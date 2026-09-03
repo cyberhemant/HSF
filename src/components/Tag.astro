@@ -1,0 +1,13 @@
+---
+export interface Props {
+  variant?: 'outline' | 'filled';
+  class?: string;
+}
+
+const { variant = 'outline', class: extraClass = '' } = Astro.props;
+const classes = ['tag', variant === 'filled' ? 'tag--filled' : '', extraClass]
+  .filter(Boolean)
+  .join(' ');
+---
+
+<span class={classes}><slot /></span>

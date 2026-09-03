@@ -1,0 +1,129 @@
+---
+import Base from '../layouts/Base.astro';
+import Tag from '../components/Tag.astro';
+
+const base = import.meta.env.BASE_URL;
+
+const versions = [
+  {
+    name: 'Version 1',
+    href: `${base}/v1/`,
+    status: 'In progress',
+    rationale: 'The baseline reading of the guidelines — full-bleed hero, editorial rhythm, four-up pillar grid.',
+    ready: false,
+  },
+  {
+    name: 'Version 2',
+    href: `${base}/v2/`,
+    status: 'Not started',
+    rationale: 'A second direction. Same components, different composition.',
+    ready: false,
+  },
+];
+---
+
+<Base title="Heenat Salma Farm — Prototype" description="Design directions for review.">
+  <div class="container picker">
+    <header class="picker__head">
+      <Tag>For Review</Tag>
+      <h1>Heenat Salma Farm</h1>
+      <p class="t-p1">
+        Design directions for the home page. Each version uses the same content and the same
+        component library — what changes is the composition and the weighting of the palette.
+      </p>
+    </header>
+
+    <div class="picker__grid">
+      {versions.map((v) => (
+        <a class="picker__card" href={v.href}>
+          <div class="picker__thumb" aria-hidden="true"></div>
+          <div class="picker__body">
+            <div class="picker__title">
+              <strong class="t-h3">{v.name}</strong>
+              <span class="t-caption">{v.status}</span>
+            </div>
+            <p class="t-p2">{v.rationale}</p>
+          </div>
+        </a>
+      ))}
+
+      <a class="picker__card picker__card--alt" href={`${base}/styleguide/`}>
+        <div class="picker__thumb picker__thumb--alt" aria-hidden="true"></div>
+        <div class="picker__body">
+          <div class="picker__title">
+            <strong class="t-h3">Styleguide</strong>
+            <span class="t-caption">Reference</span>
+          </div>
+          <p class="t-p2">
+            The system itself — palette with contrast ratios, type ramp, components in every state.
+          </p>
+        </div>
+      </a>
+    </div>
+  </div>
+</Base>
+
+<style lang="scss">
+  @use '../styles/foundation/breakpoints' as bp;
+
+  .picker { padding-block: var(--space-7); }
+
+  .picker__head {
+    max-inline-size: var(--measure);
+    > * + * { margin-block-start: var(--space-3); }
+  }
+
+  .picker__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+    margin-block-start: var(--space-7);
+
+    @include bp.from(bp.$tablet)  { grid-template-columns: repeat(2, 1fr); }
+    @include bp.from(bp.$desktop) { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  .picker__card {
+    display: flex;
+    flex-direction: column;
+    background-color: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    transition: box-shadow var(--ease), border-color var(--ease);
+
+    &:hover {
+      box-shadow: var(--shadow-card);
+      border-color: var(--ochre);
+      color: inherit;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--ochre-deep);
+      outline-offset: 3px;
+    }
+  }
+
+  .picker__thumb {
+    aspect-ratio: 16 / 10;
+    background-color: var(--beige);
+  }
+
+  .picker__thumb--alt { background-color: var(--maroon); }
+
+  .picker__body {
+    padding: var(--space-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .picker__title {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-2);
+  }
+</style>

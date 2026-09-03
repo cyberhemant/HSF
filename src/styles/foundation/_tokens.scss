@@ -1,0 +1,117 @@
+// =============================================================================
+// TOKENS — the single source of truth for every value in the system.
+// Transcribed from DESIGN.md §2 (color), §3 (type), §5 (spacing/radius), §6 (elevation).
+// NO HEX VALUE MAY APPEAR ANYWHERE ELSE IN THIS CODEBASE.
+// =============================================================================
+
+:root {
+  // ---------------------------------------------------------------------------
+  // §2 Primary
+  // ---------------------------------------------------------------------------
+  --maroon:         #491010; // logotype, headings, primary button fill. AAA everywhere.
+  --maroon-hover:   #5E1B1B;
+  --maroon-active:  #340B0B;
+
+  --ochre:          #A6885D; // icons, hairlines, dividers ONLY. 3.1:1 on cream — never body text.
+  --ochre-deep:     #8B6F45; // the text-safe ochre. Use this whenever ochre must carry words.
+
+  // ---------------------------------------------------------------------------
+  // §2 Surface & background
+  // ---------------------------------------------------------------------------
+  --cream:          #F9F7F5; // page canvas. Should dominate 70–80% of any layout by area.
+  --white:          #FFFFFF; // card and panel surface, sits above the cream canvas
+  --beige:          #E0D8CF; // secondary neutral, section washes. NEVER pair with white text (1.4:1).
+  --border:         #DCD0C0; // standard hairline for cards, dividers, input outlines
+
+  // ---------------------------------------------------------------------------
+  // §2 Neutrals & text
+  // ---------------------------------------------------------------------------
+  --ink:            #491010; // headings only
+  --ink-soft:       #6B3226; // DEFAULT BODY COPY. Never full-strength maroon (§3 Principles).
+  --ink-faint:      #9C8574; // metadata, captions, disabled text
+
+  // ---------------------------------------------------------------------------
+  // §2 Semantic
+  // ---------------------------------------------------------------------------
+  --error:          #A63B2A; // brick red kept inside the palette's warmth. 6.0:1 on cream.
+  --success:        #5B6E3A; // muted olive. 5.3:1 on cream.
+
+  // ---------------------------------------------------------------------------
+  // §3 Typography
+  // ---------------------------------------------------------------------------
+  --font-display:   "Alegreya", Georgia, "Times New Roman", serif;
+  --font-body:      "Alegreya Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+  --size-h1:        2.1rem;   // 33.6px / 800 / 1.1
+  --size-h2:        1.55rem;  // 24.8px / 700 / 1.2
+  --size-tag:       0.72rem;  // 11.5px / 600 / uppercase / +0.1em
+  --size-caption:   0.82rem;  // 13.1px / 500 / 1.4
+  --size-p1:        1.06rem;  // 17px   / 400 / 1.7  — primary body
+  --size-p2:        0.92rem;  // 14.7px / 400 / 1.65 — secondary body
+  --size-btn:       0.9rem;   // 14.4px / 600 / 1.0
+  --size-text-btn:  0.88rem;  // 14px   / 600 / underline
+
+  --measure:        62ch;     // §3: running text stays 60–65 characters
+
+  // ---------------------------------------------------------------------------
+  // §5 Spacing scale — 16px is the default gap; 32–64px between page sections
+  // ---------------------------------------------------------------------------
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  16px;
+  --space-4:  24px;
+  --space-5:  32px;
+  --space-6:  48px;
+  --space-7:  64px;
+
+  // ---------------------------------------------------------------------------
+  // §5 Radius — deliberately small. 3px signals craft, not consumer app.
+  // ---------------------------------------------------------------------------
+  --radius-button:  3px;
+  --radius-field:   4px;
+  --radius-card:    6px;
+  --radius-callout: 2px;
+  --radius-chip:    999px; // small taxonomy chips ONLY
+
+  // ---------------------------------------------------------------------------
+  // §5 Layout
+  // ---------------------------------------------------------------------------
+  --content-max:    1180px;
+  --margin-mobile:  20px;
+  --margin-tablet:  40px;
+  --margin-desktop: 64px;
+  --gutter-mobile:  16px;
+  --gutter-wide:    24px;
+
+  // ---------------------------------------------------------------------------
+  // §6 Elevation — the ONLY shadow in the system. Flat by default.
+  // ---------------------------------------------------------------------------
+  --shadow-card: 0 1px 2px rgba(73, 16, 16, 0.06), 0 6px 20px rgba(73, 16, 16, 0.05);
+
+  // Motion — restrained, no overshoot or bounce (§4 Floating Label)
+  --ease:     0.2s ease;
+  --ease-slow: 0.4s ease;
+}
+
+// =============================================================================
+// §2 Dark mode — proposed extension, no dark theme exists in the source guidelines.
+// Only token values are redefined; no component knows this block exists.
+// =============================================================================
+[data-theme="dark"] {
+  --cream:      #1C0E09;
+  --white:      #2B140D;
+  --beige:      #3A1D13;
+  --border:     #4A2A1C;
+
+  --ink:        #F3E9DD;
+  --ink-soft:   #D8C2AE;
+  --ink-faint:  #A98D77;
+
+  --ochre:      #D2A876; // brightened — base ochre is too low-contrast on a dark ground
+  --ochre-deep: #D2A876;
+
+  --error:      #D97B65;
+  --success:    #8FA36B;
+
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 6px 20px rgba(0, 0, 0, 0.25);
+}

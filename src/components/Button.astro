@@ -1,0 +1,39 @@
+---
+export interface Props {
+  variant?: 'primary' | 'secondary' | 'text';
+  href?: string;
+  disabled?: boolean;
+  onDark?: boolean;
+  type?: 'button' | 'submit' | 'reset';
+  class?: string;
+}
+
+const {
+  variant = 'primary',
+  href,
+  disabled = false,
+  onDark = false,
+  type = 'button',
+  class: extraClass = '',
+} = Astro.props;
+
+const classes = [
+  'btn',
+  `btn--${variant}`,
+  onDark ? 'btn--on-dark' : '',
+  disabled ? 'is-disabled' : '',
+  extraClass,
+].filter(Boolean).join(' ');
+
+const Tag = href && !disabled ? 'a' : 'button';
+---
+
+<Tag
+  class={classes}
+  href={href && !disabled ? href : undefined}
+  type={Tag === 'button' ? type : undefined}
+  disabled={Tag === 'button' && disabled ? true : undefined}
+  aria-disabled={disabled ? 'true' : undefined}
+>
+  <slot />
+</Tag>

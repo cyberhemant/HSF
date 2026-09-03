@@ -1,0 +1,26 @@
+// §4 Tag / Badge — the ONLY place a full-pill radius is permitted.
+// Reserved for small taxonomy chips, e.g. "Now Booking".
+.tag {
+  display: inline-flex;
+  align-items: center;
+
+  font-family: var(--font-body);
+  font-size: var(--size-tag);
+  font-weight: 600;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+
+  color: var(--ochre-deep); // never base ochre — it fails contrast at this size
+  background-color: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-chip);
+  padding: var(--space-2) var(--space-3);
+  white-space: nowrap;
+}
+
+.tag--filled {
+  background-color: var(--beige);
+  border-color: transparent;
+  color: var(--maroon);
+}

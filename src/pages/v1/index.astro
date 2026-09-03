@@ -1,0 +1,21 @@
+---
+import Base from '../../layouts/Base.astro';
+import Tag from '../../components/Tag.astro';
+import Button from '../../components/Button.astro';
+
+const base = import.meta.env.BASE_URL;
+---
+
+<Base title="Heenat Salma Farm" version="v1">
+  <div class="container" style="padding-block: var(--space-7);">
+    <Tag>v1</Tag>
+    <h1 style="margin-block-start: var(--space-3);">Version v1</h1>
+    <p class="t-p1" style="margin-block-start: var(--space-3);">
+      Placeholder. Compositions are built in BUILD-PLAN.md M5 (v1) and M7 (v2), once the
+      component library and <code>home.json</code> exist.
+    </p>
+    <div style="margin-block-start: var(--space-5);">
+      <Button variant="secondary" href={base}>Back to versions</Button>
+    </div>
+  </div>
+</Base>
