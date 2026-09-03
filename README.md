@@ -15,6 +15,21 @@ npm run preview   # serve dist/ exactly as GitHub Pages will
 Always `npm run preview` before pushing — it is the only local check that catches
 `base` path mistakes.
 
+
+## Note on `npm install`
+
+This folder is shared between your Mac and Claude's Linux sandbox. **Always run
+`npm install` on the Mac**, never from a Claude session — Rollup and esbuild ship
+platform-specific binaries, and a Linux-side install leaves a `node_modules` your
+Mac can't run (`Cannot find module @rollup/rollup-darwin-arm64`).
+
+If that happens:
+
+```bash
+rm -rf node_modules package-lock.json
+npm install
+```
+
 ## Routes
 
 | Route | What it is |
