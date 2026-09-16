@@ -2,7 +2,7 @@
 import Base from '../../layouts/Base.astro';
 import Tag from '../../components/Tag.astro';
 
-const base = import.meta.env.BASE_URL;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
 // Same default set as EventsCarousel — kept here rather than imported so
 // each event can grow its own detail page later without reshaping the carousel's props.

@@ -23,7 +23,7 @@ export interface Props {
   class?: string;
 }
 
-const base = import.meta.env.BASE_URL;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
 const {
   eyebrow = 'Shahaniya, Qatar',

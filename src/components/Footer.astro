@@ -16,7 +16,7 @@ export interface Props {
   image?: { src: string; alt: string };
 }
 
-const base = import.meta.env.BASE_URL;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
 const {
   image = { src: `${base}/images/footer- silhouette.png`, alt: 'An outdoor dining terrace overlooking the camp at Heenat Salma Farm' },
