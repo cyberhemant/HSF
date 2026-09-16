@@ -1,0 +1,122 @@
+---
+import Base from '../../layouts/Base.astro';
+import Tag from '../../components/Tag.astro';
+
+const base = import.meta.env.BASE_URL;
+
+// Same default set as EventsCarousel — kept here rather than imported so
+// each event can grow its own detail page later without reshaping the carousel's props.
+const events = [
+  {
+    title: 'Open Mic Night',
+    description: 'An evening of live music, poetry, and storytelling around the fire pit, open to guests and neighbors alike.',
+    date: 'Fri, 3 October 2026',
+    time: '7:00 PM – 9:00 PM',
+    image: `${base}/images/gallery-open-mic.webp`,
+    alt: 'Open Mic Night at Heenat Salma Farm',
+    href: `${base}/events/open-mic-night/`,
+  },
+  {
+    title: 'Wellness Sunrise Retreat',
+    description: 'A guided morning of breathwork, movement, and quiet reflection set against the farm’s tranquil landscape.',
+    date: 'Sat, 11 October 2026',
+    time: '6:00 AM – 8:00 AM',
+    image: `${base}/images/gallery-wellness-experience.webp`,
+    alt: 'Wellness experience at Heenat Salma Farm',
+    href: `${base}/events/wellness-sunrise-retreat/`,
+  },
+  {
+    title: 'Ramadan Bazar',
+    description: 'A festive evening market with local artisans, seasonal produce, and farm-fresh treats under lantern light.',
+    date: 'Thu, 18 February 2027',
+    time: '5:00 PM – 10:00 PM',
+    image: `${base}/images/gallery-ramadan-bazar.webp`,
+    alt: 'Ramadan Bazar at Heenat Salma Farm',
+    href: `${base}/events/ramadan-bazar/`,
+  },
+];
+---
+
+<Base title="Events — Heenat Salma Farm" description="Upcoming gatherings, markets, and retreats at Heenat Salma Farm.">
+  <section class="events-index bg-cream">
+    <div class="container">
+      <div class="events-index__head mx-auto text-center">
+        <span class="text-uppercase ls-tag text-ochre-deep small fw-semibold">What’s On</span>
+        <h1 class="mt-3 display-5">All Events</h1>
+        <p class="mt-3 text-ink-soft">From market evenings to sunrise wellness rituals — join us for gatherings that bring the farm’s rhythm to life.</p>
+      </div>
+
+      <div class="events-index__grid mt-5">
+        {events.map((event) => (
+          <a class="events-index__card" href={event.href}>
+            <div class="events-index__frame">
+              <img src={event.image} alt={event.alt} loading="lazy" />
+            </div>
+            <div class="events-index__body">
+              <span class="text-uppercase ls-tag text-ochre-deep small fw-semibold">
+                {event.date} &middot; {event.time}
+              </span>
+              <h2 class="events-index__title mt-2">{event.title}</h2>
+              <p class="mt-2 text-ink-soft mb-0">{event.description}</p>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .events-index {
+    padding-block: clamp(64px, 8vw, 112px);
+  }
+
+  .events-index__head {
+    max-width: 640px;
+  }
+
+  .events-index__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: clamp(24px, 3vw, 40px);
+  }
+
+  .events-index__card {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+    background-color: var(--bs-white);
+    transition: transform .3s ease;
+  }
+
+  .events-index__card:hover,
+  .events-index__card:focus-visible {
+    transform: translateY(-4px);
+  }
+
+  .events-index__frame {
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+  }
+
+  .events-index__frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform .6s ease;
+  }
+
+  .events-index__card:hover .events-index__frame img,
+  .events-index__card:focus-visible .events-index__frame img {
+    transform: scale(1.04);
+  }
+
+  .events-index__body {
+    padding: 1.5rem;
+  }
+
+  .events-index__title {
+    font-size: clamp(1.3rem, 2vw, 1.6rem);
+  }
+</style>
