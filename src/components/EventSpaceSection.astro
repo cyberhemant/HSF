@@ -33,13 +33,13 @@ const {
   class={['event-space', extraClass].filter(Boolean).join(' ')}
   style={`background-image: linear-gradient(rgba(20, 8, 5, 0.55), rgba(20, 8, 5, 0.55)), url(${image});`}
 >
-  <div class="container">
+  <div class="container px-5">
     <div class="event-space__content mx-auto " data-aos="fade-right">
      <div class="border-start border-2 ps-2">
        <Tag variant="plain" class="event-space__eyebrow pb-3 text-cream">{eyebrow}</Tag>
       <h2 class="display-4  text-cream">{heading}</h2>
      </div>
-      <p class="mt-4 fs-2 event-space__lead mx-auto">{lead}</p>
+      <p class="mt-4 fs-3 fs-md-2 event-space__lead mx-auto">{lead}</p>
       <Button variant="outline-primary" href={ctaHref} class="event-space__btn mt-4">{ctaLabel}</Button>
     </div>
   </div>
