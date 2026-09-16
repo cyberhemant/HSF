@@ -1,0 +1,284 @@
+---
+// "Academy" promo — video-left / text-right split, referencing the
+// hotel-manager reference layout (poster + circular play button on the
+// left, eyebrow/heading/lead/quote on the right) but rebuilt on this
+// system's own components (Tag, Divider, AnimatedOutlineButton) and real
+// copy from heenatsalma.earth's Academy page. The reference's persona
+// quote+avatar has no equivalent here — Heenat's Academy content is
+// program-led, not manager-led — so that slot becomes a pull-quote plus
+// the section's own CTA instead.
+import Tag from './Tag.astro';
+import Divider from './Divider.astro';
+import Icon from './Icon.astro';
+import AnimatedOutlineButton from './AnimatedOutlineButton.astro';
+
+export interface Props {
+  eyebrow?: string;
+  heading?: string;
+  lead?: string;
+  quote?: string;
+  ctaLabel?: string;
+  ctaHref?: string;
+  videoUrl?: string;
+  poster?: string;
+  class?: string;
+}
+
+const base = import.meta.env.BASE_URL;
+
+const {
+  eyebrow = 'Academy',
+  heading = 'Educational Programs At The Farm',
+  lead = "Heenat Salma's Academy runs structured learning programmes around biodiversity and sustainability, alongside vocational education in arts and craft — open to primary, secondary, high school, and university students. Through hands-on, experiential learning, students follow the growing cycle from soil to harvest, engaging with the land, the seasons, and the food system.",
+  quote = 'A season-long journey that brings students closer to the land through the simple, meaningful act of growing food.',
+  ctaLabel = 'Know More',
+  ctaHref = `${base}/academy/`,
+  videoUrl = 'https://www.youtube.com/watch?v=TYtZXVkq6M0',
+  poster = 'https://heenatsalma.earth/wp-content/uploads/2025/09/farm-to-school.jpg.webp',
+  class: extraClass = '',
+} = Astro.props;
+
+const videoId = new URL(videoUrl).searchParams.get('v') ?? videoUrl.split('/').pop();
+---
+
+<section class={['academy-section bg-ochre', extraClass].filter(Boolean).join(' ')}>
+  <div class="container">
+    <div class="row g-0">
+      <div class="col-12 col-lg-6">
+        <button
+          type="button"
+          class="academy-video"
+          data-academy-video
+          data-video-id={videoId}
+          aria-label={`Play video: ${heading}`}
+        >
+          <img class="academy-video__poster" src={poster} alt="" loading="lazy" />
+          <span class="academy-video__play" aria-hidden="true">
+            <span class="academy-video__play-ring"></span>
+            <Icon name="play_arrow" size={28} class="academy-video__play-icon" />
+          </span>
+        </button>
+      </div>
+
+      <div class="col-12 col-lg-6 p-6 bg-cream">
+        <Tag variant="plain">{eyebrow}</Tag>
+        <h2 class="display-5 mt-3">{heading}</h2>
+        <p class="mt-4">{lead}</p>
+
+       
+
+        
+
+        <AnimatedOutlineButton variant="outline-primary" arrow href={ctaHref} class="mt-3">
+          {ctaLabel}
+        </AnimatedOutlineButton>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="academy-lightbox" data-academy-lightbox hidden>
+  <button type="button" class="academy-lightbox__close" data-academy-lightbox-close aria-label="Close video">
+    <Icon name="close" size={28} />
+  </button>
+  <div class="academy-lightbox__frame" data-academy-lightbox-frame></div>
+</div>
+
+<script>
+  const lightbox = document.querySelector<HTMLDivElement>('[data-academy-lightbox]');
+  const frame = lightbox?.querySelector<HTMLDivElement>('[data-academy-lightbox-frame]');
+  const closeBtn = lightbox?.querySelector<HTMLButtonElement>('[data-academy-lightbox-close]');
+  let lastFocused: HTMLElement | null = null;
+
+  function openLightbox(videoId: string, title: string) {
+    if (!lightbox || !frame) return;
+
+    const iframe = document.createElement('iframe');
+    iframe.src = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0`;
+    iframe.title = title;
+    iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+    iframe.allowFullscreen = true;
+    iframe.setAttribute('frameborder', '0');
+    frame.replaceChildren(iframe);
+
+    lastFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    lightbox.hidden = false;
+    document.body.style.overflow = 'hidden';
+    closeBtn?.focus();
+  }
+
+  function closeLightbox() {
+    if (!lightbox || !frame || lightbox.hidden) return;
+
+    lightbox.hidden = true;
+    frame.replaceChildren(); // drop the iframe so playback actually stops
+    document.body.style.overflow = '';
+    lastFocused?.focus();
+  }
+
+  document.querySelectorAll<HTMLButtonElement>('[data-academy-video]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const videoId = btn.dataset.videoId;
+      if (!videoId) return;
+      openLightbox(videoId, btn.getAttribute('aria-label') ?? 'Video');
+    });
+  });
+
+  closeBtn?.addEventListener('click', closeLightbox);
+  lightbox?.addEventListener('click', (event) => {
+    if (event.target === lightbox) closeLightbox();
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') closeLightbox();
+  });
+</script>
+
+<style>
+  .academy-section {
+    padding-block: clamp(64px, 8vw, 112px);
+  }
+
+  .academy-video {
+    position: relative;
+    display: block;
+    width: 100%;
+    /* Stacked on mobile, so there's no sibling column height to match —
+       fall back to a fixed ratio there. */
+    aspect-ratio: 16 / 10;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    cursor: pointer;
+  }
+
+  /* Row default (align-items: stretch) makes this column's height match
+     the text column's — fill it instead of the mobile aspect-ratio. */
+  @media (min-width: 992px) {
+    .academy-video {
+      height: 100%;
+      aspect-ratio: auto;
+    }
+  }
+
+  .academy-video__poster {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    border: 0;
+  }
+
+  .academy-video__play {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .academy-video__play::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(20, 8, 5, 0.28);
+    transition: background-color .25s ease;
+  }
+
+  .academy-video:hover .academy-video__play::before,
+  .academy-video:focus-visible .academy-video__play::before {
+    background: rgba(20, 8, 5, 0.4);
+  }
+
+  .academy-video__play-ring,
+  .academy-video__play-icon {
+    position: relative;
+    z-index: 1;
+  }
+
+  .academy-video__play-ring {
+    position: absolute;
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    animation: academy-ring-pulse 2.4s ease-out infinite;
+  }
+
+  .academy-video__play-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--bs-cream);
+    color: var(--bs-maroon);
+    transition: transform .25s ease;
+  }
+
+  .academy-video:hover .academy-video__play-icon,
+  .academy-video:focus-visible .academy-video__play-icon {
+    transform: scale(1.08);
+  }
+
+  @keyframes academy-ring-pulse {
+    0% { transform: scale(0.72); opacity: .9; }
+    70% { transform: scale(1.15); opacity: 0; }
+    100% { transform: scale(1.15); opacity: 0; }
+  }
+
+  .academy-section__quote {
+    font-family: var(--bs-font-serif, 'Alegreya', serif);
+    font-style: italic;
+    font-size: 1.15rem;
+    line-height: 1.6;
+    text-decoration: underline;
+    text-decoration-color: var(--bs-ochre);
+    text-underline-offset: 4px;
+    color: var(--bs-maroon);
+  }
+
+  .academy-lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 1080;
+    background: rgba(10, 4, 2, 0.94);
+  }
+
+  .academy-lightbox[hidden] {
+    display: none;
+  }
+
+  .academy-lightbox__frame,
+  .academy-lightbox__frame :global(iframe) {
+    width: 100%;
+    height: 100%;
+    display: block;
+    border: 0;
+  }
+
+  .academy-lightbox__close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 1;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    cursor: pointer;
+    transition: background-color .2s ease;
+  }
+
+  .academy-lightbox__close:hover,
+  .academy-lightbox__close:focus-visible {
+    background: rgba(255, 255, 255, 0.2);
+  }
+</style>

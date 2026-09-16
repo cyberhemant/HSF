@@ -1,0 +1,52 @@
+---
+// AccommodationSection
+//  ├── SectionIntro
+//  └── AccommodationList
+//       └── AccommodationItem × n
+//            ├── AccommodationImage
+//            └── AccommodationInfo
+//
+// Editorial, alternating accommodation showcase — see accommodations.js for
+// content. Motion: scroll-triggered fade/rise/slide via reveal.js
+// (IntersectionObserver, already used by LodgesShowcase), no animation
+// library added. Adapted from the kisanecofarm.com/our-rooms/ "Explore Our
+// Charming Accommodations" pattern to Heenat's own real lodge photography.
+import SectionIntro from './SectionIntro.astro';
+import AccommodationList from './AccommodationList.astro';
+import { accommodations } from '../../data/accommodations.js';
+
+export interface Props {
+  eyebrow?: string;
+  heading?: string;
+  lead?: string;
+  class?: string;
+}
+
+const base = import.meta.env.BASE_URL;
+
+const {
+  eyebrow = 'Stay',
+  heading = 'Explore Our Lodges at Heenat Salma Farm',
+  lead = 'Three lodges open directly onto the working farm — each with its own character, a short walk from the fields, the kitchen, and the rest of the property.',
+  class: extraClass = '',
+} = Astro.props;
+
+const items = accommodations.map((a) => ({
+  ...a,
+  image: `${base}/${a.image}`,
+  href: `${base}/lodges/`,
+}));
+---
+
+<section class={['acc-section', extraClass].filter(Boolean).join(' ')}>
+  <div class="container">
+    <SectionIntro eyebrow={eyebrow} heading={heading} lead={lead} />
+    <AccommodationList items={items} />
+  </div>
+</section>
+
+<style>
+  .acc-section {
+    padding-block: clamp(80px, 10vw, 160px);
+  }
+</style>

@@ -1,0 +1,59 @@
+---
+// Animated Outline Button — Bootstrap's own btn-outline-primary/secondary
+// (§4 Buttons) plus the border-wipe + underline-grow hover from
+// .btn-line-effect (main.scss). Two variants only: outline-primary (maroon)
+// and outline-secondary (ochre-deep) — the two the brief asked for.
+// The arrow is a pure data-attribute toggle: markup is identical either way,
+// only data-arrow flips between border-only and border-plus-arrow.
+export interface Props {
+  variant?: 'outline-primary' | 'outline-secondary';
+  arrow?: boolean;
+  href?: string;
+  disabled?: boolean;
+  type?: 'button' | 'submit' | 'reset';
+  class?: string;
+}
+
+const VARIANT_CLASS: Record<string, string> = {
+  'outline-primary': 'btn-outline-primary',
+  'outline-secondary': 'btn-outline-secondary',
+};
+
+const {
+  variant = 'outline-primary',
+  arrow = false,
+  href,
+  disabled = false,
+  type = 'button',
+  class: extraClass = '',
+  ...rest
+} = Astro.props;
+
+const classes = [
+  'btn',
+  'btn-line-effect',
+  VARIANT_CLASS[variant],
+  disabled ? 'disabled' : '',
+  extraClass,
+].filter(Boolean).join(' ');
+
+const Tag = href && !disabled ? 'a' : 'button';
+---
+
+<Tag
+  class={classes}
+  href={href && !disabled ? href : undefined}
+  type={Tag === 'button' ? type : undefined}
+  disabled={Tag === 'button' && disabled ? true : undefined}
+  aria-disabled={disabled ? 'true' : undefined}
+  tabindex={Tag === 'a' && disabled ? -1 : undefined}
+  data-arrow={arrow ? 'true' : 'false'}
+  {...rest}
+>
+  <slot />
+  <span class="btn-line-effect__arrow" aria-hidden="true">
+    <svg viewBox="0 0 24 12" focusable="false">
+      <path d="M0 6h20M14 1l6 5-6 5" />
+    </svg>
+  </span>
+</Tag>

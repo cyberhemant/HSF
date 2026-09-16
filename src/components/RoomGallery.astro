@@ -1,0 +1,419 @@
+---
+// "Peek" gallery carousel — a bigger center slide with smaller prev/next
+// slides peeking in from the screen edges. On transition, the whole ring of
+// slides moves together: the center slide slides out to the left (becoming
+// the new left peek), the right peek slides into the center, and a new
+// slide slides in on the right — a circular filmstrip, not just the center
+// image swapping. An expand (fullscreen) button and prev/next controls with
+// a proportional progress bar round it out. No third-party carousel lib:
+// Bootstrap's own .carousel (used by StaySection.astro) doesn't support
+// edge-peeking neighbor slides or this circular slide choreography, so this
+// is a small self-contained component script.
+import Icon from './Icon.astro';
+
+export interface Props {
+  slides?: { name: string; image: string; alt?: string; href?: string }[];
+  autoplay?: boolean;
+  autoplayDelay?: number;
+  class?: string;
+}
+
+const base = import.meta.env.BASE_URL;
+
+const {
+  autoplay = true,
+  autoplayDelay = 5000,
+  slides = [
+    {
+      name: 'Wellness Experience',
+      image: `${base}/images/gallery-wellness-experience.webp`,
+      alt: 'Wellness experience at Heenat Salma Farm',
+      href: `${base}/lodges/`,
+    },
+    {
+      name: 'Ramadan Bazar',
+      image: `${base}/images/gallery-ramadan-bazar.webp`,
+      alt: 'Ramadan Bazar at Heenat Salma Farm',
+      href: `${base}/lodges/`,
+    },
+    {
+      name: 'Open Mic Night',
+      image: `${base}/images/gallery-open-mic.webp`,
+      alt: 'Open Mic Night at Heenat Salma Farm',
+      href: `${base}/lodges/`,
+    },
+  ],
+  class: extraClass = '',
+} = Astro.props;
+
+const total = slides.length;
+const wrapIndex = (i: number, length: number) => ((i % length) + length) % length;
+
+// Five ring slots: -2/-1 (left buffer + peek), 0 (center), 1/2 (right peek + buffer).
+// The buffers (-2/2) stay invisible off-screen — they're pre-loaded so the
+// next transition can slide a "new" image in from the edge.
+const ringSlots = [-2, -1, 0, 1, 2].map((relPos) => ({
+  relPos,
+  slide: slides[wrapIndex(relPos, total)],
+}));
+---
+
+<section
+  class={['room-gallery bg-sand', extraClass].filter(Boolean).join(' ')}
+  data-room-carousel
+  data-slides={JSON.stringify(slides)}
+  data-autoplay={autoplay ? 'true' : 'false'}
+  data-autoplay-delay={autoplayDelay}
+>
+  <div class="room-gallery__viewport reveal" data-role="viewport">
+    <button
+      type="button"
+      class="room-gallery__slot room-gallery__slot--peek"
+      data-action="prev"
+      aria-label="Previous slide"
+    ></button>
+
+    <div class="room-gallery__slot room-gallery__slot--center" data-role="slot-center">
+      <button type="button" class="room-gallery__expand" data-action="expand" aria-label="View image full screen">
+        <Icon name="open-in-full" size={18} />
+      </button>
+    </div>
+
+    <button
+      type="button"
+      class="room-gallery__slot room-gallery__slot--peek"
+      data-action="next"
+      aria-label="Next slide"
+    ></button>
+
+    <div class="room-gallery__stage" data-role="stage" aria-hidden="true">
+      {ringSlots.map(({ relPos, slide }) => (
+        <img
+          class="room-gallery__ring"
+          data-relpos={relPos}
+          src={slide.image}
+          alt={slide.alt || slide.name}
+          loading={relPos === 0 ? 'eager' : 'lazy'}
+        />
+      ))}
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="room-gallery__controls d-flex align-items-center justify-content-center gap-3 gap-md-4 mt-4">
+      <button type="button" class="room-gallery__nav" data-action="prev">
+        <Icon name="chevron-left" size={16} />
+        <span class="d-none d-sm-inline">Previous</span>
+      </button>
+      <div class="room-gallery__track" aria-hidden="true">
+        <span class="room-gallery__progress" data-role="progress" style={`width:${(1 / total) * 100}%`}></span>
+      </div>
+      <button type="button" class="room-gallery__nav" data-action="next">
+        <span class="d-none d-sm-inline">Next</span>
+        <Icon name="chevron-right" size={16} />
+      </button>
+    </div>
+  </div>
+</section>
+
+<script>
+  type Slide = { name: string; image: string; alt?: string; href?: string };
+  type RingEntry = { relPos: number; el: HTMLImageElement };
+  type Rect = { x: number; y: number; w: number; h: number };
+
+  const wrap = (i: number, length: number) => ((i % length) + length) % length;
+  const TRANSITION_MS = 700;
+  const EASING = 'cubic-bezier(.65,0,.35,1)';
+
+  document.querySelectorAll<HTMLElement>('[data-room-carousel]').forEach((root) => {
+    let slides: Slide[] = [];
+    try {
+      slides = JSON.parse(root.dataset.slides || '[]');
+    } catch {
+      slides = [];
+    }
+    const N = slides.length;
+    if (N < 1) return;
+
+    const viewport = root.querySelector<HTMLElement>('[data-role="viewport"]');
+    const slotCenter = root.querySelector<HTMLElement>('[data-role="slot-center"]');
+    const slotPrev = root.querySelector<HTMLElement>('[data-action="prev"].room-gallery__slot');
+    const slotNext = root.querySelector<HTMLElement>('[data-action="next"].room-gallery__slot');
+    const progressEl = root.querySelector<HTMLElement>('[data-role="progress"]');
+    const peekMedia = window.matchMedia('(min-width: 992px)');
+
+    if (!viewport || !slotCenter || !slotPrev || !slotNext) return;
+
+    const ring: RingEntry[] = Array.from(root.querySelectorAll<HTMLImageElement>('[data-relpos]')).map((el) => ({
+      relPos: Number(el.dataset.relpos),
+      el,
+    }));
+
+    let currentIndex = 0;
+    let animating = false;
+
+    const setSrc = (entry: RingEntry, dataIndex: number) => {
+      const slide = slides[wrap(dataIndex, N)];
+      entry.el.src = slide.image;
+      entry.el.alt = slide.alt || slide.name;
+    };
+
+    const getRects = (): Record<string, Rect> => {
+      const vpRect = viewport.getBoundingClientRect();
+      const toLocal = (r: DOMRect): Rect => ({ x: r.left - vpRect.left, y: r.top - vpRect.top, w: r.width, h: r.height });
+      const centerR = toLocal(slotCenter.getBoundingClientRect());
+      const leftR = toLocal(slotPrev.getBoundingClientRect());
+      const rightR = toLocal(slotNext.getBoundingClientRect());
+      const gap = Math.max(centerR.x - (leftR.x + leftR.w), 0);
+      const farLeftR: Rect = { x: leftR.x - (leftR.w + gap), y: leftR.y, w: leftR.w, h: leftR.h };
+      const farRightR: Rect = { x: rightR.x + rightR.w + gap, y: rightR.y, w: rightR.w, h: rightR.h };
+      return { '-2': farLeftR, '-1': leftR, '0': centerR, '1': rightR, '2': farRightR };
+    };
+
+    const applyStyles = (entry: RingEntry, animate: boolean) => {
+      const rect = getRects()[String(entry.relPos)];
+      const el = entry.el;
+      el.style.transition = animate
+        ? `transform ${TRANSITION_MS}ms ${EASING}, width ${TRANSITION_MS}ms ${EASING}, height ${TRANSITION_MS}ms ${EASING}, opacity ${TRANSITION_MS}ms ${EASING}`
+        : 'none';
+      el.style.width = `${rect.w}px`;
+      el.style.height = `${rect.h}px`;
+      el.style.transform = `translate(${rect.x}px, ${rect.y}px)`;
+      const peeksVisible = peekMedia.matches;
+      const opacity = entry.relPos === 0 ? 1 : Math.abs(entry.relPos) === 1 && peeksVisible ? 0.85 : 0;
+      el.style.opacity = String(opacity);
+      el.style.zIndex = entry.relPos === 0 ? '3' : Math.abs(entry.relPos) === 1 ? '2' : '1';
+      if (!animate) void el.offsetWidth;
+    };
+
+    ring.forEach((entry) => applyStyles(entry, false));
+
+    const go = (delta: number) => {
+      if (N < 2 || animating) return;
+      animating = true;
+
+      currentIndex = wrap(currentIndex + delta, N);
+      const wrapFrom = delta > 0 ? -2 : 2;
+      const wrapTo = delta > 0 ? 2 : -2;
+      const outEntry = ring.find((e) => e.relPos === wrapFrom);
+
+      ring.forEach((e) => {
+        e.relPos -= delta;
+      });
+
+      if (outEntry) {
+        outEntry.relPos = wrapTo;
+        setSrc(outEntry, currentIndex + wrapTo);
+        applyStyles(outEntry, false);
+      }
+
+      requestAnimationFrame(() => {
+        ring.forEach((entry) => applyStyles(entry, true));
+      });
+
+      window.setTimeout(() => {
+        animating = false;
+        if (progressEl) progressEl.style.width = `${((currentIndex + 1) / N) * 100}%`;
+      }, TRANSITION_MS);
+    };
+
+    let resizeRaf: number | null = null;
+    window.addEventListener('resize', () => {
+      if (resizeRaf !== null) return;
+      resizeRaf = requestAnimationFrame(() => {
+        resizeRaf = null;
+        ring.forEach((entry) => applyStyles(entry, false));
+      });
+    });
+
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const autoplayEnabled = root.dataset.autoplay === 'true' && N > 1 && !reduceMotion;
+    const autoplayDelay = Number(root.dataset.autoplayDelay) || 5000;
+    let timer: ReturnType<typeof setInterval> | null = null;
+
+    const stopAutoplay = () => {
+      if (timer !== null) {
+        clearInterval(timer);
+        timer = null;
+      }
+    };
+
+    const startAutoplay = () => {
+      if (!autoplayEnabled || timer !== null || document.hidden) return;
+      timer = setInterval(() => go(1), autoplayDelay);
+    };
+
+    const restartAutoplay = () => {
+      stopAutoplay();
+      startAutoplay();
+    };
+
+    root.querySelectorAll<HTMLElement>('[data-action="prev"]').forEach((el) => el.addEventListener('click', () => { go(-1); restartAutoplay(); }));
+    root.querySelectorAll<HTMLElement>('[data-action="next"]').forEach((el) => el.addEventListener('click', () => { go(1); restartAutoplay(); }));
+
+    root.querySelector<HTMLElement>('[data-action="expand"]')?.addEventListener('click', () => {
+      const center = ring.find((e) => e.relPos === 0);
+      if (!center) return;
+      if (document.fullscreenElement) {
+        document.exitFullscreen();
+      } else if (center.el.requestFullscreen) {
+        center.el.requestFullscreen();
+      }
+    });
+
+    root.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft') { go(-1); restartAutoplay(); }
+      if (e.key === 'ArrowRight') { go(1); restartAutoplay(); }
+    });
+
+    if (autoplayEnabled) {
+      root.addEventListener('mouseenter', stopAutoplay);
+      root.addEventListener('mouseleave', startAutoplay);
+      root.addEventListener('focusin', stopAutoplay);
+      root.addEventListener('focusout', startAutoplay);
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) stopAutoplay();
+        else startAutoplay();
+      });
+      startAutoplay();
+    }
+  });
+</script>
+
+<style>
+  .room-gallery {
+    padding-block: clamp(64px, 8vw, 112px);
+    overflow: hidden;
+  }
+
+  .room-gallery__viewport {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(12px, 2vw, 24px);
+    height: clamp(340px, 42vw, 660px);
+    margin-inline: auto;
+    max-width: 1600px;
+    padding-inline: clamp(0px, 1vw, 16px);
+    overflow: hidden;
+  }
+
+  .room-gallery__slot {
+    position: relative;
+    border: none;
+    padding: 0;
+    background: none;
+  }
+
+  .room-gallery__slot--peek {
+    flex: 0 0 clamp(48px, 8vw, 150px);
+    align-self: center;
+    height: 72%;
+    cursor: pointer;
+    display: none;
+  }
+
+  @media (min-width: 992px) {
+    .room-gallery__slot--peek {
+      display: block;
+    }
+  }
+
+  .room-gallery__slot--center {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 1200px;
+    height: 100%;
+    z-index: 1;
+  }
+
+  .room-gallery__stage {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .room-gallery__ring {
+    position: absolute;
+    top: 0;
+    left: 0;
+    margin: 0;
+    padding: 0;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    display: block;
+    object-fit: cover;
+    border-radius: 0;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, .18);
+    pointer-events: none;
+  }
+
+  .room-gallery__ring[data-relpos="0"] {
+    width: 100%;
+    height: 100%;
+    opacity: 1;
+  }
+
+  .room-gallery__expand {
+    position: absolute;
+    inset-block-start: 1rem;
+    inset-inline-end: 1rem;
+    width: 2.75rem;
+    height: 2.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, .45);
+    color: #fff;
+    border: none;
+    border-radius: var(--bs-border-radius);
+    cursor: pointer;
+    transition: background-color .2s ease;
+  }
+
+  .room-gallery__expand:hover,
+  .room-gallery__expand:focus-visible {
+    background-color: rgba(0, 0, 0, .65);
+  }
+
+  .room-gallery__nav {
+    display: inline-flex;
+    align-items: center;
+    gap: .375rem;
+    min-height: 2.75rem;
+    padding-inline: .5rem;
+    background: none;
+    border: none;
+    font-size: .85rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--bs-ink-soft);
+    cursor: pointer;
+    transition: color .2s ease;
+  }
+
+  .room-gallery__nav:hover,
+  .room-gallery__nav:focus-visible {
+    color: var(--bs-maroon);
+  }
+
+  .room-gallery__track {
+    position: relative;
+    flex: 1 1 auto;
+    max-width: 420px;
+    height: 2px;
+    background-color: var(--bs-border-color);
+  }
+
+  .room-gallery__progress {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    background-color: var(--bs-ochre-deep);
+    transition: width .3s ease;
+  }
+
+</style>

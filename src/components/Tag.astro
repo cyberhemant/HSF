@@ -1,13 +1,20 @@
 ---
+// §4 Tag / Badge — small taxonomy chips, e.g. "Now Booking". Full-pill radius
+// is otherwise reserved; the one other user is the circular Icon Button.
 export interface Props {
-  variant?: 'outline' | 'filled';
+  variant?: 'outline' | 'filled' | 'plain';
   class?: string;
 }
 
 const { variant = 'outline', class: extraClass = '' } = Astro.props;
-const classes = ['tag', variant === 'filled' ? 'tag--filled' : '', extraClass]
-  .filter(Boolean)
-  .join(' ');
+const variantClass = variant === 'filled'
+  ? 'bg-beige text-maroon'
+  : variant === 'plain'
+  ? 'bg-transparent text-ochre-deep border-0 p-0'
+  : 'bg-transparent text-ochre-deep border';
+
+const classes = ['badge', 'rounded-pill', 'text-uppercase', 'ls-tag', variantClass, extraClass]
+  .filter(Boolean).join(' ');
 ---
 
 <span class={classes}><slot /></span>

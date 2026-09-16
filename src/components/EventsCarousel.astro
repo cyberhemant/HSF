@@ -1,0 +1,392 @@
+---
+// Events carousel, in the spirit of the reference screenshot (Ritz-Carlton
+// Sharq Village & Spa's "Restaurants & Bars" slider): a large center slide
+// with prev/next images peeking at the screen edges and a bordered card
+// overlapping its bottom-right corner. Built on Bootstrap's own .carousel
+// (data-bs-ride, carousel-inner/-item, data-bs-slide — same recipe as
+// StaySection.astro) for the real slide transition, autoplay and hyperlinks,
+// with two additions Bootstrap's carousel doesn't provide on its own (see
+// RoomGallery.astro's note on this): the edge-peeking neighbor panels, kept
+// in sync by the script below, and .carousel-inner overflow set to visible
+// so the card can overlap past the image's own edge.
+import Icon from './Icon.astro';
+import Tag from './Tag.astro';
+import Button from './Button.astro';
+import AnimatedOutlineButton from './AnimatedOutlineButton.astro';
+
+export interface Props {
+  eyebrow?: string;
+  heading?: string;
+  lead?: string;
+  events?: { title: string; description: string; date: string; time: string; image: string; alt?: string; href: string }[];
+  interval?: number | false;
+  class?: string;
+}
+
+const base = import.meta.env.BASE_URL;
+
+const {
+  eyebrow = 'What’s On',
+  heading = 'Upcoming At The Farm',
+  lead = 'From market evenings to sunrise wellness rituals — join us for gatherings that bring the farm’s rhythm to life.',
+  events = [
+    {
+      title: 'Open Mic Night',
+      description: 'An evening of live music, poetry, and storytelling around the fire pit, open to guests and neighbors alike.',
+      date: 'Fri, 3 October 2026',
+      time: '7:00 PM – 9:00 PM',
+      image: `${base}/images/gallery-open-mic.webp`,
+      alt: 'Open Mic Night at Heenat Salma Farm',
+      href: `${base}/events/open-mic-night/`,
+    },
+    {
+      title: 'Wellness Sunrise Retreat',
+      description: 'A guided morning of breathwork, movement, and quiet reflection set against the farm’s tranquil landscape.',
+      date: 'Sat, 11 October 2026',
+      time: '6:00 AM – 8:00 AM',
+      image: `${base}/images/gallery-wellness-experience.webp`,
+      alt: 'Wellness experience at Heenat Salma Farm',
+      href: `${base}/events/wellness-sunrise-retreat/`,
+    },
+    {
+      title: 'Ramadan Bazar',
+      description: 'A festive evening market with local artisans, seasonal produce, and farm-fresh treats under lantern light.',
+      date: 'Thu, 18 February 2027',
+      time: '5:00 PM – 10:00 PM',
+      image: `${base}/images/gallery-ramadan-bazar.webp`,
+      alt: 'Ramadan Bazar at Heenat Salma Farm',
+      href: `${base}/events/ramadan-bazar/`,
+    },
+  ],
+  interval = 6000,
+  class: extraClass = '',
+} = Astro.props;
+
+const carouselId = 'events-carousel';
+const total = events.length;
+const wrapIndex = (i: number, length: number) => ((i % length) + length) % length;
+const pad = (n: number) => String(n).padStart(2, '0');
+const prevEvent = events[wrapIndex(-1, total)];
+const nextEvent = events[wrapIndex(1, total)];
+---
+
+<section class={['events-bs-carousel bg-sand', extraClass].filter(Boolean).join(' ')} data-events-bs-carousel data-events={JSON.stringify(events)}>
+  <div class="container">
+    <div class="events-bs-carousel__head  mx-auto text-center reveal">
+      
+      <h2 class="mt-3 display-5">{heading}</h2>
+      <p class="mt-3 text-ink-soft">{lead}</p>
+    </div>
+  </div>
+
+  <div class="events-bs-carousel__stage mt-5 reveal">
+    {total > 1 && (
+      <button
+        type="button"
+        class="events-bs-carousel__peek events-bs-carousel__peek--prev"
+        data-bs-target={`#${carouselId}`}
+        data-bs-slide="prev"
+        aria-label="Previous event"
+      >
+        <img data-role="peek-prev-img" src={prevEvent.image} alt="" loading="lazy" />
+      </button>
+    )}
+
+    <div
+      id={carouselId}
+      class="carousel slide events-bs-carousel__carousel"
+      data-bs-ride={interval === false ? undefined : 'carousel'}
+      data-bs-interval={interval === false ? 'false' : interval}
+      data-bs-touch="true"
+    >
+      <div class="carousel-inner">
+        {events.map((event, i) => (
+          <div class={['carousel-item', i === 0 ? 'active' : ''].filter(Boolean).join(' ')}>
+            <a class="events-bs-carousel__link" href={event.href}>
+              <div class="events-bs-carousel__frame">
+                <img src={event.image} alt={event.alt || event.title} loading={i === 0 ? 'eager' : 'lazy'} />
+              </div>
+              <div class="events-bs-carousel__card">
+                <span class="events-bs-carousel__meta text-uppercase ls-tag text-ochre-deep small fw-semibold">
+                  {event.date} &middot; {event.time}
+                </span>
+                <h3 class="events-bs-carousel__title mt-2">{event.title}</h3>
+                <p class="events-bs-carousel__desc mt-3 text-ink-soft mb-0">{event.description}</p>
+                <span class="events-bs-carousel__cta mt-4">Explore</span>
+              </div>
+            </a>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    {total > 1 && (
+      <button
+        type="button"
+        class="events-bs-carousel__peek events-bs-carousel__peek--next"
+        data-bs-target={`#${carouselId}`}
+        data-bs-slide="next"
+        aria-label="Next event"
+      >
+        <img data-role="peek-next-img" src={nextEvent.image} alt="" loading="lazy" />
+      </button>
+    )}
+  </div>
+
+  {total > 1 && (
+    <div class="container d-none">
+      <div class="events-bs-carousel__controls d-flex align-items-center justify-content-center gap-3 gap-md-4 mt-4">
+        <button type="button" class="events-bs-carousel__nav" data-bs-target={`#${carouselId}`} data-bs-slide="prev">
+          <Icon name="chevron-left" size={16} />
+          <span class="d-none d-sm-inline">Prev</span>
+        </button>
+        <div class="events-bs-carousel__segments" data-role="segments" aria-hidden="true">
+          {events.map((_, i) => (
+            <span class={['events-bs-carousel__segment', i === 0 ? 'is-active' : ''].filter(Boolean).join(' ')} data-role="segment"></span>
+          ))}
+        </div>
+        <button type="button" class="events-bs-carousel__nav" data-bs-target={`#${carouselId}`} data-bs-slide="next">
+          <span class="d-none d-sm-inline">Next</span>
+          <Icon name="chevron-right" size={16} />
+        </button>
+      </div>
+      <p class="events-bs-carousel__count text-center small text-ink-faint mt-2" data-role="count">{`${pad(1)} / ${pad(total)}`}</p>
+    </div>
+  )}
+
+  <div class=" text-center position-relative z-1" style="margin-top: clamp(3rem, 6vw, 6rem);">
+    <AnimatedOutlineButton variant="outline-primary" arrow={true} href="/events">
+      View All Events
+    </AnimatedOutlineButton>
+  </div>
+</section>
+
+<script>
+  type EventItem = { image: string; alt?: string; title: string };
+
+  document.querySelectorAll<HTMLElement>('[data-events-bs-carousel]').forEach((root) => {
+    let events: EventItem[] = [];
+    try {
+      events = JSON.parse(root.dataset.events || '[]');
+    } catch {
+      events = [];
+    }
+    const N = events.length;
+    if (N < 2) return;
+
+    const carouselEl = root.querySelector<HTMLElement>('.events-bs-carousel__carousel');
+    const peekPrevImg = root.querySelector<HTMLImageElement>('[data-role="peek-prev-img"]');
+    const peekNextImg = root.querySelector<HTMLImageElement>('[data-role="peek-next-img"]');
+    const segments = Array.from(root.querySelectorAll<HTMLElement>('[data-role="segment"]'));
+    const countEl = root.querySelector<HTMLElement>('[data-role="count"]');
+    if (!carouselEl) return;
+
+    const wrap = (i: number, length: number) => ((i % length) + length) % length;
+    const pad = (n: number) => String(n).padStart(2, '0');
+
+    const update = (index: number) => {
+      const prev = events[wrap(index - 1, N)];
+      const next = events[wrap(index + 1, N)];
+      if (peekPrevImg) {
+        peekPrevImg.src = prev.image;
+        peekPrevImg.alt = prev.alt || prev.title;
+      }
+      if (peekNextImg) {
+        peekNextImg.src = next.image;
+        peekNextImg.alt = next.alt || next.title;
+      }
+      segments.forEach((seg, i) => seg.classList.toggle('is-active', i === index));
+      if (countEl) countEl.textContent = `${pad(index + 1)} / ${pad(N)}`;
+    };
+
+    carouselEl.addEventListener('slide.bs.carousel', ((e: Event) => {
+      const to = (e as unknown as { to: number }).to;
+      update(to);
+    }) as EventListener);
+  });
+</script>
+
+<style>
+  .events-bs-carousel {
+    padding-block: clamp(64px, 8vw, 112px);
+    overflow: hidden;
+  }
+
+ 
+
+  .events-bs-carousel__stage {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(12px, 2vw, 32px);
+    max-width: 1800px;
+    margin-inline: auto;
+    padding-inline: clamp(0px, 1vw, 16px);
+  }
+
+  .events-bs-carousel__carousel {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 1100px;
+  }
+
+  /* Bootstrap's .carousel-inner clips overflow so off-stage slides don't
+     show during the transition — but that also clips the card below, which
+     is meant to overlap past the image's own edge. Visible is safe here:
+     inactive slides stay display:none except briefly while transitioning. */
+  .events-bs-carousel__carousel :global(.carousel-inner) {
+    overflow: visible;
+  }
+
+  .events-bs-carousel__link {
+    position: relative;
+    display: block;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .events-bs-carousel__link:focus-visible {
+    outline: 2px solid var(--bs-ochre-deep);
+    outline-offset: 4px;
+  }
+
+  .events-bs-carousel__frame {
+    aspect-ratio: 16 / 10;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .events-bs-carousel__frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform .6s ease;
+  }
+
+  .events-bs-carousel__link:hover .events-bs-carousel__frame img,
+  .events-bs-carousel__link:focus-visible .events-bs-carousel__frame img {
+    transform: scale(1.04);
+  }
+
+  .events-bs-carousel__card {
+    position: relative;
+    margin-inline: 1.5rem;
+    margin-block-start: -3rem;
+    background-color: var(--bs-white);
+    outline: 1px solid var(--bs-ochre);
+    outline-offset: 10px;
+    padding: clamp(1.5rem, 3vw, 1rem);
+  }
+
+  @media (min-width: 992px) {
+    .events-bs-carousel__card {
+      position: absolute;
+      inset-inline-end: -.5rem;
+      inset-block-end: -2.5rem;
+      width: min(440px, 48%);
+      margin: 0;
+    }
+  }
+
+  .events-bs-carousel__title {
+    font-size: clamp(1.4rem, 2.4vw, 1.9rem);
+  }
+
+  .events-bs-carousel__desc {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .events-bs-carousel__cta {
+    display: inline-block;
+    color: var(--bs-maroon);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    transition: color .2s ease;
+  }
+
+  .events-bs-carousel__link:hover .events-bs-carousel__cta,
+  .events-bs-carousel__link:focus-visible .events-bs-carousel__cta {
+    color: var(--bs-ochre-deep);
+  }
+
+  .events-bs-carousel__peek {
+    flex: 0 0 clamp(96px, 16vw, 300px);
+    align-self: center;
+    height: clamp(220px, 26vw, 360px);
+    border: none;
+    padding: 0;
+    background: none;
+    cursor: pointer;
+    display: none;
+    overflow: hidden;
+  }
+
+  @media (min-width: 992px) {
+    .events-bs-carousel__peek {
+      display: block;
+    }
+  }
+
+  .events-bs-carousel__peek img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: .55;
+    transition: opacity .2s ease;
+  }
+
+  .events-bs-carousel__peek:hover img,
+  .events-bs-carousel__peek:focus-visible img {
+    opacity: .85;
+  }
+
+  .events-bs-carousel__nav {
+    display: inline-flex;
+    align-items: center;
+    gap: .375rem;
+    min-height: 2.75rem;
+    padding-inline: .5rem;
+    background: none;
+    border: none;
+    font-size: .85rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--bs-ink-soft);
+    cursor: pointer;
+    transition: color .2s ease;
+  }
+
+  .events-bs-carousel__nav:hover,
+  .events-bs-carousel__nav:focus-visible {
+    color: var(--bs-maroon);
+  }
+
+  .events-bs-carousel__segments {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    flex: 1 1 auto;
+    max-width: 420px;
+  }
+
+  .events-bs-carousel__segment {
+    flex: 1 1 auto;
+    height: 2px;
+    background-color: var(--bs-border-color);
+    transition: background-color .2s ease, height .2s ease;
+  }
+
+  .events-bs-carousel__segment.is-active {
+    height: 3px;
+    background-color: var(--bs-ochre-deep);
+  }
+
+  .events-bs-carousel__count {
+    letter-spacing: .04em;
+  }
+</style>

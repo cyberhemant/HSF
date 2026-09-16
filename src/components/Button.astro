@@ -1,27 +1,36 @@
 ---
+// §4 Buttons — thin wrapper over Bootstrap's native btn/outline system.
+// primary → btn-primary, outline-primary → btn-outline-primary (Bootstrap's
+// own outline convention, which is exactly what we hand-built before),
+// secondary → btn-outline-secondary, text → btn-link.
 export interface Props {
-  variant?: 'primary' | 'secondary' | 'text';
+  variant?: 'primary' | 'outline-primary' | 'secondary' | 'text';
   href?: string;
   disabled?: boolean;
-  onDark?: boolean;
   type?: 'button' | 'submit' | 'reset';
   class?: string;
 }
+
+const VARIANT_CLASS: Record<string, string> = {
+  primary: 'btn-primary',
+  'outline-primary': 'btn-outline-primary',
+  secondary: 'btn-outline-secondary',
+  text: 'btn-link text-decoration-underline',
+};
 
 const {
   variant = 'primary',
   href,
   disabled = false,
-  onDark = false,
   type = 'button',
   class: extraClass = '',
+  ...rest
 } = Astro.props;
 
 const classes = [
   'btn',
-  `btn--${variant}`,
-  onDark ? 'btn--on-dark' : '',
-  disabled ? 'is-disabled' : '',
+  VARIANT_CLASS[variant],
+  disabled ? 'disabled' : '',
   extraClass,
 ].filter(Boolean).join(' ');
 
@@ -34,6 +43,8 @@ const Tag = href && !disabled ? 'a' : 'button';
   type={Tag === 'button' ? type : undefined}
   disabled={Tag === 'button' && disabled ? true : undefined}
   aria-disabled={disabled ? 'true' : undefined}
+  tabindex={Tag === 'a' && disabled ? -1 : undefined}
+  {...rest}
 >
   <slot />
 </Tag>

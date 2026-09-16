@@ -1,0 +1,93 @@
+---
+// "Event Space" promo — full-bleed parallax banner (fixed background-attachment)
+// with a dark overlay for contrast, centered eyebrow/heading/lead/CTA in
+// cream text. Same overlay-on-image treatment as the Hero video section,
+// just as a static background image rather than video.
+import Tag from './Tag.astro';
+import Button from './Button.astro';
+
+export interface Props {
+  eyebrow?: string;
+  heading?: string;
+  lead?: string;
+  ctaLabel?: string;
+  ctaHref?: string;
+  image?: string;
+  class?: string;
+}
+
+const base = import.meta.env.BASE_URL;
+
+const {
+  eyebrow = 'Gatherings & Celebrations',
+  heading = 'Event Space',
+  lead = 'From intimate gatherings to milestone celebrations, host your event against the backdrop of the desert — surrounded by working farmland, shaded courtyards, and the quiet of Heenat Salma.',
+  ctaLabel = 'Enquire About Events',
+  ctaHref = `${base}/event-space/`,
+  image = 'https://heenatsalma.earth/wp-content/uploads/2024/04/dsc00685_sm.webp',
+  class: extraClass = '',
+} = Astro.props;
+---
+
+<section
+  class={['event-space', extraClass].filter(Boolean).join(' ')}
+  style={`background-image: linear-gradient(rgba(20, 8, 5, 0.55), rgba(20, 8, 5, 0.55)), url(${image});`}
+>
+  <div class="container">
+    <div class="event-space__content mx-auto text-center" data-aos="fade-up">
+      <Tag variant="plain" class="event-space__eyebrow">{eyebrow}</Tag>
+      <h2 class="display-4 mt-3 text-cream">{heading}</h2>
+      <p class="mt-4 fs-5 event-space__lead mx-auto">{lead}</p>
+      <Button variant="outline-primary" href={ctaHref} class="event-space__btn mt-4">{ctaLabel}</Button>
+    </div>
+  </div>
+</section>
+
+<style>
+  .event-space {
+    position: relative;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    padding-block: clamp(96px, 14vw, 160px);
+  }
+
+  /* iOS Safari never renders fixed backgrounds correctly, and repainting a
+     fixed background on scroll is expensive on any touch device — scroll
+     normally below desktop instead of faking the parallax. */
+  @media (max-width: 991.98px), (hover: none) {
+    .event-space {
+      background-attachment: scroll;
+    }
+  }
+
+  .event-space__content {
+    max-width: 40rem;
+  }
+
+  .event-space__eyebrow {
+    color: var(--bs-cream) !important;
+    opacity: .85;
+  }
+
+  .text-cream {
+    color: var(--bs-cream);
+  }
+
+  .event-space__lead {
+    color: var(--bs-cream);
+    opacity: .9;
+  }
+
+  .event-space__btn {
+    --bs-btn-color: var(--bs-cream);
+    --bs-btn-border-color: var(--bs-cream);
+    --bs-btn-hover-bg: var(--bs-cream);
+    --bs-btn-hover-color: var(--bs-maroon);
+    --bs-btn-hover-border-color: var(--bs-cream);
+    --bs-btn-active-bg: var(--bs-cream);
+    --bs-btn-active-color: var(--bs-maroon);
+    --bs-btn-active-border-color: var(--bs-cream);
+  }
+</style>

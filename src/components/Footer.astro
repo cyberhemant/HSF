@@ -1,0 +1,181 @@
+---
+// §9 Known Gaps "Footer component" — not in the source guidelines. Built in
+// Figma 01 Sep 2026: three link columns (THE FARM / VISIT / CONNECT), divider,
+// copyright line. Link labels and copyright are the real terms pulled from
+// the live site's own footer markup — column grouping is a proposed curation.
+import Icon from './Icon.astro';
+import SectionDivider from './SectionDivider.astro';
+import Divider from './Divider.astro';
+import Tag from './Tag.astro';
+import IconButton from './IconButton.astro';
+export interface Props {
+  columns?: { title: string; links: { label: string; href: string }[] }[];
+  social?: { icon: string; label: string; href: string }[];
+  copyright?: string;
+  class?: string;
+  image?: { src: string; alt: string };
+}
+
+const base = import.meta.env.BASE_URL;
+
+const {
+  image = { src: `${base}/images/footer- silhouette.png`, alt: 'An outdoor dining terrace overlooking the camp at Heenat Salma Farm' },
+  columns = [
+    {
+      title: 'The Farm',
+      links: [
+        { label: 'About', href: `${base}/about/` },
+        { label: 'Organic Regenerative Agriculture', href: `${base}/organic-regenerative-agriculture/` },
+        { label: 'Artisanal Kitchen', href: `${base}/artisanal-kitchen/` },
+        { label: 'Caravane Earth Academy', href: `${base}/caravane-earth-academy/` },
+        { label: 'Careers', href: `${base}/careers/` },
+      ],
+    },
+    {
+      title: 'Visit',
+      links: [
+        { label: 'Lodges', href: `${base}/lodges/` },
+        { label: 'Guest Journey', href: `${base}/guest-journey/` },
+        { label: 'Experiences', href: `${base}/experiences/` },
+        { label: 'Home Services', href: `${base}/home-services/` },
+        { label: 'Events', href: `${base}/events/` },
+      ],
+    },
+    {
+      title: 'Connect',
+      links: [
+        { label: 'Store', href: `${base}/store/` },
+        { label: 'Wellness', href: `${base}/wellness/` },
+        { label: 'Creative Residency', href: `${base}/creative-residency/` },
+        { label: 'Contact Us', href: `${base}/contact/` },
+        { label: 'Cookie Policy (EU)', href: `${base}/cookie-policy/` },
+      ],
+    },
+  ],
+  social = [
+    { icon: 'facebook', label: 'Facebook', href: 'https://www.facebook.com/' },
+    { icon: 'instagram', label: 'Instagram', href: 'https://www.instagram.com/' },
+    { icon: 'tiktok', label: 'TikTok', href: 'https://www.tiktok.com/' },
+    { icon: 'youtube', label: 'YouTube', href: 'https://www.youtube.com/' },
+    { icon: 'twitter', label: 'Twitter', href: 'https://twitter.com/' },
+    { icon: 'whatsapp', label: 'WhatsApp', href: 'https://www.whatsapp.com/' },
+    { icon: 'snapchat', label: 'Snapchat', href: 'https://www.snapchat.com/' },
+  ],
+  copyright = ' © 2026 Heenat Salma Farm by Caravane Earth Foundation',
+  class: extraClass = '',
+} = Astro.props;
+---
+<div class="footer-gredient pt-6 px-lg-0 px-3"> 
+  
+<footer class="footer-bg-wrapper" class={['', extraClass].filter(Boolean).join(' ')}>
+  <section class="position-relative" style="z-index: 1;">
+    <div class="container">
+      <div class="row">
+        <div class="col-12 col-md-6 col-lg-5 py-5">
+          <div>
+            <Tag variant="plain">Newsletter</Tag>
+          </div>
+          <div>
+            <h3 class="display-6 fw-bold">
+                Stay connected with Heenat Salma
+            </h3>
+            <p class="text-ink-faint">
+              Get the latest from our farm right to your inbox. Subscribe for updates and special offers.</h3>
+            </p>
+            <form class="d-flex  mt-1">
+              <div class="col-8">
+                <label class="form-label" for="ds-email">Email address</label>
+                <input type="email" class="form-control" id="ds-email" placeholder="name@example.com" />
+              </div>
+              <div class="col-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">Subscribe</button>
+                </div>
+            </form>
+          </div>
+        </div>
+        <div class="col-12 col-lg-2 "> </div>
+        <div class="col-12 col-md-6 col-lg-5 py-5">
+          <div>
+            <Tag variant="plain">Find us on social media</Tag>
+          </div>
+          <div>
+            <h3 class="display-6 fw-bold">
+                Follow Heenat Salma
+            </h3>
+            <p class="text-ink-faint">
+              Get the latest from our farm right to your inbox. Subscribe for updates and special offers.</h3>
+            </p>
+          </div>
+           <div class="d-flex flex-wrap gap-2">
+            {social.map((item) => (
+              <IconButton icon={item.icon} label={item.label} href={item.href} variant="outline" shape="square" size={20} />
+            ))}
+           </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <img class="footer-bg" src={image.src} alt={image.alt} class="img-fluid d-block mx-auto my-6" />
+  <div class="container footer-bg-content py-6">
+    <div class="row g-4 g-md-5">
+      {columns.map((col) => (
+        <div class="col-12 col-md-4">
+          <span class="badge bg-transparent text-maroon text-uppercase ls-tag p-0 mb-3 d-inline-block">{col.title}</span>
+          <ul class="list-unstyled d-flex flex-column gap-2">
+            {col.links.map((link) => (
+              <li><a class="link-ink-soft link-underline-opacity-0 link-underline-opacity-100-hover" href={link.href}>{link.label}</a></li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div> 
+  </div>
+</footer>
+<section class="pb-4">
+
+<div class="container ">
+  <Divider variant="palm" />
+    <div class="row   flex-wrap-reverse px-4"> 
+      <div class="col-12 col-lg-6 text-center text-lg-start ">
+        <span class="">{copyright}</span>
+      </div>
+      <div class="col-12 col-lg-6">
+       <div class="d-flex justify-content-center justify-content-lg-end">
+        <div class="">
+          <a class="link-ink-soft link-underline-opacity-0 link-underline-opacity-100-hover" href="">Terms of Use</a>
+        </div>
+        <div class=" ps-4">
+          <a class="link-ink-soft link-underline-opacity-0 link-underline-opacity-100-hover" href="">Privacy Policy</a>
+        </div>
+        
+      </div>
+      </div>
+    </div>
+  </div>
+</section>
+</div>
+<style>
+.footer-gredient{
+  background: linear-gradient(0deg, rgba(224, 216, 207, 1) 0%, rgba(249, 247, 245, 1) 100%);
+}
+.footer-bg {
+  position: absolute;
+  width: 100%;
+
+      bottom: 0;
+    mix-blend-mode: color-burn;
+opacity: 0.1;
+
+}
+.footer-bg-wrapper {
+  position: relative;
+  overflow: hidden;
+  /* background: #F9F7F5; */
+/* background: linear-gradient(0deg, rgba(224, 216, 207, 1) 0%, rgba(249, 247, 245, 1) 100%); */
+ 
+}
+.footer-bg-content {
+  position: relative;
+  z-index: 1;
+}
+</style>

@@ -1,0 +1,734 @@
+---
+import Base from '../../layouts/Base.astro';
+import Button from '../../components/Button.astro';
+import AnimatedOutlineButton from '../../components/AnimatedOutlineButton.astro';
+import IconButton from '../../components/IconButton.astro';
+import Tag from '../../components/Tag.astro';
+import Icon from '../../components/Icon.astro';
+import Divider from '../../components/Divider.astro';
+
+const base = import.meta.env.BASE_URL;
+
+const toc = [
+  ['foundations-color', 'Colors'],
+  ['foundations-typography', 'Typography'],
+  ['foundations-spacing', 'Spacing & Radius'],
+  ['buttons', 'Buttons'],
+  ['icon-buttons', 'Icon Buttons'],
+  ['button-group', 'Button Group'],
+  ['badges', 'Badges / Tags'],
+  ['dividers', 'Dividers'],
+  ['forms', 'Forms'],
+  ['navs-tabs', 'Navs & Tabs'],
+  ['navbar-offcanvas', 'Navbar & Offcanvas'],
+  ['cards', 'Cards'],
+  ['alerts', 'Alerts'],
+  ['breadcrumb', 'Breadcrumb'],
+  ['pagination', 'Pagination'],
+  ['list-group', 'List Group'],
+  ['progress', 'Progress'],
+  ['spinners', 'Spinners'],
+  ['accordion', 'Accordion'],
+  ['dropdowns', 'Dropdowns'],
+  ['modal', 'Modal'],
+  ['toasts', 'Toasts'],
+  ['tooltips-popovers', 'Tooltips & Popovers'],
+  ['carousel', 'Carousel'],
+  ['placeholders', 'Placeholders'],
+  ['close-button', 'Close Button'],
+  ['tables', 'Tables'],
+  ['scrollspy', 'Scrollspy'],
+];
+
+const colorGroups = [
+  { group: 'Primary', swatches: [
+    { name: 'Maroon', cls: 'primary', hex: '#491010', note: 'Headings, primary button fill. AAA everywhere.' },
+    { name: 'Ochre', cls: 'ochre', hex: '#A6885D', note: 'Icons, hairlines, dividers ONLY — fails contrast as text.' },
+    { name: 'Ochre Deep', cls: 'secondary', hex: '#8B6F45', note: 'The text-safe ochre (Bootstrap "secondary").' },
+  ]},
+  { group: 'Surface', swatches: [
+    { name: 'Cream', cls: 'cream', hex: '#F9F7F5', note: 'Page canvas (Bootstrap "light").' },
+    { name: 'Beige', cls: 'beige', hex: '#E0D8CF', note: 'Section washes, chip fill.' },
+    { name: 'Sand', cls: 'sand', hex: '#EAE5D1', note: 'Proposed extension — warmer neutral wash, between cream and beige.' },
+  ]},
+  { group: 'Text', swatches: [
+    { name: 'Ink Soft', cls: 'ink-soft', hex: '#6B3226', note: 'Default body copy.' },
+    { name: 'Ink Faint', cls: 'ink-faint', hex: '#9C8574', note: 'Metadata, captions, disabled.' },
+  ]},
+  { group: 'Semantic', swatches: [
+    { name: 'Danger', cls: 'danger', hex: '#A63B2A', note: 'Validation, destructive.' },
+    { name: 'Success', cls: 'success', hex: '#5B6E3A', note: 'Confirmation, valid field.' },
+    { name: 'Warning', cls: 'warning', hex: '#B9975B', note: 'Proposed extension — not in DESIGN.md’s 5-color palette.' },
+    { name: 'Info', cls: 'info', hex: '#7C8B74', note: 'Proposed extension — muted sage, no foreign hue introduced.' },
+  ]},
+];
+
+const typeRamp = [
+  { role: 'H1', el: 'h1', size: '2.1rem / 800 / 1.1' },
+  { role: 'H2', el: 'h2', size: '1.55rem / 700 / 1.2' },
+  { role: 'H3', el: 'h3', size: '1.25rem / 700 / 1.3' },
+  { role: 'H4', el: 'h4', size: '1.06rem / 600 / 1.4' },
+];
+
+const spacing = [1, 2, 3, 4, 5, 6, 7];
+const radii = [
+  { name: 'rounded-1', use: 'Buttons, inputs — 3px, the family default' },
+  { name: 'rounded-2', use: 'Callout / quote blocks — 2px' },
+  { name: 'rounded-3', use: 'Cards, panels — 6px' },
+  { name: 'rounded-pill', use: 'Tags, circular Icon Buttons — the one full-pill radius' },
+];
+
+const experiences = [
+  { name: 'Sunrise Farm Walk', duration: '90 min', price: 'OMR 12' },
+  { name: 'Artisanal Kitchen Workshop', duration: '3 hrs', price: 'OMR 35' },
+  { name: 'Wellness & Sound Bath', duration: '60 min', price: 'OMR 18' },
+];
+---
+
+<Base title="Design System — Heenat Salma Farm" description="Every Bootstrap component, themed to the brand.">
+  <div class="container py-6">
+    <header class="measure mb-6">
+      <Tag>Design System</Tag>
+      <h1 class="mt-3">Heenat Salma Farm</h1>
+      <p class="mt-3 fs-5">
+        Bootstrap 5.3, themed entirely through Sass variables and a thin custom layer from
+        <code>DESIGN.md</code> — no component here carries a hand-picked one-off color. Every
+        component Bootstrap ships is catalogued below in its themed state.
+      </p>
+      <p class="mt-2"><a href={base}>&larr; Back to versions</a></p>
+    </header>
+
+    <div class="row">
+      <div class="col-lg-3 d-none d-lg-block">
+        <nav class="nav nav-pills flex-column sticky-top" style="top: 1.5rem;">
+          {toc.map(([id, label]) => (
+            <a class="nav-link text-ink-soft" href={`#${id}`}>{label}</a>
+          ))}
+        </nav>
+      </div>
+
+      <div class="col-lg-9">
+        <!-- ================= COLOR ================= -->
+        <section id="foundations-color" class="pb-6 mb-6 border-bottom">
+          <h2>Colors</h2>
+          <p class="text-ink-soft">Every theme color, generated as <code>--bs-*</code> custom properties and <code>.bg-*</code> / <code>.text-*</code> / <code>.btn-*</code> utilities.</p>
+
+          {colorGroups.map((g) => (
+            <div class="mt-4">
+              <h3 class="h5">{g.group}</h3>
+              <div class="row g-3 mt-1">
+                {g.swatches.map((s) => (
+                  <div class="col-12 col-md-6 col-lg-4">
+                    <div class="d-flex gap-3 align-items-start p-3 bg-white border rounded-3">
+                      <div class={`bg-${s.cls} border rounded-2 flex-shrink-0`} style="width: 48px; height: 48px;"></div>
+                      <div>
+                        <strong class="d-block">{s.name}</strong>
+                        <code class="small">{s.hex}</code>
+                        <p class="small text-ink-faint mb-0">{s.note}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </section>
+
+        <!-- ================= TYPOGRAPHY ================= -->
+        <section id="foundations-typography" class="pb-6 mb-6 border-bottom">
+          <h2>Typography</h2>
+          <p class="text-ink-soft">Alegreya (serif) carries the brand moment; Alegreya Sans carries function.</p>
+
+          {typeRamp.map((t) => {
+            const HeadingTag = t.el;
+            return (
+              <div class="row py-3 border-top align-items-baseline">
+                <div class="col-md-3">
+                  <strong>{t.role}</strong>
+                  <div class="small text-ink-faint">{t.size}</div>
+                </div>
+                <div class="col-md-9">
+                  <HeadingTag class="mb-0">The farm wakes before we do</HeadingTag>
+                </div>
+              </div>
+            );
+          })}
+
+          <div class="row py-3 border-top align-items-baseline">
+            <div class="col-md-3"><strong>Body / Link</strong></div>
+            <div class="col-md-9">
+              <p class="mb-1">Paragraph text runs at the base size with a <a href="#">text-button-style link</a> inline.</p>
+              <a class="text-nav-link" href="#">Uppercase Nav Link</a>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= SPACING & RADIUS ================= -->
+        <section id="foundations-spacing" class="pb-6 mb-6 border-bottom">
+          <h2>Spacing &amp; Radius</h2>
+          <p class="text-ink-soft">4–64px spacing scale (Bootstrap's spacer map, extended to keys 6–7); four radii, one of them a reserved full pill.</p>
+
+          <div class="mt-4">
+            {spacing.map((s) => (
+              <div class="d-flex align-items-center gap-3 py-1">
+                <code style="width: 2rem;">{s}</code>
+                <div class={`bg-ochre p-${s}`} style="height: 16px;"></div>
+              </div>
+            ))}
+          </div>
+
+          <div class="row g-4 mt-4">
+            {radii.map((r) => (
+              <div class="col-6 col-md-3">
+                <div class={`bg-beige border ${r.name}`} style="height: 64px;"></div>
+                <code class="small d-block mt-2">{r.name}</code>
+                <span class="small text-ink-faint">{r.use}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <!-- ================= BUTTONS ================= -->
+        <section id="buttons" class="pb-6 mb-6 border-bottom">
+          <h2>Buttons</h2>
+          <p class="text-ink-soft">Bootstrap's native fill/outline/link tiers, tab through them for the themed ochre focus ring.</p>
+
+          <div class="d-flex flex-wrap gap-3 align-items-center mt-3">
+            <Button variant="primary">Plan a Visit</Button>
+            <Button variant="outline-primary">Plan a Visit</Button>
+            <Button variant="secondary">Read the Story</Button>
+            <Button variant="text">See all Experiences</Button>
+          </div>
+          <div class="d-flex flex-wrap gap-3 align-items-center mt-3">
+            <button class="btn btn-primary btn-lg">Large</button>
+            <button class="btn btn-primary">Default</button>
+            <button class="btn btn-primary btn-sm">Small</button>
+            <Button variant="primary" disabled>Disabled</Button>
+          </div>
+
+          <h3 class="h5 mt-5">Animated Outline</h3>
+          <p class="text-ink-soft">
+            <code>AnimatedOutlineButton.astro</code> — border wipes away and an underline grows
+            on hover/focus, in place of Bootstrap's native fill-in. The arrow is a pure
+            <code>data-arrow</code> toggle, so the same two variants below cover all four states.
+          </p>
+          <div class="d-flex flex-wrap gap-3 align-items-center mt-3">
+            <AnimatedOutlineButton variant="outline-primary">Plan a Visit</AnimatedOutlineButton>
+            <AnimatedOutlineButton variant="outline-primary" arrow>Plan a Visit</AnimatedOutlineButton>
+            <AnimatedOutlineButton variant="outline-secondary">Read the Story</AnimatedOutlineButton>
+            <AnimatedOutlineButton variant="outline-secondary" arrow>Read the Story</AnimatedOutlineButton>
+            <AnimatedOutlineButton variant="outline-primary" disabled>Disabled</AnimatedOutlineButton>
+          </div>
+        </section>
+
+        <!-- ================= ICON BUTTONS ================= -->
+        <section id="icon-buttons" class="pb-6 mb-6 border-bottom">
+          <h2>Icon Buttons</h2>
+          <p class="text-ink-soft">Bootstrap has no icon-only primitive — this is <code>.btn</code> + a fill/outline/link variant + <code>.rounded-circle</code>.</p>
+
+          <div class="d-flex flex-wrap gap-3 align-items-center mt-3">
+            <IconButton icon="menu" label="Open menu" variant="plain" shape="square" />
+            <IconButton icon="menu" label="Open menu" variant="plain" shape="circle" />
+            <IconButton icon="search" label="Search" variant="outline" shape="square" />
+            <IconButton icon="search" label="Search" variant="outline" shape="circle" />
+            <IconButton icon="add" label="Add" variant="filled" shape="square" />
+            <IconButton icon="add" label="Add" variant="filled" shape="circle" />
+            <IconButton icon="close" label="Close" variant="outline" disabled />
+          </div>
+        </section>
+
+        <!-- ================= BUTTON GROUP ================= -->
+        <section id="button-group" class="pb-6 mb-6 border-bottom">
+          <h2>Button Group</h2>
+          <div class="btn-group mt-3" role="group" aria-label="Guest count">
+            <button type="button" class="btn btn-outline-secondary">1 Guest</button>
+            <button type="button" class="btn btn-outline-secondary active">2 Guests</button>
+            <button type="button" class="btn btn-outline-secondary">4 Guests</button>
+          </div>
+        </section>
+
+        <!-- ================= BADGES ================= -->
+        <section id="badges" class="pb-6 mb-6 border-bottom">
+          <h2>Badges / Tags</h2>
+          <p class="text-ink-soft">Small taxonomy chips only — the one other user of the full-pill radius besides the circular Icon Button.</p>
+          <div class="d-flex flex-wrap gap-2 mt-3">
+            <Tag>Now Booking</Tag>
+            <Tag>Seasonal</Tag>
+            <Tag variant="filled">Wellness</Tag>
+            <Tag variant="plain">Farm Fresh</Tag>
+            <span class="badge text-bg-danger rounded-pill">Sold Out</span>
+          </div>
+        </section>
+
+        <!-- ================= DIVIDERS ================= -->
+        <section id="dividers" class="pb-6 mb-6 border-bottom">
+          <h2>Dividers</h2>
+          <p class="text-ink-soft">
+            Four jobs, four marks — all built from the same hairline (<code>#DCD0C0</code>) +
+            ochre vocabulary per <code>DESIGN.md</code> §4, rather than four unrelated one-offs.
+            Use one weight of divider per page.
+          </p>
+
+          <div class="mt-4 p-3 bg-white border rounded-3">
+            <p class="small text-ink-faint mb-1"><code>variant="diamond"</code> — the plain section break, anywhere two sections meet.</p>
+            <Divider variant="diamond" />
+          </div>
+
+          <div class="mt-3 p-3 bg-white border rounded-3">
+            <p class="small text-ink-faint mb-1"><code>variant="palm"</code> — the signature break; the farm's own palm-frond mark, used sparingly.</p>
+            <Divider variant="palm" />
+          </div>
+
+          <div class="mt-3 p-3 bg-white border rounded-3">
+            <p class="small text-ink-faint mb-1"><code>variant="dots"</code> — a soft pause rather than a break, between stanzas or short blocks.</p>
+            <Divider variant="dots" />
+          </div>
+
+          <div class="mt-3 p-3 bg-white border rounded-3">
+            <p class="small text-ink-faint mb-1"><code>variant="hizb"</code> — a colophon rule; closes a document, never sits mid-page.</p>
+            <Divider variant="hizb" />
+          </div>
+        </section>
+
+        <!-- ================= FORMS ================= -->
+        <section id="forms" class="pb-6 mb-6 border-bottom">
+          <h2>Forms</h2>
+          <form class="row g-3 mt-1" novalidate>
+            <div class="col-md-6">
+              <label class="form-label" for="ds-name">Full name</label>
+              <input type="text" class="form-control" id="ds-name" placeholder="Your name" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="ds-experience">Experience</label>
+              <select class="form-select" id="ds-experience">
+                <option selected>Choose one&hellip;</option>
+                <option>Sunrise Farm Walk</option>
+                <option>Artisanal Kitchen Workshop</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="ds-search">Search the site</label>
+              <div class="input-group">
+                <span class="input-group-text"><Icon name="search" size={16} /></span>
+                <input type="text" class="form-control" id="ds-search" placeholder="Lodges, events, wellness&hellip;" />
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="ds-floating">Floating label</label>
+              <div class="form-floating">
+                <input type="email" class="form-control" id="ds-floating" placeholder="name@example.com" />
+                <label for="ds-floating">Email address</label>
+              </div>
+            </div>
+            <div class="col-12">
+              <label class="form-label" for="ds-range">Party size</label>
+              <input type="range" class="form-range" id="ds-range" min="1" max="10" />
+            </div>
+            <div class="col-12 d-flex flex-wrap gap-4">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="ds-check1" checked />
+                <label class="form-check-label" for="ds-check1">Newsletter</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="ds-radio" id="ds-radio1" checked />
+                <label class="form-check-label" for="ds-radio1">Morning</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="ds-radio" id="ds-radio2" />
+                <label class="form-check-label" for="ds-radio2">Afternoon</label>
+              </div>
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" role="switch" id="ds-switch" />
+                <label class="form-check-label" for="ds-switch">Notify me</label>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="ds-invalid">Validation state</label>
+              <input type="text" class="form-control is-invalid" id="ds-invalid" value="not-an-email" />
+              <div class="invalid-feedback">Please enter a valid email.</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="ds-valid">Validation state</label>
+              <input type="text" class="form-control is-valid" id="ds-valid" value="guest@example.com" />
+              <div class="valid-feedback">Looks good.</div>
+            </div>
+          </form>
+        </section>
+
+        <!-- ================= NAVS & TABS ================= -->
+        <section id="navs-tabs" class="pb-6 mb-6 border-bottom">
+          <h2>Navs &amp; Tabs</h2>
+
+          <ul class="nav nav-tabs mt-3" id="ds-tab" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active" id="ds-tab-farm" data-bs-toggle="tab" data-bs-target="#ds-tab-farm-pane" type="button" role="tab">The Farm</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="ds-tab-visit" data-bs-toggle="tab" data-bs-target="#ds-tab-visit-pane" type="button" role="tab">Visit</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="ds-tab-connect" data-bs-toggle="tab" data-bs-target="#ds-tab-connect-pane" type="button" role="tab">Connect</button>
+            </li>
+          </ul>
+          <div class="tab-content p-3 border border-top-0" id="ds-tab-content">
+            <div class="tab-pane fade show active" id="ds-tab-farm-pane" role="tabpanel">Organic regenerative agriculture, an artisanal kitchen, and a working herd.</div>
+            <div class="tab-pane fade" id="ds-tab-visit-pane" role="tabpanel">Lodges, a guided guest journey, and seasonal experiences.</div>
+            <div class="tab-pane fade" id="ds-tab-connect-pane" role="tabpanel">Store, contact, and the Caravane Earth Academy.</div>
+          </div>
+
+          <ul class="nav nav-pills mt-4">
+            <li class="nav-item"><a class="nav-link active" href="#">Overview</a></li>
+            <li class="nav-item"><a class="nav-link" href="#">Gallery</a></li>
+            <li class="nav-item"><a class="nav-link disabled" aria-disabled="true">Reviews</a></li>
+          </ul>
+        </section>
+
+        <!-- ================= NAVBAR & OFFCANVAS ================= -->
+        <section id="navbar-offcanvas" class="pb-6 mb-6 border-bottom">
+          <h2>Navbar &amp; Offcanvas</h2>
+          <p class="text-ink-soft">
+            Live at the top of every page — <code>Header.astro</code> is a themed <code>.navbar</code>,
+            and its hamburger opens <code>Nav.astro</code>, a themed <code>.offcanvas.offcanvas-start</code>
+            with the real 15-item nav. A second instance, off the end side, is demoed here so the
+            component itself is visible without duplicating the live site nav.
+          </p>
+          <button class="btn btn-outline-primary mt-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#ds-offcanvas-end" aria-controls="ds-offcanvas-end">
+            Open end offcanvas
+          </button>
+          <div class="offcanvas offcanvas-end" tabindex="-1" id="ds-offcanvas-end" aria-labelledby="ds-offcanvas-end-label">
+            <div class="offcanvas-header">
+              <h5 class="offcanvas-title" id="ds-offcanvas-end-label">Filter Experiences</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+            <div class="offcanvas-body">
+              <p class="text-ink-soft">A right-side offcanvas — the same component as the site nav, opposite side.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= CARDS ================= -->
+        <section id="cards" class="pb-6 mb-6 border-bottom">
+          <h2>Cards</h2>
+          <div class="row g-4 mt-1">
+            <div class="col-12 col-md-4">
+              <div class="card h-100">
+                <div class="bg-beige ratio ratio-16x10"></div>
+                <div class="card-body">
+                  <h3 class="h5 card-title">Sunrise Farm Walk</h3>
+                  <p class="card-text small text-ink-soft">A guided walk through the working farm at first light.</p>
+                  <Button variant="outline-primary">Book Now</Button>
+                </div>
+              </div>
+            </div>
+            <div class="col-12 col-md-4">
+              <div class="card h-100">
+                <div class="card-header">Featured</div>
+                <div class="card-body">
+                  <h3 class="h5 card-title">Artisanal Kitchen</h3>
+                  <p class="card-text small text-ink-soft">Hands-on preserving and baking with the farm's own harvest.</p>
+                </div>
+                <div class="card-footer text-ink-faint small">Updated this season</div>
+              </div>
+            </div>
+            <div class="col-12 col-md-4">
+              <div class="card h-100 bg-maroon text-white">
+                <div class="card-body">
+                  <h3 class="h5 card-title">Stay With Us</h3>
+                  <p class="card-text small">Three lodges, each opening onto the working farm.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= ALERTS ================= -->
+        <section id="alerts" class="pb-6 mb-6 border-bottom">
+          <h2>Alerts</h2>
+          <div class="alert alert-primary mt-3" role="alert">Booking confirmed — check your email for details.</div>
+          <div class="alert alert-success" role="alert">Your message has been sent.</div>
+          <div class="alert alert-danger" role="alert">That date is fully booked — try another week.</div>
+          <div class="alert alert-warning alert-dismissible fade show mb-0" role="alert">
+            Some experiences are weather-dependent this season.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        </section>
+
+        <!-- ================= BREADCRUMB ================= -->
+        <section id="breadcrumb" class="pb-6 mb-6 border-bottom">
+          <h2>Breadcrumb</h2>
+          <nav class="mt-3" aria-label="breadcrumb">
+            <ol class="breadcrumb">
+              <li class="breadcrumb-item"><a href="#">Home</a></li>
+              <li class="breadcrumb-item"><a href="#">Experiences</a></li>
+              <li class="breadcrumb-item active" aria-current="page">Wellness</li>
+            </ol>
+          </nav>
+        </section>
+
+        <!-- ================= PAGINATION ================= -->
+        <section id="pagination" class="pb-6 mb-6 border-bottom">
+          <h2>Pagination</h2>
+          <nav class="mt-3" aria-label="Journal pages">
+            <ul class="pagination">
+              <li class="page-item disabled"><span class="page-link">Previous</span></li>
+              <li class="page-item active"><span class="page-link">1</span></li>
+              <li class="page-item"><a class="page-link" href="#">2</a></li>
+              <li class="page-item"><a class="page-link" href="#">3</a></li>
+              <li class="page-item"><a class="page-link" href="#">Next</a></li>
+            </ul>
+          </nav>
+        </section>
+
+        <!-- ================= LIST GROUP ================= -->
+        <section id="list-group" class="pb-6 mb-6 border-bottom">
+          <h2>List Group</h2>
+          <ul class="list-group mt-3" style="max-width: 24rem;">
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Guest Journey
+              <span class="badge text-bg-secondary rounded-pill">New</span>
+            </li>
+            <li class="list-group-item active">Lodges</li>
+            <li class="list-group-item disabled">Careers (closed)</li>
+            <li class="list-group-item">Contact Us</li>
+          </ul>
+        </section>
+
+        <!-- ================= PROGRESS ================= -->
+        <section id="progress" class="pb-6 mb-6 border-bottom">
+          <h2>Progress</h2>
+          <div class="progress mt-3" role="progressbar" aria-label="Booking progress" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-bar" style="width: 25%">Step 1 of 4</div>
+          </div>
+          <div class="progress mt-2" role="progressbar" aria-label="Season occupancy" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-bar bg-ochre-deep progress-bar-striped progress-bar-animated" style="width: 70%"></div>
+          </div>
+        </section>
+
+        <!-- ================= SPINNERS ================= -->
+        <section id="spinners" class="pb-6 mb-6 border-bottom">
+          <h2>Spinners</h2>
+          <div class="d-flex gap-4 align-items-center mt-3">
+            <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading&hellip;</span></div>
+            <div class="spinner-grow text-secondary" role="status"><span class="visually-hidden">Loading&hellip;</span></div>
+          </div>
+        </section>
+
+        <!-- ================= ACCORDION ================= -->
+        <section id="accordion" class="pb-6 mb-6 border-bottom">
+          <h2>Accordion</h2>
+          <p class="text-ink-soft">§4's documented use case — FAQ-style content, booking policy detail.</p>
+          <div class="accordion mt-3" id="ds-accordion">
+            <div class="accordion-item">
+              <h3 class="accordion-header">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#ds-acc-1">What should I bring?</button>
+              </h3>
+              <div id="ds-acc-1" class="accordion-collapse collapse show" data-bs-parent="#ds-accordion">
+                <div class="accordion-body">Comfortable shoes and sun protection — most experiences run outdoors.</div>
+              </div>
+            </div>
+            <div class="accordion-item">
+              <h3 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#ds-acc-2">What's the cancellation policy?</button>
+              </h3>
+              <div id="ds-acc-2" class="accordion-collapse collapse" data-bs-parent="#ds-accordion">
+                <div class="accordion-body">Full refund up to 48 hours before your booking.</div>
+              </div>
+            </div>
+            <div class="accordion-item">
+              <h3 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#ds-acc-3">Are children welcome?</button>
+              </h3>
+              <div id="ds-acc-3" class="accordion-collapse collapse" data-bs-parent="#ds-accordion">
+                <div class="accordion-body">Yes — the Guest Journey team can suggest age-appropriate experiences.</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= DROPDOWNS ================= -->
+        <section id="dropdowns" class="pb-6 mb-6 border-bottom">
+          <h2>Dropdowns</h2>
+          <div class="dropdown mt-3">
+            <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+              Sort Experiences
+            </button>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="#">Most Popular</a></li>
+              <li><a class="dropdown-item" href="#">Price: Low to High</a></li>
+              <li><hr class="dropdown-divider" /></li>
+              <li><a class="dropdown-item disabled" aria-disabled="true">Sold Out (hidden)</a></li>
+            </ul>
+          </div>
+        </section>
+
+        <!-- ================= MODAL ================= -->
+        <section id="modal" class="pb-6 mb-6 border-bottom">
+          <h2>Modal</h2>
+          <button type="button" class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#ds-modal">
+            Reserve a Lodge
+          </button>
+          <div class="modal fade" id="ds-modal" tabindex="-1" aria-labelledby="ds-modal-label" aria-hidden="true">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h3 class="modal-title h5" id="ds-modal-label">Reserve a Lodge</h3>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  <p>Three lodges open directly onto the working farm — availability is confirmed by our Guest Journey team.</p>
+                </div>
+                <div class="modal-footer">
+                  <Button variant="secondary" class="btn-sm" data-bs-dismiss="modal">Close</Button>
+                  <Button variant="primary" class="btn-sm">Send Request</Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= TOASTS ================= -->
+        <section id="toasts" class="pb-6 mb-6 border-bottom">
+          <h2>Toasts</h2>
+          <button type="button" class="btn btn-outline-primary mt-3" id="ds-toast-trigger">Show toast</button>
+          <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1080;">
+            <div id="ds-toast" class="toast" role="status" aria-live="polite" aria-atomic="true">
+              <div class="toast-header">
+                <strong class="me-auto">Heenat Salma Farm</strong>
+                <small class="text-ink-faint">just now</small>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+              </div>
+              <div class="toast-body">Your booking request was sent.</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= TOOLTIPS & POPOVERS ================= -->
+        <section id="tooltips-popovers" class="pb-6 mb-6 border-bottom">
+          <h2>Tooltips &amp; Popovers</h2>
+          <div class="d-flex flex-wrap gap-3 mt-3">
+            <button class="btn btn-outline-secondary" data-bs-toggle="tooltip" data-bs-placement="top" title="Phosphor Thin, 20px, ochre-deep">
+              Hover for tooltip
+            </button>
+            <button class="btn btn-outline-secondary" data-bs-toggle="popover" data-bs-title="Guest Journey" data-bs-content="A dedicated team plans each stay from arrival to departure.">
+              Click for popover
+            </button>
+          </div>
+        </section>
+
+        <!-- ================= CAROUSEL ================= -->
+        <section id="carousel" class="pb-6 mb-6 border-bottom">
+          <h2>Carousel</h2>
+          <div id="ds-carousel" class="carousel slide mt-3" data-bs-ride="false">
+            <div class="carousel-indicators">
+              <button type="button" data-bs-target="#ds-carousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+              <button type="button" data-bs-target="#ds-carousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
+              <button type="button" data-bs-target="#ds-carousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
+            </div>
+            <div class="carousel-inner">
+              <div class="carousel-item active">
+                <div class="bg-beige ratio ratio-16x10"></div>
+                <div class="carousel-caption d-none d-md-block"><h5>The Farm</h5></div>
+              </div>
+              <div class="carousel-item">
+                <div class="bg-ochre ratio ratio-16x10"></div>
+                <div class="carousel-caption d-none d-md-block"><h5>The Lodges</h5></div>
+              </div>
+              <div class="carousel-item">
+                <div class="bg-maroon ratio ratio-16x10"></div>
+                <div class="carousel-caption d-none d-md-block"><h5>The Kitchen</h5></div>
+              </div>
+            </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#ds-carousel" data-bs-slide="prev">
+              <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+              <span class="visually-hidden">Previous</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#ds-carousel" data-bs-slide="next">
+              <span class="carousel-control-next-icon" aria-hidden="true"></span>
+              <span class="visually-hidden">Next</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- ================= PLACEHOLDERS ================= -->
+        <section id="placeholders" class="pb-6 mb-6 border-bottom">
+          <h2>Placeholders</h2>
+          <p class="text-ink-soft">Loading-state skeletons, for content still being fetched.</p>
+          <div class="card mt-3" style="max-width: 24rem;" aria-hidden="true">
+            <div class="card-body placeholder-glow">
+              <h3 class="h5 card-title placeholder col-6"></h3>
+              <p class="card-text">
+                <span class="placeholder col-7"></span>
+                <span class="placeholder col-4"></span>
+                <span class="placeholder col-4"></span>
+                <span class="placeholder col-6"></span>
+              </p>
+              <span class="btn btn-primary disabled placeholder col-4"></span>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= CLOSE BUTTON ================= -->
+        <section id="close-button" class="pb-6 mb-6 border-bottom">
+          <h2>Close Button</h2>
+          <div class="d-flex gap-3 align-items-center mt-3 p-3 bg-white border rounded-3" style="max-width: 16rem;">
+            <span class="flex-grow-1 small">Dismissible row</span>
+            <button type="button" class="btn-close" aria-label="Close"></button>
+          </div>
+        </section>
+
+        <!-- ================= TABLES ================= -->
+        <section id="tables" class="pb-6 mb-6 border-bottom">
+          <h2>Tables</h2>
+          <div class="table-responsive mt-3">
+            <table class="table table-striped table-hover align-middle">
+              <thead>
+                <tr><th scope="col">Experience</th><th scope="col">Duration</th><th scope="col">Price</th></tr>
+              </thead>
+              <tbody>
+                {experiences.map((e) => (
+                  <tr>
+                    <td>{e.name}</td>
+                    <td>{e.duration}</td>
+                    <td>{e.price}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ================= SCROLLSPY ================= -->
+        <section id="scrollspy" class="pb-6 mb-6 border-bottom">
+          <h2>Scrollspy</h2>
+          <p class="text-ink-soft">A self-contained example (Bootstrap's own documented pattern) — scroll inside the box.</p>
+          <div class="row mt-3">
+            <div class="col-4">
+              <nav id="ds-spy-nav" class="nav nav-pills flex-column">
+                <a class="nav-link" href="#ds-spy-one">One</a>
+                <a class="nav-link" href="#ds-spy-two">Two</a>
+                <a class="nav-link" href="#ds-spy-three">Three</a>
+              </nav>
+            </div>
+            <div class="col-8">
+              <div
+                data-bs-spy="scroll"
+                data-bs-target="#ds-spy-nav"
+                data-bs-smooth-scroll="true"
+                tabindex="0"
+                class="p-3 bg-white border rounded-3"
+                style="height: 140px; overflow-y: scroll;"
+              >
+                <h4 id="ds-spy-one" class="h6">One</h4>
+                <p class="small">Organic regenerative agriculture underpins everything the farm grows.</p>
+                <h4 id="ds-spy-two" class="h6">Two</h4>
+                <p class="small">The artisanal kitchen turns that harvest into meals for guests.</p>
+                <h4 id="ds-spy-three" class="h6">Three</h4>
+                <p class="small">And the lodges put guests in the middle of it, not beside it.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+</Base>

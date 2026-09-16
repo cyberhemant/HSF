@@ -1,0 +1,117 @@
+---
+// §9 Known Gaps "Nav pattern & menu content" — left-side off-canvas panel.
+// Restructured 10 Sep 2026 at client request from a flat 15-item mirror of
+// the real site's nav into curated groups (Stay / Experiences / The Farm),
+// matching Footer.astro's own column groupings for a consistent information
+// architecture across the two. Built on Bootstrap's Offcanvas component:
+// backdrop, Escape-to-close, and focus handling all come from
+// bootstrap.bundle.js — no custom JS needed.
+import Icon from './Icon.astro';
+
+export interface Props {
+  logotree?: { src: string; alt: string };
+  logoSrc?: string;
+  id?: string;
+  groups?: { heading: string; items: { label: string; href: string }[] }[];
+  trailingLinks?: { label: string; href: string }[];
+  instagramHref?: string;
+  class?: string;
+}
+
+const base = import.meta.env.BASE_URL;
+
+const {
+  logotree = { src: `${base}/images/hsf-bg-logo-tree.png`, alt: 'Heenat Salma Farm' },
+  logoSrc = `${base}/images/color-hsf-logo.png`,
+  id = 'site-nav',
+  groups = [
+    {
+      heading: 'Stay',
+      items: [
+        { label: 'Lodges', href: `${base}/lodges/` },
+        { label: 'Guest Journey', href: `${base}/guest-journey/` },
+      ],
+    },
+    {
+      heading: 'Experiences',
+      items: [
+        { label: 'Artisanal Experiences', href: `${base}/artisanal-experiences/` },
+        { label: 'Wellness', href: `${base}/wellness/` },
+        { label: 'Creative Residency', href: `${base}/creative-residency/` },
+        { label: 'Home Services', href: `${base}/home-services/` },
+      ],
+    },
+    {
+      heading: 'The Farm',
+      items: [
+        { label: 'Organic Regenerative Agriculture', href: `${base}/organic-regenerative-agriculture/` },
+        { label: 'Artisanal Kitchen', href: `${base}/artisanal-kitchen/` },
+        { label: 'Caravane Earth Academy', href: `${base}/caravane-earth-academy/` },
+      ],
+    },
+  ],
+  trailingLinks = [
+    { label: 'Events', href: `${base}/events/` },
+    { label: 'Shop', href: `${base}/store/` },
+    { label: 'About', href: `${base}/about/` },
+  ],
+  instagramHref = 'https://www.instagram.com/',
+  class: extraClass = '',
+} = Astro.props;
+---
+
+<div class={['offcanvas offcanvas-start bg-sand menu-tree', extraClass].filter(Boolean).join(' ')} tabindex="-1" id={id} aria-labelledby={`${id}-label`} >
+  <div class="offcanvas-header border-bottom pb-2">
+    <div id={`${id}-label`} class="">
+       <img src={logoSrc}  alt="Heenat Salma Farm" class="" style="max-height: 40px;" />
+    </div>
+    <button
+      type="button"
+      class="btn btn-link icon-btn text-decoration-none text-ochre-deep p-0 ms-auto"
+      data-bs-dismiss="offcanvas"
+      aria-label="Close menu"
+    >
+      <Icon name="close" size={32} />
+    </button>
+  </div>
+
+  <div class="offcanvas-body d-flex flex-column">
+    {groups.map((group) => (
+      <div class="nav-group mb-4">
+        <span class="badge bg-transparent text-ochre-deep text-uppercase ls-tag p-0 pb-2 mb-2 d-inline-block border-bottom">{group.heading}</span>
+        <ul class="list-unstyled mb-0">
+          {group.items.map((link) => (
+            <li class="reveal">
+              <a class="text-nav-link" href={link.href}>{link.label}</a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    ))}
+
+    <ul class="list-unstyled mb-0">
+      {trailingLinks.map((link) => (
+        <li>
+          <a class="text-nav-link" href={link.href}>{link.label}</a>
+        </li>
+      ))}
+    </ul>
+
+    
+  </div>
+</div>
+<style define:vars={{ bgUrl: `url(${logotree.src})` }}>
+  .menu-tree {
+    background-image: var(--bgUrl);
+    background-size: 38% auto;
+    background-position: bottom -5px right 10px;
+    background-repeat: no-repeat;
+    min-height: 400px;
+    transition: background-size .3s ease-in-out;
+  }
+  .show.menu-tree {
+   
+     background-size: 40% auto;
+   
+  }
+</style>

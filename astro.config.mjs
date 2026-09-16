@@ -9,4 +9,16 @@ export default defineConfig({
   build: {
     format: 'directory',
   },
+  vite: {
+    css: {
+      preprocessorOptions: {
+        // Bootstrap's own Sass still uses pre-module color functions;
+        // quietDeps silences warnings from node_modules, not our own code.
+        scss: {
+          quietDeps: true,
+          silenceDeprecations: ['color-functions', 'import', 'global-builtin'],
+        },
+      },
+    },
+  },
 });

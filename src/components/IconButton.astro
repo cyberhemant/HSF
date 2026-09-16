@@ -1,0 +1,61 @@
+---
+// Icon-only counterpart to Button.astro. filled/outline reuse Bootstrap's
+// own btn-{color}/btn-outline-{color} pair; plain uses btn-link (no fill or
+// border until interacted with — "line icon only"). Shape is Bootstrap's
+// own .rounded-circle utility, or the default (themed 3px) square radius.
+import Icon from './Icon.astro';
+
+export interface Props {
+  icon: string;
+  label: string;
+  variant?: 'filled' | 'outline' | 'plain';
+  shape?: 'square' | 'circle';
+  size?: number;
+  href?: string;
+  disabled?: boolean;
+  type?: 'button' | 'submit' | 'reset';
+  class?: string;
+}
+
+const VARIANT_CLASS: Record<string, string> = {
+  filled: 'btn-primary',
+  outline: 'btn-outline-primary',
+  plain: 'btn-link text-decoration-none',
+};
+
+const {
+  icon,
+  label,
+  variant = 'plain',
+  shape = 'square',
+  size,
+  href,
+  disabled = false,
+  type = 'button',
+  class: extraClass = '',
+} = Astro.props;
+
+const classes = [
+  'btn',
+  'icon-btn',
+  VARIANT_CLASS[variant],
+  shape === 'circle' ? 'rounded-circle' : '',
+  disabled ? 'disabled' : '',
+  extraClass,
+].filter(Boolean).join(' ');
+
+const Tag = href && !disabled ? 'a' : 'button';
+---
+
+<Tag
+  class={classes}
+  href={href && !disabled ? href : undefined}
+  type={Tag === 'button' ? type : undefined}
+  disabled={Tag === 'button' && disabled ? true : undefined}
+  aria-disabled={disabled ? 'true' : undefined}
+  tabindex={Tag === 'a' && disabled ? -1 : undefined}
+  aria-label={label}
+  title={label}
+>
+  <Icon name={icon} size={size} />
+</Tag>

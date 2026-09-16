@@ -1,0 +1,22 @@
+---
+import AccommodationItem from './AccommodationItem.astro';
+
+export interface Props {
+  items: { title: string; capacity: string; description: string; image: string; href: string }[];
+}
+
+const { items } = Astro.props;
+---
+
+<div class="acc-list">
+  {items.map((item, i) => (
+    <AccommodationItem
+      title={item.title}
+      capacity={item.capacity}
+      description={item.description}
+      image={item.image}
+      href={item.href}
+      reverse={i % 2 === 1}
+    />
+  ))}
+</div>

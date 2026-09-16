@@ -10,120 +10,73 @@ const versions = [
     href: `${base}/v1/`,
     status: 'In progress',
     rationale: 'The baseline reading of the guidelines — full-bleed hero, editorial rhythm, four-up pillar grid.',
-    ready: false,
+    thumbClass: 'bg-beige',
   },
   {
     name: 'Version 2',
     href: `${base}/v2/`,
     status: 'Not started',
     rationale: 'A second direction. Same components, different composition.',
-    ready: false,
+    thumbClass: 'bg-beige',
   },
 ];
 ---
 
 <Base title="Heenat Salma Farm — Prototype" description="Design directions for review.">
-  <div class="container picker">
-    <header class="picker__head">
+  <div class="container py-7">
+    <header class="measure">
       <Tag>For Review</Tag>
-      <h1>Heenat Salma Farm</h1>
-      <p class="t-p1">
+      <h1 class="mt-3">Heenat Salma Farm</h1>
+      <p class="mt-3 fs-5">
         Design directions for the home page. Each version uses the same content and the same
         component library — what changes is the composition and the weighting of the palette.
       </p>
     </header>
 
-    <div class="picker__grid">
+    <div class="row g-4 mt-6">
       {versions.map((v) => (
-        <a class="picker__card" href={v.href}>
-          <div class="picker__thumb" aria-hidden="true"></div>
-          <div class="picker__body">
-            <div class="picker__title">
-              <strong class="t-h3">{v.name}</strong>
-              <span class="t-caption">{v.status}</span>
+        <div class="col-12 col-md-6 col-lg-4">
+          <a class="card h-100 text-decoration-none picker-card" href={v.href}>
+            <div class={`${v.thumbClass} ratio ratio-16x10`} aria-hidden="true"></div>
+            <div class="card-body d-flex flex-column gap-2">
+              <div class="d-flex align-items-baseline justify-content-between gap-2">
+                <strong class="h3 mb-0">{v.name}</strong>
+                <span class="small text-ink-faint">{v.status}</span>
+              </div>
+              <p class="small text-ink-soft mb-0">{v.rationale}</p>
             </div>
-            <p class="t-p2">{v.rationale}</p>
-          </div>
-        </a>
+          </a>
+        </div>
       ))}
 
-      <a class="picker__card picker__card--alt" href={`${base}/styleguide/`}>
-        <div class="picker__thumb picker__thumb--alt" aria-hidden="true"></div>
-        <div class="picker__body">
-          <div class="picker__title">
-            <strong class="t-h3">Styleguide</strong>
-            <span class="t-caption">Reference</span>
+      <div class="col-12 col-md-6 col-lg-4">
+        <a class="card h-100 text-decoration-none picker-card" href={`${base}/design-system/`}>
+          <div class="bg-maroon ratio ratio-16x10" aria-hidden="true"></div>
+          <div class="card-body d-flex flex-column gap-2">
+            <div class="d-flex align-items-baseline justify-content-between gap-2">
+              <strong class="h3 mb-0">Design System</strong>
+              <span class="small text-ink-faint">Reference</span>
+            </div>
+            <p class="small text-ink-soft mb-0">
+              The system itself — palette, type ramp, and every themed Bootstrap component in
+              every state.
+            </p>
           </div>
-          <p class="t-p2">
-            The system itself — palette with contrast ratios, type ramp, components in every state.
-          </p>
-        </div>
-      </a>
+        </a>
+      </div>
     </div>
   </div>
 </Base>
 
-<style lang="scss">
-  @use '../styles/foundation/breakpoints' as bp;
-
-  .picker { padding-block: var(--space-7); }
-
-  .picker__head {
-    max-inline-size: var(--measure);
-    > * + * { margin-block-start: var(--space-3); }
-  }
-
-  .picker__grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: var(--space-4);
-    margin-block-start: var(--space-7);
-
-    @include bp.from(bp.$tablet)  { grid-template-columns: repeat(2, 1fr); }
-    @include bp.from(bp.$desktop) { grid-template-columns: repeat(3, 1fr); }
-  }
-
-  .picker__card {
-    display: flex;
-    flex-direction: column;
-    background-color: var(--white);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-card);
-    overflow: hidden;
-    text-decoration: none;
+<style>
+  .picker-card {
     color: inherit;
-    transition: box-shadow var(--ease), border-color var(--ease);
-
-    &:hover {
-      box-shadow: var(--shadow-card);
-      border-color: var(--ochre);
-      color: inherit;
-    }
-
-    &:focus-visible {
-      outline: 2px solid var(--ochre-deep);
-      outline-offset: 3px;
-    }
+    transition: box-shadow .2s ease, border-color .2s ease;
   }
 
-  .picker__thumb {
-    aspect-ratio: 16 / 10;
-    background-color: var(--beige);
-  }
-
-  .picker__thumb--alt { background-color: var(--maroon); }
-
-  .picker__body {
-    padding: var(--space-4);
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-  }
-
-  .picker__title {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: var(--space-2);
+  .picker-card:hover {
+    box-shadow: var(--bs-box-shadow);
+    border-color: var(--bs-ochre);
+    color: inherit;
   }
 </style>

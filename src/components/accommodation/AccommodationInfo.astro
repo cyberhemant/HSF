@@ -1,0 +1,103 @@
+---
+// Editorial info panel — title/capacity/description/CTA stagger in
+// individually once the panel scrolls into view (§7 of the brief: 100 /
+// 180 / 260 / 380ms after the panel itself starts moving).
+import Icon from '../Icon.astro';
+
+export interface Props {
+  title: string;
+  capacity: string;
+  description: string;
+  href: string;
+}
+
+const { title, capacity, description, href } = Astro.props;
+---
+
+<div class="acc-info">
+  <h3 class="acc-info__title reveal" style="transition-delay:100ms">{title}</h3>
+  <p class="acc-info__capacity reveal" style="transition-delay:180ms">{capacity}</p>
+  <p class="acc-info__description reveal" style="transition-delay:260ms">{description}</p>
+  <a class="acc-cta reveal" style="transition-delay:380ms" href={href}>
+    <span class="acc-cta__circle">
+      <Icon name="chevron-right" size={16} />
+    </span>
+    <span class="acc-cta__label">View Room</span>
+  </a>
+</div>
+
+<style>
+  .acc-info {
+    background-color: #fff;
+    border-radius: 4px;
+    padding: clamp(1.5rem, 4vw, 2.75rem);
+    box-shadow: 0 1px 2px rgba(73, 16, 16, .06), 0 6px 20px rgba(73, 16, 16, .05);
+  }
+
+  .acc-info__title {
+    font-family: 'Alegreya', Georgia, 'Times New Roman', serif;
+    font-size: clamp(1.25rem, 1rem + 1vw, 1.55rem);
+    font-weight: 700;
+    color: var(--bs-maroon);
+    margin-block-end: .5rem;
+  }
+
+  .acc-info__capacity {
+    font-size: .82rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--bs-ochre-deep);
+    margin-block-end: .75rem;
+  }
+
+  .acc-info__description {
+    color: var(--bs-ink-soft);
+    margin-block-end: 1.5rem;
+    max-width: 40ch;
+  }
+
+  .acc-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: .75rem;
+    text-decoration: none;
+    color: var(--bs-maroon);
+    font-size: .9rem;
+    font-weight: 600;
+  }
+
+  .acc-cta__circle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    border: 1px solid var(--bs-border-color);
+    color: var(--bs-ochre-deep);
+    transition: transform .3s ease, border-color .3s ease, color .3s ease;
+  }
+
+  .acc-cta__label {
+    transition: color .3s ease;
+  }
+
+  .acc-cta:hover .acc-cta__circle,
+  .acc-cta:focus-visible .acc-cta__circle {
+    transform: scale(1.08);
+    border-color: var(--bs-maroon);
+    color: var(--bs-maroon);
+  }
+
+  .acc-cta:hover .acc-cta__label,
+  .acc-cta:focus-visible .acc-cta__label {
+    color: var(--bs-maroon);
+  }
+
+  .acc-cta:focus-visible {
+    outline: 2px solid var(--bs-ochre-deep);
+    outline-offset: 4px;
+    border-radius: 2px;
+  }
+</style>

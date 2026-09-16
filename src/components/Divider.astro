@@ -1,0 +1,126 @@
+---
+// §4 Dividers — "A thin horizontal rule (1px solid #DCD0C0) interrupted by a
+// small diamond/geometric motif in ochre... used between major page sections
+// only, never as a repeating background." (DESIGN.md §4).
+//
+// SectionDivider.astro already covers the nested-diamond default. This is the
+// fuller divider set drawn from the "Heenat Salma — rules and breaks" motif
+// study: four jobs, four marks, all built from the same hairline + ochre
+// vocabulary rather than four unrelated one-offs.
+//
+//   diamond — the plain section break. Anywhere two sections meet.
+//   palm    — the signature break. Once per page, sparingly — it's the
+//             brand's own palm-frond mark, not a generic ornament.
+//   dots    — a soft pause, not a break. Between stanzas/short blocks.
+//   hizb    — a colophon rule (Rub el Hizb star over a tapered line, nothing
+//             after it). Closes a document; never sits mid-page.
+export interface Props {
+  variant?: 'diamond' | 'palm' | 'dots' | 'hizb';
+  class?: string;
+}
+
+const { variant = 'diamond', class: extraClass = '' } = Astro.props;
+const classes = ['divider', `divider--${variant}`, extraClass].filter(Boolean).join(' ');
+---
+
+{variant === 'hizb' ? (
+  <div class={classes} role="presentation" aria-hidden="true">
+    <svg class="divider__star" width="30" height="30" viewBox="0 0 100 100" fill="none">
+      <rect x="22" y="22" width="56" height="56" stroke="currentColor" stroke-width="4.5" />
+      <path d="M50 6 L94 50 L50 94 L6 50 Z" stroke="currentColor" stroke-width="4.5" />
+    </svg>
+    <svg class="divider__taper" viewBox="0 0 400 10" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M0 5.2 Q200 1 400 5.2 Q200 9 0 5.2 Z" fill="currentColor" />
+    </svg>
+  </div>
+) : (
+  <div class={classes} role="presentation" aria-hidden="true">
+    <span class="divider__line"></span>
+
+    {variant === 'diamond' && (
+      <svg class="divider__motif" width="15" height="15" viewBox="0 0 20 20" fill="none">
+        <path d="M10 2 L18 10 L10 18 L2 10 Z" stroke="currentColor" stroke-width="1.6" />
+      </svg>
+    )}
+
+    {variant === 'palm' && (
+      <svg class="divider__motif divider__motif--palm" width="24" height="32" viewBox="0 0 60 80" fill="none">
+        <g stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M30 78V38" />
+          <path d="M30 38C22 30 14 27 6 28c6-6 15-6 24 2" />
+          <path d="M30 38c8-8 16-11 24-10-6-6-15-6-24 2" />
+          <path d="M30 30c-6-9-13-13-21-14 5-7 14-5 21 4" />
+          <path d="M30 30c6-9 13-13 21-14-5-7-14-5-21 4" />
+          <path d="M30 22c-3-8-3-14 0-20 3 6 3 12 0 20" />
+        </g>
+      </svg>
+    )}
+
+    {variant === 'dots' && (
+      <span class="divider__motif divider__dots">
+        <svg width="6" height="6" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="currentColor" opacity=".55" /></svg>
+        <svg width="10" height="10" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="currentColor" /></svg>
+        <svg width="6" height="6" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="currentColor" opacity=".55" /></svg>
+      </span>
+    )}
+
+    <span class="divider__line"></span>
+  </div>
+)}
+
+<style>
+  .divider {
+    color: var(--bs-ochre);
+  }
+
+  /* diamond / palm / dots share the line–motif–line row */
+  .divider--diamond,
+  .divider--palm,
+  .divider--dots {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding-block: 1.5rem;
+    padding-inline: 1rem;
+  }
+
+  .divider__line {
+    flex: 1 1 auto;
+    height: 1px;
+    background-color: var(--bs-border-color);
+  }
+
+  .divider__motif {
+    flex: 0 0 auto;
+    display: flex;
+  }
+
+  .divider--palm .divider__motif--palm {
+    opacity: .9;
+  }
+
+  .divider__dots {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+  }
+
+  /* hizb — a closing colophon, stacked and centered, no side rules */
+  .divider--hizb {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .75rem;
+    padding-block: 2rem;
+  }
+
+  .divider__star {
+    flex: 0 0 auto;
+  }
+
+  .divider__taper {
+    width: min(280px, 60%);
+    height: 10px;
+    display: block;
+  }
+</style>

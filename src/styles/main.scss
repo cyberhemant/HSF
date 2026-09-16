@@ -1,13 +1,658 @@
-// Heenat Salma Farm — global stylesheet.
-// Order matters: tokens must land before anything that consumes them.
+// Heenat Salma Farm — Bootstrap 5.3, themed from ../../../DESIGN.md.
+// Follows Bootstrap's own documented customization recipe: functions, then
+// variable overrides, then Bootstrap's variables/maps/mixins, then every
+// component partial (so /design-system/ can catalog all of them), then a
+// thin custom layer for the handful of things Sass variables can't reach.
 
-@use 'foundation/tokens';
-@use 'foundation/reset';
-@use 'foundation/typography';
-@use 'foundation/grid';
+@use 'sass:math';
+@import 'bootstrap/scss/functions';
 
-@use 'components/button';
-@use 'components/tag';
+// =============================================================================
+// §2 Color Palette
+// =============================================================================
+$maroon: #491010; // logotype, headings, primary button fill. AAA everywhere.
+$maroon-hover: #5E1B1B;
+$maroon-active: #340B0B;
+$ochre: #A6885D; // icons, hairlines, dividers ONLY. 3.1:1 on cream — never body text.
+$ochre-deep: #8B6F45; // the text-safe ochre. Use wherever ochre must carry words.
 
-@use 'themes/v1';
-@use 'themes/v2';
+$cream: #F9F7F5; // page canvas
+$white: #FFF; // card/panel surface
+$beige: #E0D8CF; // secondary neutral, section washes. NEVER pair with white text.
+$sand: #EAE5D1; // proposed extension — warmer neutral wash, between cream and beige
+$hairline: #DCD0C0; // standard hairline for cards, dividers, input outlines
+
+$ink: #491010; // headings only
+$ink-soft: #6B3226; // DEFAULT body copy — never full-strength maroon
+$ink-faint: #9C8574; // metadata, captions, disabled text
+
+$error: #A63B2A; // 6.0:1 on cream
+$success: #5B6E3A; // 5.3:1 on cream
+
+// Proposed extensions (not in DESIGN.md's locked five-color palette): Bootstrap's
+// theme requires a warning/info tier. Rather than import a foreign hue (blue
+// appears nowhere in this brand), both are derived from the existing ochre family.
+$warning-brand: #B9975B; // lighter ochre tint
+$info-brand: #7C8B74; // muted sage — closest warm-neutral analog to "info"
+
+$primary: $maroon;
+$secondary: $ochre-deep;
+$success: $success;
+$info: $info-brand;
+$warning: $warning-brand;
+$danger: $error;
+$light: $cream;
+$dark: $ink;
+$body-bg: $cream;
+$body-color: $ink-soft;
+$min-contrast-ratio: 4.5;
+
+// =============================================================================
+// §3 Typography — serif carries the brand moment, sans carries function.
+// =============================================================================
+$font-family-serif: 'Alegreya', georgia, 'Times New Roman', serif;
+$font-family-sans: 'Alegreya Sans', -apple-system, blinkmacsystemfont, 'Segoe UI', roboto, sans-serif;
+$font-family-base: $font-family-sans;
+$font-family-sans-serif: $font-family-sans;
+$font-size-base: 1.06rem; // §3 Paragraph 1 — primary body size
+$line-height-base: 1.7;
+$headings-font-family: $font-family-serif;
+$headings-color: $ink;
+$headings-margin-bottom: 0;
+$h1-font-size: 2.1rem;   // 800 / 1.1
+$h2-font-size: 1.55rem;  // 700 / 1.2
+$h3-font-size: 1.25rem;  // 700 / 1.3 (derived — not in the original 8-role sheet)
+$h4-font-size: 1.06rem;  // 600 / 1.4 (derived)
+$h5-font-size: 1rem;
+$h6-font-size: .85rem;
+$link-color: $ochre-deep; // §4 Text Button color, reused for inline links
+$link-hover-color: $maroon;
+$link-decoration: underline;
+$enable-rfs: false; // fixed sizes per DESIGN.md, not fluid-scaled
+$small-font-size: .72rem; // <small> / .small
+
+// §4 Tag / Badge — 0.72rem/600/uppercase/+0.1em tracking, generous padding.
+$badge-font-size: .72rem;
+$badge-font-weight: 600;
+$badge-padding-y: .5rem;  // 8px
+$badge-padding-x: 1rem;   // 16px
+
+// =============================================================================
+// §5 Spacing — 4/8/16/24/32/48/64px, extending Bootstrap's 0–5 spacer map
+// =============================================================================
+$spacer: 1rem; // 16px
+$spacers: (
+  0: 0,
+  1: .25rem, // 4px
+  2: .5rem,  // 8px
+  3: 1rem,   // 16px
+  4: 1.5rem, // 24px
+  5: 2rem,   // 32px
+  6: 3rem,   // 48px
+  7: 4rem,   // 64px
+);
+
+// =============================================================================
+// §5 Radius — deliberately small; 999px reserved for Tag / circular Icon Button
+// =============================================================================
+$border-radius: 3px;
+$border-radius-sm: 2px;
+$border-radius-lg: 6px;
+$border-radius-xl: 6px;
+$border-radius-xxl: 6px;
+$border-radius-pill: 999px;
+$border-color: $hairline;
+
+// §4 Buttons — square corners, uppercase micro-tracking (overrides the
+// general radius scale above, which still applies to cards/inputs/etc).
+$btn-border-radius: 0;
+$btn-border-radius-sm: 0;
+$btn-border-radius-lg: 0;
+$btn-font-size: .875rem;
+$btn-font-size-sm: .875rem;
+$btn-font-size-lg: .875rem;
+// 2x Bootstrap's default horizontal padding (.75rem/.5rem/1rem) for every
+// text button. Icon Button isn't affected — .icon-btn (main.scss below)
+// resets padding to 0 for a fixed 44px square regardless of this variable.
+$btn-padding-x: 1.5rem;
+$btn-padding-x-sm: 1rem;
+$btn-padding-x-lg: 2rem;
+// Button Group inherits its corners from $btn-border-radius above — no
+// separate Bootstrap variable exists for it, so it's already square.
+
+// Square corners for the remaining components called out as flat in the
+// brief: Input, Tabs, Card, Alert, List Group, Checkbox, Progress Bar,
+// Accordion, Pagination. Left independent of $border-radius above so
+// anything NOT listed here (Dropdown, Badge, Toast, Modal, Tooltip,
+// Popover, Thumbnail) keeps the general radius scale.
+$input-border-radius: 0;
+$input-border-radius-sm: 0;
+$input-border-radius-lg: 0;
+$form-check-input-border-radius: 0;
+$nav-tabs-border-radius: 0;
+$card-border-radius: 0;
+$alert-border-radius: 0;
+$list-group-border-radius: 0;
+$progress-border-radius: 0;
+$accordion-border-radius: 0;
+$pagination-border-radius: 0;
+
+// =============================================================================
+// §5 Breakpoints & Grid — mobile / tablet(768) / desktop(1280), 1180px content
+// =============================================================================
+$grid-breakpoints: (
+  xs: 0,
+  sm: 576px,
+  md: 768px,
+  lg: 992px,
+  xl: 1280px,
+  xxl: 1400px,
+);
+$container-max-widths: (
+  sm: 540px,
+  md: 720px,
+  lg: 960px,
+  xl: 1180px, // §5 content-max — stays capped here at every larger breakpoint too
+);
+$grid-gutter-width: 1.5rem; // 24px, §5 wide gutter
+
+// =============================================================================
+// §6 Elevation — the one card shadow in the system; Modal pulls its own
+// documented (slightly more present) shadow.
+// =============================================================================
+$box-shadow: 0 1px 2px rgba($maroon, .06), 0 6px 20px rgba($maroon, .05);
+$box-shadow-sm: 0 1px 2px rgba($maroon, .06);
+$box-shadow-lg: 0 4px 12px rgba($maroon, .10), 0 16px 40px rgba($maroon, .12); // §4 Modal
+
+// =============================================================================
+// Focus ring — one ochre ring everywhere (§6), not a per-variant tint.
+// This single override cascades into buttons, inputs, form-checks, nav
+// links, pagination, and the close button.
+// =============================================================================
+$focus-ring-box-shadow: 0 0 0 2px $cream, 0 0 0 4px $ochre;
+
+// Text inputs/selects drop the focus glow entirely (border color still
+// changes on :focus) — form-check (checkbox/radio) is the one exception
+// and keeps the ochre ring above via $form-check-input-focus-box-shadow.
+$input-focus-box-shadow: none;
+$form-select-focus-box-shadow: none;
+// Overridden directly (rather than left to compose $input-focus-box-shadow)
+// so the range thumb doesn't end up with an invalid "<shadow>, none" value.
+$form-range-thumb-focus-box-shadow: none;
+
+// =============================================================================
+// Motion — restrained, no overshoot/bounce
+// =============================================================================
+$transition-base: all .2s ease;
+
+@import 'bootstrap/scss/variables';
+@import 'bootstrap/scss/variables-dark';
+
+// §2 Dark mode (proposed extension — no dark theme in the source guidelines)
+$body-bg-dark: #1C0E09;
+$body-color-dark: #D8C2AE;
+$border-color-dark: #4A2A1C;
+
+// §5 Image & Content Grid — the picker/card thumbnail ratio isn't one of
+// Bootstrap's four defaults (1x1/4x3/16x9/21x9).
+$aspect-ratios: map-merge($aspect-ratios, (
+  '16x10': percentage(math.div(10, 16)),
+));
+$theme-colors: map-merge($theme-colors, (
+  'maroon':     $maroon,
+  'ochre':      $ochre,
+  'ochre-deep': $ochre-deep,
+  'beige':      $beige,
+  'sand':       $sand,
+  'cream':      $cream,
+  'ink-soft':   $ink-soft,
+  'ink-faint':  $ink-faint,
+));
+
+@import 'bootstrap/scss/maps';
+@import 'bootstrap/scss/mixins';
+@import 'bootstrap/scss/utilities';
+@import 'bootstrap/scss/root';
+@import 'bootstrap/scss/reboot';
+@import 'bootstrap/scss/type';
+@import 'bootstrap/scss/images';
+@import 'bootstrap/scss/containers';
+@import 'bootstrap/scss/grid';
+@import 'bootstrap/scss/tables';
+@import 'bootstrap/scss/forms';
+@import 'bootstrap/scss/buttons';
+@import 'bootstrap/scss/transitions';
+@import 'bootstrap/scss/dropdown';
+@import 'bootstrap/scss/button-group';
+@import 'bootstrap/scss/nav';
+@import 'bootstrap/scss/navbar';
+@import 'bootstrap/scss/card';
+@import 'bootstrap/scss/accordion';
+@import 'bootstrap/scss/breadcrumb';
+@import 'bootstrap/scss/pagination';
+@import 'bootstrap/scss/badge';
+@import 'bootstrap/scss/alert';
+@import 'bootstrap/scss/progress';
+@import 'bootstrap/scss/list-group';
+@import 'bootstrap/scss/close';
+@import 'bootstrap/scss/toasts';
+@import 'bootstrap/scss/modal';
+@import 'bootstrap/scss/tooltip';
+@import 'bootstrap/scss/popover';
+@import 'bootstrap/scss/carousel';
+@import 'bootstrap/scss/spinners';
+@import 'bootstrap/scss/offcanvas';
+@import 'bootstrap/scss/placeholders';
+@import 'bootstrap/scss/helpers';
+@import 'bootstrap/scss/utilities/api';
+
+// =============================================================================
+// Custom layer — the handful of things Sass variables can't reach.
+// =============================================================================
+
+// Images default to filling their container's width (height auto to
+// preserve aspect ratio) rather than rendering at intrinsic size.
+img {
+  width: 100%;
+  height: auto;
+}
+
+// §8 Touch Targets — 44px minimum on every interactive element.
+.btn,
+.page-link,
+.nav-link {
+  min-height: 2.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// Inputs/selects sit at the same 2.75rem floor as .btn above (padding-y +
+// $line-height-base's tall 1.7 alone land text controls a hair under it), so
+// a form-control/form-select next to a button — e.g. Footer.astro's
+// newsletter row — lines up exactly. .btn-lg computes to the same 2.75rem
+// as the default .btn (see above), so form-control-lg/form-select-lg match
+// it with the same value rather than a separate, larger one.
+.form-control,
+.form-control-lg,
+.form-select,
+.form-select-lg {
+  min-height: 2.75rem;
+}
+
+// §4 Buttons — uppercase with micro-tracking; no Bootstrap variable reaches
+// text-transform/letter-spacing, so it's set here (radius/font-size are set
+// via $btn-* variable overrides above).
+.btn {
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+// §4 Buttons — Animated Outline. Layers onto Bootstrap's own
+// .btn-outline-primary / .btn-outline-secondary (no separate color logic
+// needed here — the pseudo-elements below just read currentColor). Cancels
+// the native fill-in hover and replaces it with a border wipe + underline
+// grow; the arrow is a fully separate opt-in, toggled only by data-arrow so
+// the same class works unchanged on hand-written markup (Hero.astro's
+// "Discover Our Story" anchor predates this file and has no arrow markup —
+// it gets the border-wipe for free, no template change required).
+.btn-line-effect {
+  position: relative;
+
+  // Cancel Bootstrap's outline-variant fill/invert on hover, active and
+  // keyboard focus — the CSS custom properties buttons.scss itself reads,
+  // not the properties directly, so this stays robust regardless of
+  // stylesheet order.
+  --#{$prefix}btn-border-color: transparent;
+  --#{$prefix}btn-hover-color: var(--#{$prefix}btn-color);
+  --#{$prefix}btn-hover-bg: transparent;
+  --#{$prefix}btn-hover-border-color: transparent;
+  --#{$prefix}btn-active-color: var(--#{$prefix}btn-color);
+  --#{$prefix}btn-active-bg: transparent;
+  --#{$prefix}btn-active-border-color: transparent;
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    pointer-events: none;
+  }
+
+  // Full outline, visible until hover — wipes away start → end.
+  &::before {
+    inset: 0;
+    border: 1px solid currentcolor;
+    clip-path: inset(0 0 0 0);
+    transition: clip-path .5s ease;
+  }
+
+  // Underline, hidden until hover — grows start → end.
+  &::after {
+    inset-inline-start: 0;
+    inset-block-end: 0;
+    width: 0;
+    height: 1px;
+    background-color: currentcolor;
+    transition: width .5s ease;
+  }
+
+  &:focus-visible::before { clip-path: inset(0 100% 0 0); }
+  &:focus-visible::after { width: 100%; }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .btn-line-effect:hover::before { clip-path: inset(0 100% 0 0); }
+  .btn-line-effect:hover::after { width: 100%; }
+}
+
+// Arrow variant gets .5rem extra padding on both sides (kept symmetric so
+// the text stays centered — see .btn-line-effect__arrow below). The arrow
+// itself stays anchored to the same distance from the border, so the extra
+// room lands entirely between the (now-narrower) text and the arrow.
+.btn-line-effect[data-arrow='true'] {
+  padding-inline: calc(var(--#{$prefix}btn-padding-x) + .5rem);
+}
+
+// Arrow — opt-in only: present in the DOM whenever a consumer renders it
+// (AnimatedOutlineButton.astro always does), but invisible and out of the
+// hover/focus rules below unless data-arrow="true". Absolutely positioned
+// (rather than a flex sibling of the slot text) so it never takes part in
+// the button's own centering: it lives inside the existing padding-inline-end
+// zone, which keeps the text centered on the button both at rest and on
+// hover, and means the button never resizes either.
+.btn-line-effect__arrow {
+  position: absolute;
+  inset-inline-end: .375rem;
+  inset-block-start: 50%;
+  display: inline-flex;
+  align-items: center;
+  opacity: 0;
+  transform: translateY(-50%) translateX(-6px);
+  transition: opacity .35s ease, transform .35s ease;
+  pointer-events: none;
+}
+
+.btn-line-effect__arrow svg {
+  width: 18px;
+  height: 10px;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 2;
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+}
+
+.btn-line-effect:not([data-arrow='true']) .btn-line-effect__arrow {
+  display: none;
+}
+
+.btn-line-effect[data-arrow='true']:focus-visible .btn-line-effect__arrow {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .btn-line-effect[data-arrow='true']:hover .btn-line-effect__arrow {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-line-effect::before,
+  .btn-line-effect::after,
+  .btn-line-effect__arrow {
+    transition: none;
+  }
+}
+
+// Valid/invalid focus glow is one shared value in Bootstrap's
+// $form-validation-states map, applied identically to .form-control,
+// .form-select, and .form-check-input — no Sass variable can drop it for
+// text inputs/selects while keeping it on form-check (checkbox/radio), so
+// it's un-set here with selectors matching Bootstrap's own for equal
+// specificity (source order — after bootstrap/scss/forms — wins).
+.was-validated .form-control:valid:focus,
+.form-control.is-valid:focus,
+.was-validated .form-control:invalid:focus,
+.form-control.is-invalid:focus,
+.was-validated .form-select:valid:focus,
+.form-select.is-valid:focus,
+.was-validated .form-select:invalid:focus,
+.form-select.is-invalid:focus {
+  box-shadow: none;
+}
+
+// Per-role heading weights — Bootstrap's $headings-font-weight is one value
+// for h1–h6; DESIGN.md specifies a different weight per role (§3 Hierarchy).
+h1, .h1 { font-weight: 800; }
+h2, .h2 { font-weight: 700; }
+h3, .h3 { font-weight: 700; }
+h4, .h4 { font-weight: 600; font-family: $font-family-sans; }
+
+// §3 Running text stays 60–65 characters wide regardless of viewport.
+.measure { max-width: 62ch; }
+
+// §9 Known Gaps — "Nav Link", the 9th type role (Alegreya Sans Medium 15px).
+// Used for the off-canvas panel's 15-item nav (Nav.astro).
+.text-nav-link {
+  display: flex;
+  align-items: center;
+  min-height: 2.75rem;
+  font-family: $font-family-sans;
+  font-size: .94rem;
+  font-weight: 500;
+  color: var(--#{$prefix}ink-soft);
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+
+  &:hover, &:focus-visible { color: var(--#{$prefix}maroon); }
+}
+
+// Icon Button — Bootstrap has no icon-only button primitive; this is the one
+// addition needed on top of .btn + a color/outline variant + .rounded-circle.
+.icon-btn {
+  width: 2.75rem;  // §8 Touch Targets — 44px minimum
+  height: 2.75rem;
+  padding: 0;
+}
+
+// §4 Tag — Bootstrap has no letter-spacing utility.
+.ls-tag { letter-spacing: .1em; }
+
+// Header CTA — while .h-nav sits transparent over hero imagery (before JS
+// adds .toggle-menu-style on scroll), the maroon-on-transparent outline
+// button is invisible/illegible; invert it to white. Overriding Bootstrap's
+// own --bs-btn-* custom properties (rather than hand-rolling :hover/:focus/
+// :active rules) reuses its full outline-button state machine, so every
+// state — default, hover, focus, active, disabled — inverts together.
+// Global, not in Header.astro's scoped <style>, for the same reason as
+// .material-symbols-outlined above: Button.astro is a child component, so a
+// selector scoped to Header.astro can never match the markup it renders.
+.h-nav:not(.toggle-menu-style) .h-nav__cta {
+  --#{$prefix}btn-color: #{$white};
+  --#{$prefix}btn-border-color: #{$white};
+  --#{$prefix}btn-hover-color: #{$maroon};
+  --#{$prefix}btn-hover-bg: #{$white};
+  --#{$prefix}btn-hover-border-color: #{$white};
+  --#{$prefix}btn-focus-shadow-rgb: 255, 255, 255;
+  --#{$prefix}btn-active-color: #{$maroon};
+  --#{$prefix}btn-active-bg: #{rgba($white, .85)};
+  --#{$prefix}btn-active-border-color: #{$white};
+  --#{$prefix}btn-disabled-color: #{rgba($white, .5)};
+  --#{$prefix}btn-disabled-bg: transparent;
+  --#{$prefix}btn-disabled-border-color: #{rgba($white, .5)};
+}
+
+// Header icon buttons (hamburger, account, cart) — same transparent-nav
+// inversion as .h-nav__cta above. All three are already .btn-link under the
+// hood, whose color comes from $link-color ($ochre-deep) via Bootstrap's own
+// --bs-btn-color/--bs-btn-hover-color/etc., so the brand-color resting state
+// (once .toggle-menu-style lands) needs no override here — only the
+// transparent state does.
+.h-nav:not(.toggle-menu-style) .h-nav__icon-btn {
+  --#{$prefix}btn-color: #{$white};
+  --#{$prefix}btn-hover-color: #{rgba($white, .8)};
+  --#{$prefix}btn-active-color: #{rgba($white, .8)};
+  --#{$prefix}btn-disabled-color: #{rgba($white, .5)};
+  --#{$prefix}btn-focus-shadow-rgb: 255, 255, 255;
+}
+
+// §4 Icons — Material Symbols renders as a text glyph, not an SVG; this
+// keeps it centered wherever Icon.astro is dropped in (buttons, input
+// groups, inline with text) the same way the old inline SVGs sat.
+.material-symbols-outlined {
+  display: inline-flex;
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: var(--icon-size, 24px);
+  line-height: 1;
+  vertical-align: middle;
+  user-select: none;
+  color: currentcolor;
+}
+
+// Footer — same beige surface, with an aged-paper grain. Procedurally
+// generated (SVG feTurbulence, tinted ink-soft), not a stock texture photo —
+// keeps the "nothing stock, nothing digitally traced" rule (§7 Do's/Don'ts)
+// intact; this is a texture, not illustration.
+.footer-paper {
+  background-color: $beige;
+  background-repeat: repeat;
+  background-image:
+    radial-gradient(ellipse at 15% 20%, rgba($ink-soft, .05), transparent 55%),
+    radial-gradient(ellipse at 85% 80%, rgba($ink-soft, .05), transparent 55%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.4196  0 0 0 0 0.1961  0 0 0 0 0.1490  0 0 0 0.12 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+// §4 Dividers — hairline interrupted by a small ochre geometric motif,
+// reserved for major page-section boundaries only (never a repeating fill).
+.section-divider {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: $ochre;
+  padding: 1.5rem $spacer; // §5 space-4 block, space-3 inline
+}
+
+.section-divider__line {
+  flex: 1 1 auto;
+  height: 1px;
+  background-color: $hairline;
+}
+
+.section-divider__motif {
+  flex: 0 0 auto;
+}
+
+// Lodges showcase — image zoom + card lift on hover, restrained per §4/§6
+// ("no overshoot or bounce"); scroll-reveal via .reveal (scripts/reveal.js).
+.lodge-card {
+  color: inherit;
+  border-radius: $border-radius-lg;
+  transition: $transition-base, box-shadow .2s ease, transform .2s ease;
+
+  &:hover, &:focus-visible {
+    color: inherit;
+    transform: translateY(-4px);
+    box-shadow: $box-shadow;
+
+    .lodge-card__img { transform: scale(1.05); }
+    .lodge-card__cta { color: $maroon; }
+  }
+
+  &:focus-visible {
+    outline: 2px solid $ochre-deep;
+    outline-offset: 3px;
+  }
+}
+
+.lodge-card__frame {
+  overflow: hidden;
+  border-radius: $border-radius-lg;
+  aspect-ratio: 4 / 5;
+}
+
+.lodge-card__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform .4s ease;
+}
+
+.lodge-card__body {
+  padding-block-start: 1rem;
+}
+
+.lodge-card__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: .25rem;
+  transition: color .2s ease;
+
+  .material-symbols-outlined {
+    transition: transform .2s ease;
+  }
+}
+
+.lodge-card:hover .lodge-card__cta .material-symbols-outlined {
+  transform: translateX(3px);
+}
+
+// AccommodationInfo's circular-arrow CTA — global for the same reason as
+// .lodge-card above: the icon is rendered by a child component (Icon.astro),
+// so a rule scoped to AccommodationInfo's own <style> block can never match
+// it (Astro's scope attribute isn't applied across component boundaries).
+.acc-cta__circle .material-symbols-outlined {
+  transition: transform .3s ease;
+}
+
+.acc-cta:hover .acc-cta__circle .material-symbols-outlined,
+.acc-cta:focus-visible .acc-cta__circle .material-symbols-outlined {
+  transform: translateX(3px);
+}
+
+// Scroll reveal — fade + gentle rise, no bounce/overshoot. Instant for
+// prefers-reduced-motion, and instant if JS never runs (reveal.js clears
+// .reveal on load, so content never hard-depends on the observer firing).
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity .6s ease-out, transform .6s ease-out;
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  // !important is deliberate: this must win over every reveal--* modifier
+  // added by individual components (higher specificity, defined later),
+  // not just the plain .reveal above — an accessibility guarantee, not a
+  // specificity hack to work around.
+  [class*='reveal'] {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
+.skip-link {
+  position: absolute;
+  inset-inline-start: $spacer;
+  inset-block-start: -100%;
+  z-index: 1090;
+  background-color: $maroon;
+  color: $white;
+  padding: .5rem 1rem;
+  border-radius: $border-radius;
+  text-decoration: none;
+
+  &:focus {
+    inset-block-start: $spacer;
+    color: $white;
+  }
+}

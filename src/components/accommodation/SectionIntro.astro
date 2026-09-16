@@ -1,0 +1,40 @@
+---
+import Tag from '../Tag.astro';
+
+export interface Props {
+  eyebrow?: string;
+  heading: string;
+  lead?: string;
+}
+
+const { eyebrow, heading, lead } = Astro.props;
+---
+
+<div class="acc-intro measure reveal">
+  {eyebrow && <Tag>{eyebrow}</Tag>}
+  <h2 class="acc-intro__heading">{heading}</h2>
+  {lead && <p class="acc-intro__lead">{lead}</p>}
+</div>
+
+<style>
+  .acc-intro {
+    margin-block-end: clamp(2.5rem, 6vw, 4.5rem);
+  }
+
+  .acc-intro__heading {
+    font-family: 'Alegreya', Georgia, 'Times New Roman', serif;
+    font-weight: 800;
+    font-size: clamp(1.75rem, 1.2rem + 2vw, 2.6rem);
+    line-height: 1.15;
+    color: var(--bs-maroon);
+    margin-block-start: .75rem;
+    margin-block-end: 0;
+  }
+
+  .acc-intro__lead {
+    margin-block-start: 1rem;
+    font-size: clamp(1rem, .95rem + .3vw, 1.15rem);
+    color: var(--bs-ink-soft);
+    max-width: 60ch;
+  }
+</style>

@@ -1,0 +1,72 @@
+---
+// Accommodations showcase, in the spirit of kisanecofarm.com/our-rooms/'s
+// "Explore Our Charming Accommodations" section — adapted to Heenat's own
+// three lodges (real photography, §9 Known Gaps "Stay (3 lodge photos)"),
+// restrained hover/reveal motion per §4/§6 ("no overshoot or bounce").
+import Icon from './Icon.astro';
+import Tag from './Tag.astro';
+
+export interface Props {
+  eyebrow?: string;
+  heading?: string;
+  lead?: string;
+  lodges?: { name: string; description: string; image: string; href: string }[];
+  class?: string;
+}
+
+const base = import.meta.env.BASE_URL;
+
+const {
+  eyebrow = 'Stay',
+  heading = 'Explore Our Lodges at Heenat Salma Farm',
+  lead = 'Three lodges open directly onto the working farm — each a quiet return after a day spent in the fields, the kitchen, or on the water.',
+  lodges = [
+    {
+      name: 'Lodge One',
+      description: 'Closest to the fields, for guests who want the farm’s morning right outside the door.',
+      image: `${base}/images/lodge-one.webp`,
+      href: `${base}/lodges/`,
+    },
+    {
+      name: 'Lodge Two',
+      description: 'A quieter setting toward the edge of the property, further from the working day.',
+      image: `${base}/images/lodge-two.webp`,
+      href: `${base}/lodges/`,
+    },
+    {
+      name: 'Lodge Three',
+      description: 'The largest of the three, suited to families or a small group staying together.',
+      image: `${base}/images/lodge-three.webp`,
+      href: `${base}/lodges/`,
+    },
+  ],
+  class: extraClass = '',
+} = Astro.props;
+---
+
+<section class={['lodges-showcase', extraClass].filter(Boolean).join(' ')}>
+  <div class="lodges-showcase__head measure reveal">
+    <Tag>{eyebrow}</Tag>
+    <h2 class="mt-3">{heading}</h2>
+    <p class="mt-3 fs-5 text-ink-soft">{lead}</p>
+  </div>
+
+  <div class="row g-4 mt-1">
+    {lodges.map((lodge, i) => (
+      <div class="col-12 col-md-4 reveal" style={`transition-delay:${i * 90}ms`}>
+        <a class="lodge-card text-decoration-none d-block" href={lodge.href}>
+          <div class="lodge-card__frame">
+            <img class="lodge-card__img" src={lodge.image} alt={lodge.name} loading="lazy" />
+          </div>
+          <div class="lodge-card__body">
+            <h3 class="h5 mb-1">{lodge.name}</h3>
+            <p class="small text-ink-soft mb-2">{lodge.description}</p>
+            <span class="lodge-card__cta text-ochre-deep small fw-semibold">
+              View Lodge <Icon name="chevron-right" size={14} />
+            </span>
+          </div>
+        </a>
+      </div>
+    ))}
+  </div>
+</section>

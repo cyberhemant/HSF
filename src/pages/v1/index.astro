@@ -1,21 +1,41 @@
 ---
 import Base from '../../layouts/Base.astro';
-import Tag from '../../components/Tag.astro';
-import Button from '../../components/Button.astro';
-
-const base = import.meta.env.BASE_URL;
+import LodgesShowcase from '../../components/LodgesShowcase.astro';
+import AccommodationSection from '../../components/accommodation/AccommodationSection.astro';
+import StaySection from '../../components/StaySection.astro';
+import ActivitiesSection from '../../components/ActivitiesSection.astro';
+import UpcomingEvents from '../../components/UpcomingEvents.astro';
+import EventsCarousel from '../../components/EventsCarousel.astro';
+import RoomGallery from '../../components/RoomGallery.astro';
+import Hero from '../../components/Hero.astro';
+import EventSpaceSection from '../../components/EventSpaceSection.astro';
+import AcademySection from '../../components/AcademySection.astro';
+import KitchenSection from '../../components/KitchenSection.astro';
 ---
 
 <Base title="Heenat Salma Farm" version="v1">
-  <div class="container" style="padding-block: var(--space-7);">
-    <Tag>v1</Tag>
-    <h1 style="margin-block-start: var(--space-3);">Version v1</h1>
-    <p class="t-p1" style="margin-block-start: var(--space-3);">
-      Placeholder. Compositions are built in BUILD-PLAN.md M5 (v1) and M7 (v2), once the
-      component library and <code>home.json</code> exist.
-    </p>
-    <div style="margin-block-start: var(--space-5);">
-      <Button variant="secondary" href={base}>Back to versions</Button>
-    </div>
-  </div>
+  <Hero />
+
+  <StaySection />
+  
+    <EventsCarousel />
+ <!-- <RoomGallery /> -->
+<EventSpaceSection />
+<KitchenSection />
+  <AcademySection />
+  <ActivitiesSection />
+
+
+
+  <!-- <UpcomingEvents /> -->
+
+
+
 </Base>
+
+<script>
+  import AOS from 'aos';
+  import 'aos/dist/aos.css';
+
+  AOS.init({ once: true, duration: 600, easing: 'ease-out-cubic' });
+</script>

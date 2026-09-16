@@ -1,0 +1,119 @@
+---
+// One editorial feature block: large image + overlapping info panel.
+// `reverse` alternates the composition (image/info vs info/image) per
+// item — mobile-first: stacked with no overlap below 768px, side-by-side
+// with the panel overlapping the image edge from 768px up.
+import AccommodationImage from './AccommodationImage.astro';
+import AccommodationInfo from './AccommodationInfo.astro';
+
+export interface Props {
+  title: string;
+  capacity: string;
+  description: string;
+  image: string;
+  href: string;
+  reverse?: boolean;
+}
+
+const { title, capacity, description, image, href, reverse = false } = Astro.props;
+---
+
+<div class={['acc-item', reverse ? 'acc-item--reverse' : ''].filter(Boolean).join(' ')}>
+  <div class="acc-item__image-col reveal reveal--image">
+    <AccommodationImage src={image} alt={title} />
+  </div>
+  <div class="acc-item__info-col">
+    <div class={['acc-item__panel', 'reveal', reverse ? 'reveal--from-right' : 'reveal--from-left'].join(' ')}>
+      <AccommodationInfo title={title} capacity={capacity} description={description} href={href} />
+    </div>
+  </div>
+</div>
+
+<style>
+  .acc-item {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(1rem, 4vw, 1.5rem);
+    margin-block: clamp(2.5rem, 6vw, 4rem);
+  }
+
+  .acc-item__image-col {
+    flex: 1 1 auto;
+  }
+
+  .acc-item__info-col {
+    flex: 1 1 auto;
+  }
+
+  @media (min-width: 768px) {
+    .acc-item {
+      flex-direction: row;
+      align-items: center;
+      gap: clamp(1rem, 3vw, 2rem);
+      margin-block: clamp(3rem, 7vw, 6rem);
+    }
+
+    .acc-item--reverse {
+      flex-direction: row-reverse;
+    }
+
+    .acc-item__image-col {
+      flex: 1 1 62%;
+    }
+
+    .acc-item__info-col {
+      flex: 1 1 38%;
+      position: relative;
+      z-index: 2;
+    }
+
+    .acc-item__panel {
+      margin-inline-start: clamp(-3rem, -5vw, -1.5rem);
+    }
+
+    .acc-item--reverse .acc-item__panel {
+      margin-inline-start: 0;
+      margin-inline-end: clamp(-3rem, -5vw, -1.5rem);
+    }
+  }
+
+  /* Entrance signatures — image rises + fades + settles from a slight
+     zoom; the info panel slides in horizontally from its trailing side.
+     Reduced motion is handled globally in main.scss (opacity-only, !important). */
+  .reveal--image {
+    transform: translateY(24px) scale(1.03);
+    transition: opacity .9s cubic-bezier(0.16, 1, 0.3, 1), transform .9s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .reveal--image.is-visible {
+    transform: none;
+  }
+
+  .reveal--from-left {
+    transform: translateX(-40px);
+    transition: opacity .8s cubic-bezier(0.16, 1, 0.3, 1), transform .8s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .reveal--from-right {
+    transform: translateX(40px);
+    transition: opacity .8s cubic-bezier(0.16, 1, 0.3, 1), transform .8s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .reveal--from-left.is-visible,
+  .reveal--from-right.is-visible {
+    transform: none;
+  }
+
+  @media (max-width: 767.98px) {
+    /* Mobile: reduce movement distance/complexity per the brief — a
+       deliberate mobile composition, not a shrunk desktop one. */
+    .reveal--image {
+      transform: translateY(14px);
+    }
+
+    .reveal--from-left,
+    .reveal--from-right {
+      transform: translateY(14px);
+    }
+  }
+</style>

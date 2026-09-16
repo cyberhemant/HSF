@@ -1,0 +1,128 @@
+---
+// §4 Navigation / §9 Known Gaps "Nav pattern & menu content": the real site
+// never shows an inline link list — hamburger (left) + centered logo + CTA
+// (right), opening the off-canvas panel built in Nav.astro. The toggle uses
+// Bootstrap's native data-bs-toggle="offcanvas" — no custom JS needed.
+import Button from './Button.astro';
+import Icon from './Icon.astro';
+import IconButton from './IconButton.astro';
+export interface Props {
+  siteName?: string;
+  logoHref?: string;
+  logoSrc?: string;
+  whiteLogoSrc?: string;
+  ctaLabel?: string;
+  ctaHref?: string;
+  navId?: string;
+  class?: string;
+}
+
+const base = import.meta.env.BASE_URL;
+
+const {
+  siteName = 'Heenat Salma Farm',
+  logoHref = base,
+  logoSrc = `${base}/images/color-hsf-logo.png`,
+  whiteLogoSrc = `${base}/images/white-hsf-logo.png`,
+  ctaLabel = 'Plan a Visit',
+  ctaHref = '#',
+  navId = 'site-nav',
+  class: extraClass = '',
+} = Astro.props;
+---
+
+<header class={['h-nav   position-fixed  py-2', extraClass].filter(Boolean).join(' ')}>
+  <div class="container" >
+   
+
+    
+
+    <div class="row">
+      <div class="col">
+        <div class="d-flex "> 
+          <button
+            type="button"
+            class="text-decoration-none icon-btn btn btn-link h-nav__icon-btn p-0 justify-self-start"
+            data-bs-toggle="offcanvas"
+            data-bs-target={`#${navId}`}
+            aria-controls={navId}
+            aria-label="Open menu"
+          >
+            <Icon name="menu" size={32} />
+          </button>
+        </div>
+      </div>
+      <div class="col">
+        <div class="d-flex justify-content-center">
+          
+          <a class="logo-wrapper nav-brand" href={logoHref}>
+            <img src={logoSrc}  alt={siteName} class="logo logo-color" />
+            <img src={whiteLogoSrc}  alt={siteName} class="logo logo-white" />
+          </a>
+   
+        </div>
+      </div>
+      <div class="col">
+        <div class="d-flex justify-content-end gap-3">
+          <div>
+<IconButton icon="account_circle" label="Account" variant="plain" size={32} class="h-nav__icon-btn" />
+    <IconButton icon="shopping_bag" label="Cart" variant="plain" size={32} class="h-nav__icon-btn" />
+          </div>
+          <div class="d-none d-md-block">
+             <Button variant="outline-primary" href={ctaHref} class="h-nav__cta">{ctaLabel}</Button>
+          </div>
+              
+   
+        </div>
+      </div>
+    </div>
+
+
+  </div>
+</header>
+<style>
+
+.h-nav{
+  z-index: 100;
+  width: 100%;
+   transition: all 0.3s ease-in-out;
+   background: rgba(249, 247, 245, 0);
+
+}
+
+
+
+/* Stack both images directly over each other */
+.logo-wrapper {
+  position: relative;
+  display: inline-grid;
+  
+}
+
+.logo {
+  grid-area: 1 / 1; /* Places both images in the exact same spot */
+  width: 100%;
+  max-height:40px;
+  
+}
+
+/* Default state: show white, hide color */
+.logo-color {
+  opacity: 0;
+}
+
+/* Active state: hide white, show color */
+.toggle-menu-style .logo-wrapper .logo-white {
+  opacity: 0;
+}
+
+.toggle-menu-style .logo-wrapper .logo-color {
+  opacity: 1;
+}
+
+.toggle-menu-style{
+background: rgba(249, 247, 245, 1);
+  box-shadow: 0 4px 4px -4px rgba(0, 0, 0, 0.2);
+ 
+}
+</style>
