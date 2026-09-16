@@ -4,6 +4,7 @@
 // component partial (so /design-system/ can catalog all of them), then a
 // thin custom layer for the handful of things Sass variables can't reach.
 
+@use 'sass:map';
 @use 'sass:math';
 @import 'bootstrap/scss/functions';
 
@@ -111,12 +112,14 @@ $btn-border-radius-lg: 0;
 $btn-font-size: .875rem;
 $btn-font-size-sm: .875rem;
 $btn-font-size-lg: .875rem;
+
 // 2x Bootstrap's default horizontal padding (.75rem/.5rem/1rem) for every
 // text button. Icon Button isn't affected — .icon-btn (main.scss below)
 // resets padding to 0 for a fixed 44px square regardless of this variable.
 $btn-padding-x: 1.5rem;
 $btn-padding-x-sm: 1rem;
 $btn-padding-x-lg: 2rem;
+
 // Button Group inherits its corners from $btn-border-radius above — no
 // separate Bootstrap variable exists for it, so it's already square.
 
@@ -176,6 +179,7 @@ $focus-ring-box-shadow: 0 0 0 2px $cream, 0 0 0 4px $ochre;
 // and keeps the ochre ring above via $form-check-input-focus-box-shadow.
 $input-focus-box-shadow: none;
 $form-select-focus-box-shadow: none;
+
 // Overridden directly (rather than left to compose $input-focus-box-shadow)
 // so the range thumb doesn't end up with an invalid "<shadow>, none" value.
 $form-range-thumb-focus-box-shadow: none;
@@ -195,10 +199,10 @@ $border-color-dark: #4A2A1C;
 
 // §5 Image & Content Grid — the picker/card thumbnail ratio isn't one of
 // Bootstrap's four defaults (1x1/4x3/16x9/21x9).
-$aspect-ratios: map-merge($aspect-ratios, (
-  '16x10': percentage(math.div(10, 16)),
+$aspect-ratios: map.merge($aspect-ratios, (
+  '16x10': math.percentage(math.div(10, 16)),
 ));
-$theme-colors: map-merge($theme-colors, (
+$theme-colors: map.merge($theme-colors, (
   'maroon':     $maroon,
   'ochre':      $ochre,
   'ochre-deep': $ochre-deep,
@@ -428,7 +432,11 @@ img {
 h1, .h1 { font-weight: 800; }
 h2, .h2 { font-weight: 700; }
 h3, .h3 { font-weight: 700; }
-h4, .h4 { font-weight: 600; font-family: $font-family-sans; }
+
+h4, .h4 {
+  font-weight: 600;
+  font-family: $font-family-sans;
+}
 
 // §3 Running text stays 60–65 characters wide regardless of viewport.
 .measure { max-width: 62ch; }
@@ -504,7 +512,7 @@ h4, .h4 { font-weight: 600; font-family: $font-family-sans; }
 // groups, inline with text) the same way the old inline SVGs sat.
 .material-symbols-outlined {
   display: inline-flex;
-  font-family: 'Material Symbols Outlined';
+  font-family: 'Material Symbols Outlined', sans-serif;
   font-weight: normal;
   font-style: normal;
   font-size: var(--icon-size, 24px);

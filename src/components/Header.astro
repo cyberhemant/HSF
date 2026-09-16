@@ -21,7 +21,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
 const {
   siteName = 'Heenat Salma Farm',
-  logoHref = base,
+  logoHref = base || '/',
   logoSrc = `${base}/images/color-hsf-logo.png`,
   whiteLogoSrc = `${base}/images/white-hsf-logo.png`,
   ctaLabel = 'Plan a Visit',

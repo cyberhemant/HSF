@@ -15,7 +15,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
       component library and <code>home.json</code> exist.
     </p>
     <div class="mt-5">
-      <Button variant="secondary" href={base}>Back to versions</Button>
+      <Button variant="secondary" href={base || '/'}>Back to versions</Button>
     </div>
   </div>
 </Base>
