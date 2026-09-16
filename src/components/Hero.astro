@@ -106,7 +106,7 @@ const {
   Your browser does not support the video tag.
 </video>
         <div class="hero-content">
-    <h1 class="text-light display-4">Where Nature, Culture & Community Come Together</h1>
+    <h1 class="text-light display-4 hero-title">Where Nature, Culture & Community Come Together</h1>
             
             <a href="#story-section" class="fs-3 text-light pt-4 text-decoration-none" aria-label="Get started">
               <span>Experience the Farm</span>
@@ -201,6 +201,13 @@ const {
 
 
 /* Container: Remove z-index: -1, use relative positioning */
+
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: 2.5rem; /* Adjust as needed for smaller screens */
+  }
+}
+
 .hero-video-background {
   position: relative;
   top: 0;
