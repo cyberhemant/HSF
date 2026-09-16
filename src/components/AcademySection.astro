@@ -42,9 +42,9 @@ const videoId = new URL(videoUrl).searchParams.get('v') ?? videoUrl.split('/').p
 ---
 
 <section class={['academy-section bg-ochre', extraClass].filter(Boolean).join(' ')}>
-  <div class="container">
-    <div class="row g-0">
-      <div class="col-12 col-lg-6 p-6 bg-cream">
+  <div class="container reveal">
+    <div class="row g-0 flex-wrap-reverse">
+      <div class="col-12 col-lg-6 p-4 p-lg-6 bg-cream">
         <Tag variant="plain">{eyebrow}</Tag>
         <h2 class="display-5 mt-3">{heading}</h2>
         <p class="mt-4">{lead}</p>

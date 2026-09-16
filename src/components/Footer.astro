@@ -70,21 +70,21 @@ const {
 <footer class="footer-bg-wrapper" class={['', extraClass].filter(Boolean).join(' ')}>
   <section class="position-relative" style="z-index: 1;">
     <div class="container">
-      <div class="row">
-        <div class="col-12 col-md-6 col-lg-5 py-5">
+      <div class="row justify-content-between">
+        <div class="col-12 col-md-6 col-lg-5 py-5 reveal">
           <div>
             <Tag variant="plain">Newsletter</Tag>
           </div>
           <div>
-            <h3 class="display-6 fw-bold">
-                Stay connected with Heenat Salma
+            <h3 class="h1">
+                Stay connected 
             </h3>
-            <p class="text-ink-faint">
+            <!-- <p class="text-ink-faint">
               Get the latest from our farm right to your inbox. Subscribe for updates and special offers.</h3>
-            </p>
+            </p> -->
             <form class="d-flex  mt-1">
               <div class="col-8">
-                <label class="form-label" for="ds-email">Email address</label>
+                <!-- <label class="form-label" for="ds-email">Email address</label> -->
                 <input type="email" class="form-control" id="ds-email" placeholder="name@example.com" />
               </div>
               <div class="col-4 d-flex align-items-end">
@@ -93,18 +93,18 @@ const {
             </form>
           </div>
         </div>
-        <div class="col-12 col-lg-2 "> </div>
-        <div class="col-12 col-md-6 col-lg-5 py-5">
+  
+        <div class="col-12 col-md-6 col-lg-5 py-5 reveal">
           <div>
             <Tag variant="plain">Find us on social media</Tag>
           </div>
           <div>
-            <h3 class="display-6 fw-bold">
+            <h3 class="h1">
                 Follow Heenat Salma
             </h3>
-            <p class="text-ink-faint">
+            <!-- <p class="text-ink-faint">
               Get the latest from our farm right to your inbox. Subscribe for updates and special offers.</h3>
-            </p>
+            </p> -->
           </div>
            <div class="d-flex flex-wrap gap-2">
             {social.map((item) => (
@@ -116,7 +116,7 @@ const {
     </div>
   </section>
   <img class="footer-bg" src={image.src} alt={image.alt} class="img-fluid d-block mx-auto my-6" />
-  <div class="container footer-bg-content py-6">
+  <div class="container footer-bg-content py-6 reveal">
     <div class="row g-4 g-md-5">
       {columns.map((col) => (
         <div class="col-12 col-md-4">
