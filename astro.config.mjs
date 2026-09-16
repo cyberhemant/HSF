@@ -10,7 +10,7 @@ import { defineConfig } from 'astro/config';
 const isNetlify = Boolean(process.env.NETLIFY);
 
 export default defineConfig({
-  site: isNetlify ? process.env.URL : 'https://your-username.github.io',
+  site: isNetlify ? (process.env.URL || 'https://heenatfarm.netlify.app') : 'https://your-username.github.io',
   base: isNetlify ? '/' : '/heenat-prototype',
   build: {
     format: 'directory',
