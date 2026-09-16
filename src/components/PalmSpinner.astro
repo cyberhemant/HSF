@@ -1,0 +1,54 @@
+---
+// Brand loading indicator — a palm/leaf mark inside a frame that traces
+// itself closed, then wipes the mark into view (bottom to top, like growth),
+// holds, and retracts to loop (see .palm-spinner__arc / __leaf keyframes in
+// main.scss). Color comes from currentColor via the same text-color
+// utilities the stock Bootstrap spinners use; "inverted" (text-white) is
+// for on-dark contexts.
+export interface Props {
+  variant?: 'primary' | 'secondary' | 'inverted';
+  size?: number;
+  label?: string;
+  class?: string;
+}
+
+const VARIANT_CLASS: Record<string, string> = {
+  primary: 'text-primary',
+  secondary: 'text-secondary',
+  inverted: 'text-white',
+};
+
+const {
+  variant = 'primary',
+  size = 72,
+  label = 'Loading',
+  class: extraClass = '',
+} = Astro.props;
+
+const height = Math.round(size * 1.25); // viewBox is 80x100 (4:5)
+
+const classes = ['palm-spinner', VARIANT_CLASS[variant], extraClass]
+  .filter(Boolean).join(' ');
+---
+
+<svg
+  class={classes}
+  viewBox="0 0 80 100"
+  width={size}
+  height={height}
+  role="status"
+  aria-label={label}
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <rect class="palm-spinner__track" x="1.5" y="1.5" width="77" height="97" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.2" />
+  <rect class="palm-spinner__arc" x="1.5" y="1.5" width="77" height="97" fill="none" stroke="currentColor" stroke-width="1.6" pathLength="400" stroke-dasharray="0 400" />
+
+  <g class="palm-spinner__leaf" transform="translate(16 15.6) scale(0.8)" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round">
+    <path d="M30 78V38" />
+    <path d="M30 38C22 30 14 27 6 28c6-6 15-6 24 2" />
+    <path d="M30 38c8-8 16-11 24-10-6-6-15-6-24 2" />
+    <path d="M30 30c-6-9-13-13-21-14 5-7 14-5 21 4" />
+    <path d="M30 30c6-9 13-13 21-14-5-7-14-5-21 4" />
+    <path d="M30 22c-3-8-3-14 0-20 3 6 3 12 0 20" />
+  </g>
+</svg>

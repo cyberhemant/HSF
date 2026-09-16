@@ -6,6 +6,7 @@ import IconButton from '../../components/IconButton.astro';
 import Tag from '../../components/Tag.astro';
 import Icon from '../../components/Icon.astro';
 import Divider from '../../components/Divider.astro';
+import PalmSpinner from '../../components/PalmSpinner.astro';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
@@ -63,6 +64,15 @@ const colorGroups = [
   ]},
 ];
 
+const displayRamp = [
+  { role: 'Display 1', cls: 'display-1', size: '5rem / 300' },
+  { role: 'Display 2', cls: 'display-2', size: '4.5rem / 300' },
+  { role: 'Display 3', cls: 'display-3', size: '4rem / 300' },
+  { role: 'Display 4', cls: 'display-4', size: '3.5rem / 300' },
+  { role: 'Display 5', cls: 'display-5', size: '3rem / 300' },
+  { role: 'Display 6', cls: 'display-6', size: '2.5rem / 300' },
+];
+
 const typeRamp = [
   { role: 'H1', el: 'h1', size: '2.1rem / 800 / 1.1' },
   { role: 'H2', el: 'h2', size: '1.55rem / 700 / 1.2' },
@@ -75,7 +85,7 @@ const radii = [
   { name: 'rounded-1', use: 'Buttons, inputs — 3px, the family default' },
   { name: 'rounded-2', use: 'Callout / quote blocks — 2px' },
   { name: 'rounded-3', use: 'Cards, panels — 6px' },
-  { name: 'rounded-pill', use: 'Tags, circular Icon Buttons — the one full-pill radius' },
+  { name: 'rounded-pill', use: 'Circular Icon Buttons — the one full-pill radius' },
 ];
 
 const experiences = [
@@ -138,6 +148,23 @@ const experiences = [
         <section id="foundations-typography" class="pb-6 mb-6 border-bottom">
           <h2>Typography</h2>
           <p class="text-ink-soft">Alegreya (serif) carries the brand moment; Alegreya Sans carries function.</p>
+
+          <h3 class="h4 mt-4">Display</h3>
+          <p class="text-ink-soft">Bootstrap's stock display-1–display-6 — unweighted by the brief, so they inherit the serif heading font at Bootstrap's own light (300) weight.</p>
+
+          {displayRamp.map((d) => (
+            <div class="row py-3 border-top align-items-baseline">
+              <div class="col-md-3">
+                <strong>{d.role}</strong>
+                <div class="small text-ink-faint">{d.size}</div>
+              </div>
+              <div class="col-md-9">
+                <p class={`${d.cls} mb-0`}>The farm wakes</p>
+              </div>
+            </div>
+          ))}
+
+          <h3 class="h4 mt-5">Headings</h3>
 
           {typeRamp.map((t) => {
             const HeadingTag = t.el;
@@ -250,13 +277,13 @@ const experiences = [
         <!-- ================= BADGES ================= -->
         <section id="badges" class="pb-6 mb-6 border-bottom">
           <h2>Badges / Tags</h2>
-          <p class="text-ink-soft">Small taxonomy chips only — the one other user of the full-pill radius besides the circular Icon Button.</p>
+          <p class="text-ink-soft">Small taxonomy chips only — square corners.</p>
           <div class="d-flex flex-wrap gap-2 mt-3">
             <Tag>Now Booking</Tag>
             <Tag>Seasonal</Tag>
             <Tag variant="filled">Wellness</Tag>
             <Tag variant="plain">Farm Fresh</Tag>
-            <span class="badge text-bg-danger rounded-pill">Sold Out</span>
+            <span class="badge text-bg-danger">Sold Out</span>
           </div>
         </section>
 
@@ -485,7 +512,7 @@ const experiences = [
           <ul class="list-group mt-3" style="max-width: 24rem;">
             <li class="list-group-item d-flex justify-content-between align-items-center">
               Guest Journey
-              <span class="badge text-bg-secondary rounded-pill">New</span>
+              <span class="badge text-bg-secondary">New</span>
             </li>
             <li class="list-group-item active">Lodges</li>
             <li class="list-group-item disabled">Careers (closed)</li>
@@ -502,6 +529,21 @@ const experiences = [
           <div class="progress mt-2" role="progressbar" aria-label="Season occupancy" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100">
             <div class="progress-bar bg-ochre-deep progress-bar-striped progress-bar-animated" style="width: 70%"></div>
           </div>
+          <div class="progress mt-2" role="progressbar" aria-label="Farm-to-table sourcing" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-bar bg-ochre-deep" style="width: 60%"></div>
+          </div>
+
+          <h3 class="h4 mt-5">Thin</h3>
+          <p class="text-ink-soft">.5rem height — <code>.progress-thin</code>, for inline/compact contexts.</p>
+          <div class="progress progress-thin mt-3" role="progressbar" aria-label="Booking progress" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-bar" style="width: 25%"></div>
+          </div>
+          <div class="progress progress-thin mt-2" role="progressbar" aria-label="Season occupancy" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-bar bg-ochre-deep progress-bar-striped progress-bar-animated" style="width: 70%"></div>
+          </div>
+          <div class="progress progress-thin mt-2" role="progressbar" aria-label="Farm-to-table sourcing" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-bar bg-ochre-deep" style="width: 60%"></div>
+          </div>
         </section>
 
         <!-- ================= SPINNERS ================= -->
@@ -510,6 +552,16 @@ const experiences = [
           <div class="d-flex gap-4 align-items-center mt-3">
             <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading&hellip;</span></div>
             <div class="spinner-grow text-secondary" role="status"><span class="visually-hidden">Loading&hellip;</span></div>
+          </div>
+
+          <h3 class="h4 mt-5">Palm Spinner</h3>
+          <p class="text-ink-soft">Brand loading indicator — the frame traces closed, then wipes the palm mark into view.</p>
+          <div class="d-flex flex-wrap gap-5 align-items-center mt-3">
+            <PalmSpinner variant="primary" />
+            <PalmSpinner variant="secondary" />
+            <div class="bg-maroon p-4">
+              <PalmSpinner variant="inverted" />
+            </div>
           </div>
         </section>
 

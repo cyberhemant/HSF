@@ -71,11 +71,13 @@ $link-decoration: underline;
 $enable-rfs: false; // fixed sizes per DESIGN.md, not fluid-scaled
 $small-font-size: .72rem; // <small> / .small
 
-// §4 Tag / Badge — 0.72rem/600/uppercase/+0.1em tracking, generous padding.
+// §4 Tag / Badge — 0.72rem/600/uppercase/+0.1em tracking, generous padding,
+// square corners.
 $badge-font-size: .72rem;
 $badge-font-weight: 600;
 $badge-padding-y: .5rem;  // 8px
 $badge-padding-x: 1rem;   // 16px
+$badge-border-radius: 0;
 
 // =============================================================================
 // §5 Spacing — 4/8/16/24/32/48/64px, extending Bootstrap's 0–5 spacer map
@@ -93,7 +95,7 @@ $spacers: (
 );
 
 // =============================================================================
-// §5 Radius — deliberately small; 999px reserved for Tag / circular Icon Button
+// §5 Radius — deliberately small; 999px reserved for the circular Icon Button
 // =============================================================================
 $border-radius: 3px;
 $border-radius-sm: 2px;
@@ -122,9 +124,9 @@ $btn-padding-x-lg: 2rem;
 
 // Square corners for the remaining components called out as flat in the
 // brief: Input, Tabs, Card, Alert, List Group, Checkbox, Progress Bar,
-// Accordion, Pagination. Left independent of $border-radius above so
-// anything NOT listed here (Dropdown, Badge, Toast, Modal, Tooltip,
-// Popover, Thumbnail) keeps the general radius scale.
+// Accordion, Pagination, Dropdown. Left independent of $border-radius above
+// so anything NOT listed here (Badge, Toast, Modal, Tooltip, Popover,
+// Thumbnail) keeps the general radius scale.
 $input-border-radius: 0;
 $input-border-radius-sm: 0;
 $input-border-radius-lg: 0;
@@ -136,6 +138,7 @@ $list-group-border-radius: 0;
 $progress-border-radius: 0;
 $accordion-border-radius: 0;
 $pagination-border-radius: 0;
+$dropdown-border-radius: 0;
 
 // =============================================================================
 // §5 Breakpoints & Grid — mobile / tablet(768) / desktop(1280), 1180px content
@@ -461,6 +464,21 @@ h4, .h4 { font-weight: 600; font-family: $font-family-sans; }
 // §4 Tag — Bootstrap has no letter-spacing utility.
 .ls-tag { letter-spacing: .1em; }
 
+// §4 Progress — thin (.5rem) variant; Bootstrap has no size modifier
+// out of the box, so override its own height custom property.
+.progress-thin { --#{$prefix}progress-height: .5rem; }
+
+// §4 Accordion — bottom hairline only (no side/top borders stacking between
+// items), and no focus ring on the button (the bottom-border active state
+// already communicates focus/expansion).
+.accordion-item {
+  border-width: 0 0 var(--#{$prefix}accordion-border-width);
+}
+
+.accordion-button:focus {
+  box-shadow: none;
+}
+
 // Header CTA — while .h-nav sits transparent over hero imagery (before JS
 // adds .toggle-menu-style on scroll), the maroon-on-transparent outline
 // button is invisible/illegible; invert it to white. Overriding Bootstrap's
@@ -512,6 +530,47 @@ h4, .h4 { font-weight: 600; font-family: $font-family-sans; }
   vertical-align: middle;
   user-select: none;
   color: currentcolor;
+}
+
+// §4 Palm Spinner — brand loading indicator (PalmSpinner.astro): the frame
+// traces itself closed, then the palm mark wipes into view bottom-to-top
+// (like growth), holds, and retracts to loop. Color is currentColor
+// throughout, so it's driven the same way as the stock Bootstrap spinners
+// above — .text-primary / .text-secondary, plus .text-white for the
+// inverted (on-dark) variant. The reveal is a CSS clip-path animation
+// (not an animated <clipPath> child) — the latter doesn't reliably
+// repaint across browsers.
+.palm-spinner__arc {
+  stroke-dasharray: 400;
+  stroke-dashoffset: 400;
+  animation: palm-spinner-arc 3.6s cubic-bezier(.65, 0, .35, 1) infinite;
+}
+
+.palm-spinner__leaf {
+  clip-path: inset(100% 0 0 0);
+  animation: palm-spinner-wipe 3.6s cubic-bezier(.65, 0, .35, 1) infinite;
+}
+
+@keyframes palm-spinner-arc {
+  0% { stroke-dashoffset: 400; }
+  45%, 85% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: 400; }
+}
+
+@keyframes palm-spinner-wipe {
+  0%, 45% { clip-path: inset(100% 0 0 0); }
+  85% { clip-path: inset(0% 0 0 0); }
+  100% { clip-path: inset(100% 0 0 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .palm-spinner__arc,
+  .palm-spinner__leaf {
+    animation: none;
+  }
+
+  .palm-spinner__arc { stroke-dashoffset: 0; }
+  .palm-spinner__leaf { clip-path: inset(0% 0 0 0); }
 }
 
 // Footer — same beige surface, with an aged-paper grain. Procedurally

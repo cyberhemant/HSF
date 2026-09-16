@@ -1,6 +1,5 @@
 ---
-// §4 Tag / Badge — small taxonomy chips, e.g. "Now Booking". Full-pill radius
-// is otherwise reserved; the one other user is the circular Icon Button.
+// §4 Tag / Badge — small taxonomy chips, e.g. "Now Booking". Square corners.
 export interface Props {
   variant?: 'outline' | 'filled' | 'plain';
   class?: string;
@@ -13,7 +12,7 @@ const variantClass = variant === 'filled'
   ? 'bg-transparent text-ochre-deep border-0 p-0'
   : 'bg-transparent text-ochre-deep border';
 
-const classes = ['badge', 'rounded-pill', 'text-uppercase', 'ls-tag', variantClass, extraClass]
+const classes = ['badge', 'text-uppercase', 'ls-tag', variantClass, extraClass]
   .filter(Boolean).join(' ');
 ---
 
