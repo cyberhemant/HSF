@@ -21,7 +21,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const {
   eyebrow = 'Gatherings & Celebrations',
   heading = 'Event Space',
-  lead = 'From intimate gatherings to milestone celebrations, host your event against the backdrop of the desert — surrounded by working farmland, shaded courtyards, and the quiet of Heenat Salma.',
+  lead = 'Host your event amidst the quiet desert, working farmland, and shaded courtyards of Heenat Salma.',
   ctaLabel = 'Enquire About Events',
   ctaHref = `${base}/event-space/`,
   image = 'https://heenatsalma.earth/wp-content/uploads/2024/04/dsc00685_sm.webp',
@@ -34,10 +34,12 @@ const {
   style={`background-image: linear-gradient(rgba(20, 8, 5, 0.55), rgba(20, 8, 5, 0.55)), url(${image});`}
 >
   <div class="container">
-    <div class="event-space__content mx-auto text-center" data-aos="fade-up">
-      <Tag variant="plain" class="event-space__eyebrow">{eyebrow}</Tag>
-      <h2 class="display-4 mt-3 text-cream">{heading}</h2>
-      <p class="mt-4 fs-5 event-space__lead mx-auto">{lead}</p>
+    <div class="event-space__content mx-auto " data-aos="fade-up">
+     <div class="border-start border-2 ps-2">
+       <Tag variant="plain" class="event-space__eyebrow pb-3 text-cream">{eyebrow}</Tag>
+      <h2 class="display-4  text-cream">{heading}</h2>
+     </div>
+      <p class="mt-4 fs-2 event-space__lead mx-auto">{lead}</p>
       <Button variant="outline-primary" href={ctaHref} class="event-space__btn mt-4">{ctaLabel}</Button>
     </div>
   </div>
