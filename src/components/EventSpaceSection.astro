@@ -48,11 +48,12 @@ const {
 <style>
   .event-space {
     position: relative;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
+    background-size: auto;
+    background-position: left 0 bottom 50%;
+    background-repeat: repeat-x;
     background-attachment: fixed;
     padding-block: clamp(96px, 14vw, 160px);
+   
   }
 
   /* iOS Safari never renders fixed backgrounds correctly, and repainting a
@@ -92,4 +93,20 @@ const {
     --bs-btn-active-color: var(--bs-maroon);
     --bs-btn-active-border-color: var(--bs-cream);
   }
+@media screen and (min-width: 768px) {
+  .event-space{
+    /* Animation attaches only when screen width is 768px or wider */
+    animation: slideRight 20s linear infinite; 
+  }
+}
+
+  @keyframes slideRight {
+  0% {
+    background-position: left 0 bottom 50%;
+  }
+  100% {
+    /* Moving to a positive value pushes the background from left to right */
+    background-position:left 100% bottom 50%; 
+  }
+}
 </style>
