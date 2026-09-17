@@ -90,7 +90,14 @@ const {
     const show = (index: number) => {
       current = ((index % count) + count) % count;
 
-      images.forEach((img, i) => img.classList.toggle('is-active', i === current));
+      images.forEach((img, i) => {
+        img.classList.toggle('is-active', i === current);
+        // Every image not currently active sits off-canvas to the left or
+        // right based purely on its index vs. current — no direction
+        // tracking needed. Whichever way `current` moves, the CSS
+        // transition on transform carries it across in the right direction.
+        img.classList.toggle('is-prev', i < current);
+      });
 
       thumbs.forEach((thumb, i) => {
         const active = i === current;
@@ -177,15 +184,27 @@ const {
     height: 100%;
     object-fit: contain;
     object-position: center;
-    opacity: 0;
     z-index: 1;
-    transition: opacity .35s ease;
+    /* Default (unset) position is off-canvas right — .is-prev below moves
+       anything behind the active index off-canvas left instead. */
+    transform: translateX(100%);
+    transition: transform .4s ease;
     pointer-events: none;
   }
 
   .product-gallery__image.is-active {
-    opacity: 1;
+    transform: translateX(0);
     z-index: 2;
+  }
+
+  .product-gallery__image.is-prev {
+    transform: translateX(-100%);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .product-gallery__image {
+      transition: none;
+    }
   }
 
   .product-gallery__arrows {
