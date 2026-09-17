@@ -123,6 +123,38 @@ const {
       if (e.key === 'ArrowLeft') show(current - 1);
       if (e.key === 'ArrowRight') show(current + 1);
     });
+
+    // Swipe left/right on the stage — mobile only in practice (arrows take
+    // over on desktop), but touch events fire regardless of viewport so
+    // this doesn't need a media-query gate. passive: true throughout since
+    // nothing here ever calls preventDefault — a mostly-vertical drag is
+    // left alone to scroll the page as normal.
+    const stage = root.querySelector<HTMLElement>('.product-gallery__stage');
+    if (stage && count > 1) {
+      const SWIPE_THRESHOLD = 40;
+      let startX = 0;
+      let startY = 0;
+      let tracking = false;
+
+      stage.addEventListener('touchstart', (e) => {
+        const touch = e.touches[0];
+        startX = touch.clientX;
+        startY = touch.clientY;
+        tracking = true;
+      }, { passive: true });
+
+      stage.addEventListener('touchend', (e) => {
+        if (!tracking) return;
+        tracking = false;
+
+        const touch = e.changedTouches[0];
+        const dx = touch.clientX - startX;
+        const dy = touch.clientY - startY;
+        if (Math.abs(dx) < SWIPE_THRESHOLD || Math.abs(dx) < Math.abs(dy)) return;
+
+        show(current + (dx < 0 ? 1 : -1));
+      }, { passive: true });
+    }
   });
 </script>
 
