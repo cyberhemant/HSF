@@ -123,7 +123,7 @@ $btn-padding-x-lg: 2rem;
 // separate Bootstrap variable exists for it, so it's already square.
 
 // Square corners for the remaining components called out as flat in the
-// brief: Input, Tabs, Card, Alert, List Group, Checkbox, Progress Bar,
+// brief: Input, Tabs, Pills, Card, Alert, List Group, Checkbox, Progress Bar,
 // Accordion, Pagination, Dropdown. Left independent of $border-radius above
 // so anything NOT listed here (Badge, Toast, Modal, Tooltip, Popover,
 // Thumbnail) keeps the general radius scale.
@@ -132,6 +132,7 @@ $input-border-radius-sm: 0;
 $input-border-radius-lg: 0;
 $form-check-input-border-radius: 0;
 $nav-tabs-border-radius: 0;
+$nav-pills-border-radius: 0;
 $card-border-radius: 0;
 $alert-border-radius: 0;
 $list-group-border-radius: 0;
@@ -139,6 +140,16 @@ $progress-border-radius: 0;
 $accordion-border-radius: 0;
 $pagination-border-radius: 0;
 $dropdown-border-radius: 0;
+
+// §4 Nav — Underline Tabs (proposed extension, not in DESIGN.md's original
+// component list). Bootstrap's built-in .nav-underline variant themed to the
+// brand: active color matches the heading maroon rather than Bootstrap's
+// default near-black emphasis color, and the gap widens to match the rest
+// of the system's generous nav spacing. Pair with .border-bottom in markup
+// for the full-width baseline the active tab's underline sits on — it
+// already resolves to $hairline via $border-color above.
+$nav-underline-gap: 2rem;
+$nav-underline-link-active-color: $ink;
 
 // =============================================================================
 // §5 Breakpoints & Grid — mobile / tablet(768) / desktop(1280), 1180px content
@@ -252,6 +263,13 @@ $theme-colors: map-merge($theme-colors, (
 // =============================================================================
 // Custom layer — the handful of things Sass variables can't reach.
 // =============================================================================
+
+// Text selection — brand maroon fill with cream text, no Bootstrap variable
+// reaches ::selection.
+::selection {
+  background-color: var(--#{$prefix}beige);
+  // color: var(--#{$prefix}maroon);
+}
 
 // Images default to filling their container's width (height auto to
 // preserve aspect ratio) rather than rendering at intrinsic size.
@@ -426,6 +444,33 @@ img {
   box-shadow: none;
 }
 
+// Disabled form elements — Bootstrap 5 doesn't set a cursor on disabled
+// controls itself. form-check-input keeps pointer-events: none while
+// disabled, so its own cursor never shows; the sibling label is what's
+// actually hovered, hence the separate selector below.
+.form-control:disabled,
+.form-select:disabled,
+.form-range:disabled {
+  cursor: not-allowed;
+}
+
+.form-check-input:disabled ~ .form-check-label {
+  cursor: not-allowed;
+}
+
+// .btn:disabled also gets pointer-events: none from Bootstrap's own
+// _buttons.scss, which would swallow the cursor the same way form-check
+// does above. Every disabled button in this codebase (Button.astro,
+// IconButton.astro) renders a real <button disabled>, so the browser
+// already blocks clicks/focus on its own — safe to hand pointer-events
+// back just so the cursor renders. .btn-line-effect (AnimatedOutlineButton)
+// is excluded: its wipe/underline animation is driven by :hover, so
+// restoring pointer-events would let a disabled one still animate on hover.
+.btn:disabled:not(.btn-line-effect) {
+  pointer-events: auto;
+  cursor: not-allowed;
+}
+
 // Per-role heading weights — Bootstrap's $headings-font-weight is one value
 // for h1–h6; DESIGN.md specifies a different weight per role (§3 Hierarchy).
 h1, .h1 { font-weight: 800; }
@@ -461,12 +506,83 @@ h4, .h4 { font-weight: 600; font-family: $font-family-sans; }
   padding: 0;
 }
 
+// Numeric Stepper — Bootstrap has no quantity/count primitive; this strips
+// native number-input chrome so it reads as a bare numeral between the two
+// flanking Icon Buttons.
+.stepper__input {
+  width: 3rem;
+  border: 0;
+  background: transparent;
+  text-align: center;
+  font-family: $font-family-sans;
+  font-weight: 600;
+  color: var(--#{$prefix}ink-soft);
+  appearance: textfield;
+
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--#{$prefix}ochre-deep);
+    outline-offset: 2px;
+  }
+}
+
+// Numeric Stepper — Block variant: solid secondary end-caps flush against
+// the input, read as one continuous bordered bar rather than three gapped
+// controls. overflow: hidden clips the inner squared buttons to the
+// wrapper's own rounded-1 corners.
+.stepper--block {
+  display: inline-flex;
+  align-items: stretch;
+  overflow: hidden;
+
+  .stepper__btn.icon-btn {
+    // width: 3.5rem;
+    // height: auto;
+    // border-radius: 0;
+  }
+
+  .stepper__input {
+    min-width: 4.5rem;
+    padding: 0 .5rem;
+  }
+}
+
 // §4 Tag — Bootstrap has no letter-spacing utility.
 .ls-tag { letter-spacing: .1em; }
 
 // §4 Progress — thin (.5rem) variant; Bootstrap has no size modifier
 // out of the box, so override its own height custom property.
 .progress-thin { --#{$prefix}progress-height: .5rem; }
+
+// §4 Nav — Underline Tabs sliding indicator. Bootstrap's own .nav-underline
+// pops each link's border-bottom on/off with the active class — no
+// transition, since it's two separate elements. This swaps that for one
+// shared bar, positioned over the active <li> in scripts/bootstrap.js, that
+// slides and resizes between tabs instead of jumping.
+.tabs-underline {
+  position: relative;
+}
+
+.tabs-underline .nav-link.active,
+.tabs-underline .show > .nav-link {
+  border-bottom-color: transparent; // the sliding bar draws the line instead
+}
+
+.tabs-underline__bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: var(--#{$prefix}nav-underline-border-width);
+  background-color: var(--#{$prefix}nav-underline-link-active-color);
+  transition: transform .25s ease, width .25s ease;
+  pointer-events: none;
+}
 
 // §4 Accordion — bottom hairline only (no side/top borders stacking between
 // items), and no focus ring on the button (the bottom-border active state
@@ -477,6 +593,22 @@ h4, .h4 { font-weight: 600; font-family: $font-family-sans; }
 
 .accordion-button:focus {
   box-shadow: none;
+}
+
+// Open state — primary-colored title on a white panel (rather than
+// Bootstrap's default tinted primary background), and the collapsed button
+// stays white on hover instead of picking up a tint.
+.accordion-button:not(.collapsed) {
+  color: var(--#{$prefix}maroon);
+  background-color: $white;
+}
+
+.accordion-collapse.show {
+  background-color: $white;
+}
+
+.accordion-button.collapsed:hover {
+  background-color: $white;
 }
 
 // Header CTA — while .h-nav sits transparent over hero imagery (before JS
@@ -571,6 +703,14 @@ h4, .h4 { font-weight: 600; font-family: $font-family-sans; }
 
   .palm-spinner__arc { stroke-dashoffset: 0; }
   .palm-spinner__leaf { clip-path: inset(0% 0 0 0); }
+}
+
+// §4 Placeholders — Bootstrap's skeleton fill is background-color: currentcolor,
+// so it otherwise inherits whatever text color it sits inside (card-title,
+// card-text, etc). Pin it to ochre instead, matching its icons/hairlines/
+// dividers role rather than the surrounding copy color.
+.placeholder {
+  color: $ochre;
 }
 
 // Footer — same beige surface, with an aged-paper grain. Procedurally

@@ -1,0 +1,247 @@
+---
+// Product-detail style gallery: one large stage image, prev/next arrows
+// pinned to its bottom-right corner, and a row of square thumbnails below
+// that scrolls horizontally once it outgrows the available width. On mobile
+// the arrows and thumbnail strip give way to a row of dots under the stage.
+import Icon from './Icon.astro';
+
+export interface Props {
+  images?: { src: string; alt?: string }[];
+  class?: string;
+}
+
+const {
+  images = [],
+  class: extraClass = '',
+} = Astro.props;
+---
+
+<div
+  class={['product-gallery', extraClass].filter(Boolean).join(' ')}
+  data-product-gallery
+  data-count={images.length}
+  tabindex="0"
+>
+  <div class="product-gallery__stage">
+    {images.map((image, i) => (
+      <img
+        class="product-gallery__image"
+        class:list={[{ 'is-active': i === 0 }]}
+        data-index={i}
+        src={image.src}
+        alt={image.alt || ''}
+        loading={i === 0 ? 'eager' : 'lazy'}
+      />
+    ))}
+
+    <div class="product-gallery__arrows d-none d-md-flex">
+      <button type="button" class="product-gallery__arrow" data-action="prev" aria-label="Previous image">
+        <Icon name="chevron-left" size={24} />
+      </button>
+      <button type="button" class="product-gallery__arrow" data-action="next" aria-label="Next image">
+        <Icon name="chevron-right" size={24} />
+      </button>
+    </div>
+  </div>
+
+  <div class="product-gallery__thumbs d-none d-md-flex" data-role="thumbs">
+    {images.map((image, i) => (
+      <button
+        type="button"
+        class="product-gallery__thumb"
+        class:list={[{ 'is-active': i === 0 }]}
+        data-action="thumb"
+        data-index={i}
+        aria-label={`Show image ${i + 1}`}
+        aria-current={i === 0 ? 'true' : 'false'}
+      >
+        <img src={image.src} alt="" loading="lazy" />
+      </button>
+    ))}
+  </div>
+
+  <div class="product-gallery__dots d-flex d-md-none" role="tablist" aria-label="Select image">
+    {images.map((_, i) => (
+      <button
+        type="button"
+        class="product-gallery__dot"
+        class:list={[{ 'is-active': i === 0 }]}
+        data-action="dot"
+        data-index={i}
+        aria-label={`Go to image ${i + 1}`}
+        aria-current={i === 0 ? 'true' : 'false'}
+      ></button>
+    ))}
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-product-gallery]').forEach((root) => {
+    const count = Number(root.dataset.count) || 0;
+    if (count < 1) return;
+
+    const images = Array.from(root.querySelectorAll<HTMLImageElement>('.product-gallery__image'));
+    const thumbs = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-action="thumb"]'));
+    const dots = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-action="dot"]'));
+    const thumbsWrap = root.querySelector<HTMLElement>('[data-role="thumbs"]');
+
+    let current = 0;
+
+    const show = (index: number) => {
+      current = ((index % count) + count) % count;
+
+      images.forEach((img, i) => img.classList.toggle('is-active', i === current));
+
+      thumbs.forEach((thumb, i) => {
+        const active = i === current;
+        thumb.classList.toggle('is-active', active);
+        thumb.setAttribute('aria-current', String(active));
+      });
+
+      dots.forEach((dot, i) => {
+        const active = i === current;
+        dot.classList.toggle('is-active', active);
+        dot.setAttribute('aria-current', String(active));
+      });
+
+      const activeThumb = thumbs[current];
+      if (activeThumb && thumbsWrap) {
+        const wrapRect = thumbsWrap.getBoundingClientRect();
+        const thumbRect = activeThumb.getBoundingClientRect();
+        if (thumbRect.left < wrapRect.left || thumbRect.right > wrapRect.right) {
+          activeThumb.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' });
+        }
+      }
+    };
+
+    root.querySelector('[data-action="prev"]')?.addEventListener('click', () => show(current - 1));
+    root.querySelector('[data-action="next"]')?.addEventListener('click', () => show(current + 1));
+    thumbs.forEach((thumb, i) => thumb.addEventListener('click', () => show(i)));
+    dots.forEach((dot, i) => dot.addEventListener('click', () => show(i)));
+
+    root.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft') show(current - 1);
+      if (e.key === 'ArrowRight') show(current + 1);
+    });
+  });
+</script>
+
+<style>
+  .product-gallery {
+    outline: none;
+  }
+
+  .product-gallery__stage {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    background-color: var(--bs-sand);
+    overflow: hidden;
+  }
+
+  .product-gallery__image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+    opacity: 0;
+    z-index: 1;
+    transition: opacity .35s ease;
+    pointer-events: none;
+  }
+
+  .product-gallery__image.is-active {
+    opacity: 1;
+    z-index: 2;
+  }
+
+  .product-gallery__arrows {
+    position: absolute;
+    inset-block-end: 1rem;
+    inset-inline-end: 1rem;
+    z-index: 3;
+    gap: .5rem;
+  }
+
+  .product-gallery__arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    background-color: #fff;
+    color: var(--bs-ink-soft);
+    border: none;
+    /* border-radius: var(--bs-border-radius); */
+    cursor: pointer;
+    transition: color .2s ease;
+  }
+
+  .product-gallery__arrow:hover,
+  .product-gallery__arrow:focus-visible {
+    color: var(--bs-maroon);
+  }
+
+  .product-gallery__thumbs {
+    gap: .75rem;
+    margin-block-start: 1rem;
+    padding-block-end: .25rem;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+
+  .product-gallery__thumb {
+    flex: 0 0 auto;
+    width: 5.5rem;
+    height: 5.5rem;
+    padding: 0;
+    background: none;
+    border: 2px solid transparent;
+    /* border-radius: var(--bs-border-radius); */
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color .2s ease;
+  }
+
+  .product-gallery__thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: .6;
+  }
+
+  .product-gallery__thumb:hover img {
+    opacity: 1;
+  }
+
+  
+  .product-gallery__thumb.is-active img {
+    opacity: 1;
+  
+  }
+
+  .product-gallery__dots {
+    justify-content: center;
+    align-items: center;
+    gap: .5rem;
+    margin-block-start: 1rem;
+  }
+
+  .product-gallery__dot {
+    width: .5rem;
+    height: .5rem;
+    padding: 0;
+    background-color: var(--bs-border-color);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background-color .2s ease, transform .2s ease;
+  }
+
+  .product-gallery__dot.is-active {
+    background-color: var(--bs-maroon);
+    transform: scale(1.25);
+  }
+</style>

@@ -16,3 +16,33 @@ if (toastTrigger && toastEl) {
     bootstrap.Toast.getOrCreateInstance(toastEl).show();
   });
 }
+
+// Underline Tabs demo — the sliding bar has no data-attribute equivalent, so
+// it's measured off the active <li> here: once on load, then again on every
+// shown.bs.tab event so it animates to the newly active tab (transition
+// lives on .tabs-underline__bar in main.scss). Re-measured on resize too,
+// since the tab labels' widths depend on layout.
+const underlineNav = document.getElementById('ds-utab');
+const underlineBar = underlineNav?.querySelector('.tabs-underline__bar');
+if (underlineNav && underlineBar) {
+  const moveBarToLink = (link) => {
+    const li = link.closest('.nav-item');
+    if (!li) return;
+    const navRect = underlineNav.getBoundingClientRect();
+    const liRect = li.getBoundingClientRect();
+    underlineBar.style.width = `${liRect.width}px`;
+    underlineBar.style.transform = `translateX(${liRect.left - navRect.left}px)`;
+  };
+
+  const activeLink = underlineNav.querySelector('.nav-link.active');
+  if (activeLink) moveBarToLink(activeLink);
+
+  underlineNav.querySelectorAll('[data-bs-toggle="tab"]').forEach((trigger) => {
+    trigger.addEventListener('shown.bs.tab', (e) => moveBarToLink(e.target));
+  });
+
+  window.addEventListener('resize', () => {
+    const current = underlineNav.querySelector('.nav-link.active');
+    if (current) moveBarToLink(current);
+  });
+}

@@ -1,0 +1,102 @@
+---
+// Numeric Stepper — Bootstrap has no quantity/count primitive. Two Icon
+// Buttons flank a number input. "circular" (default) uses the outline
+// circular Icon Button family with a chrome-stripped input, gapped apart.
+// "block" is one continuous bordered bar — solid secondary square end-caps
+// flush against the input, no gap.
+import IconButton from './IconButton.astro';
+
+export interface Props {
+  label: string;
+  id?: string;
+  name?: string;
+  min?: number;
+  max?: number;
+  step?: number;
+  value?: number;
+  disabled?: boolean;
+  variant?: 'circular' | 'block';
+  class?: string;
+}
+
+const {
+  label,
+  id,
+  name,
+  min = 0,
+  max = 99,
+  step = 1,
+  value = min,
+  disabled = false,
+  variant = 'circular',
+  class: extraClass = '',
+} = Astro.props;
+
+const inputId = id ?? `stepper-${Math.random().toString(36).slice(2, 9)}`;
+const isBlock = variant === 'block';
+
+const wrapperClass = [
+  'stepper',
+  isBlock ? 'stepper--block border' : 'd-inline-flex align-items-center gap-2',
+  extraClass,
+].filter(Boolean).join(' ');
+
+const btnVariant = isBlock ? 'filled-secondary' : 'outline';
+---
+
+<div
+  class={wrapperClass}
+  data-stepper
+  role="group"
+  aria-label={label}
+>
+  <IconButton icon="remove" label={`Decrease ${label}`} variant={btnVariant} shape="square" disabled={disabled} class="stepper__btn" />
+  <input
+    type="number"
+    class="stepper__input"
+    id={inputId}
+    name={name}
+    min={min}
+    max={max}
+    step={step}
+    value={value}
+    inputmode="numeric"
+    disabled={disabled}
+    aria-live="polite"
+  />
+  <IconButton icon="add" label={`Increase ${label}`} variant={btnVariant} shape="square" disabled={disabled} class="stepper__btn" />
+</div>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-stepper]').forEach((root) => {
+    const input = root.querySelector<HTMLInputElement>('.stepper__input');
+    const buttons = root.querySelectorAll<HTMLButtonElement>('button');
+    const [decrementBtn, incrementBtn] = buttons;
+    if (!input || !decrementBtn || !incrementBtn) return;
+
+    const min = Number(input.min || 0);
+    const max = input.max !== '' ? Number(input.max) : Infinity;
+    const step = Number(input.step || 1);
+
+    const clamp = (n: number) => Math.min(max, Math.max(min, n));
+
+    const updateBounds = () => {
+      const n = Number(input.value) || 0;
+      decrementBtn.disabled = n <= min;
+      incrementBtn.disabled = n >= max;
+    };
+
+    const setValue = (n: number) => {
+      input.value = String(clamp(n));
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+      updateBounds();
+    };
+
+    decrementBtn.addEventListener('click', () => setValue((Number(input.value) || 0) - step));
+    incrementBtn.addEventListener('click', () => setValue((Number(input.value) || 0) + step));
+    input.addEventListener('change', () => setValue(Number(input.value) || 0));
+
+    updateBounds();
+  });
+</script>

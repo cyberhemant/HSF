@@ -8,7 +8,7 @@ import Icon from './Icon.astro';
 export interface Props {
   icon: string;
   label: string;
-  variant?: 'filled' | 'outline' | 'plain';
+  variant?: 'filled' | 'outline' | 'plain' | 'filled-secondary' | 'outline-secondary';
   shape?: 'square' | 'circle';
   size?: number;
   href?: string;
@@ -21,6 +21,8 @@ const VARIANT_CLASS: Record<string, string> = {
   filled: 'btn-primary',
   outline: 'btn-outline-primary',
   plain: 'btn-link text-decoration-none',
+  'filled-secondary': 'btn-secondary',
+  'outline-secondary': 'btn-outline-secondary',
 };
 
 const {
