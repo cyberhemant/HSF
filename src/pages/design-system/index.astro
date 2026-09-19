@@ -38,6 +38,7 @@ const toc = [
   ['toasts', 'Toasts'],
   ['tooltips-popovers', 'Tooltips & Popovers'],
   ['carousel', 'Carousel'],
+  ['product-gallery', 'Product Gallery'],
   ['placeholders', 'Placeholders'],
   ['close-button', 'Close Button'],
   ['tables', 'Tables'],
@@ -437,11 +438,22 @@ const experiences = [
             <div class="tab-pane fade" id="ds-tab-connect-pane" role="tabpanel">Store, contact, and the Caravane Earth Academy.</div>
           </div>
 
-          <ul class="nav nav-pills mt-4">
-            <li class="nav-item"><a class="nav-link active" href="#">Overview</a></li>
-            <li class="nav-item"><a class="nav-link" href="#">Gallery</a></li>
-            <li class="nav-item"><a class="nav-link disabled" aria-disabled="true">Reviews</a></li>
+          <ul class="nav nav-pills mt-4" id="ds-ptab" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active" id="ds-ptab-overview" data-bs-toggle="pill" data-bs-target="#ds-ptab-overview-pane" type="button" role="tab">Overview</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="ds-ptab-gallery" data-bs-toggle="pill" data-bs-target="#ds-ptab-gallery-pane" type="button" role="tab">Gallery</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link disabled" id="ds-ptab-reviews" data-bs-toggle="pill" data-bs-target="#ds-ptab-reviews-pane" type="button" role="tab" disabled>Reviews</button>
+            </li>
           </ul>
+          <div class="tab-content p-3" id="ds-ptab-content">
+            <div class="tab-pane fade show active" id="ds-ptab-overview-pane" role="tabpanel">A working organic farm in the Omani highlands — regenerative agriculture, an artisanal kitchen, and lodges among the palms.</div>
+            <div class="tab-pane fade" id="ds-ptab-gallery-pane" role="tabpanel">Sunrise over the terraces, the herd at pasture, and long tables set for dinner under the date palms.</div>
+            <div class="tab-pane fade" id="ds-ptab-reviews-pane" role="tabpanel">Guest reviews will appear here.</div>
+          </div>
 
           <ul class="nav nav-underline border-bottom tabs-underline mt-4" id="ds-utab" role="tablist">
             <li class="nav-item" role="presentation">
