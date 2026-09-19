@@ -665,18 +665,20 @@ h4, .h4 { font-weight: 600; font-family: $font-family-sans; }
   color: currentcolor;
 }
 
-// §4 Palm Spinner — brand loading indicator (PalmSpinner.astro): the frame
-// traces itself closed, then the palm mark wipes into view bottom-to-top
-// (like growth), holds, and retracts to loop. Color is currentColor
-// throughout, so it's driven the same way as the stock Bootstrap spinners
+// §4 Palm Spinner — brand loading indicator (PalmSpinner.astro): four evenly
+// spaced dashes circulate continuously around the frame while the palm mark
+// wipes into view bottom-to-top (like growth), holds, and retracts to loop.
+// Color is currentColor throughout, so it's driven the same way as the stock Bootstrap spinners
 // above — .text-primary / .text-secondary, plus .text-white for the
 // inverted (on-dark) variant. The reveal is a CSS clip-path animation
 // (not an animated <clipPath> child) — the latter doesn't reliably
 // repaint across browsers.
+// pathLength is 400: four 40-unit dashes separated by 60-unit gaps. Sliding
+// the dash offset by the full 400 makes a seamless linear loop.
 .palm-spinner__arc {
-  stroke-dasharray: 400;
-  stroke-dashoffset: 400;
-  animation: palm-spinner-arc 3.6s cubic-bezier(.65, 0, .35, 1) infinite;
+  stroke-dasharray: 40 60 40 60 40 60 40 60;
+  stroke-dashoffset: 0;
+  animation: palm-spinner-arc 3.6s linear infinite;
 }
 
 .palm-spinner__leaf {
@@ -685,9 +687,8 @@ h4, .h4 { font-weight: 600; font-family: $font-family-sans; }
 }
 
 @keyframes palm-spinner-arc {
-  0% { stroke-dashoffset: 400; }
-  45%, 85% { stroke-dashoffset: 0; }
-  100% { stroke-dashoffset: 400; }
+  from { stroke-dashoffset: 0; }
+  to { stroke-dashoffset: -400; }
 }
 
 @keyframes palm-spinner-wipe {
@@ -702,7 +703,6 @@ h4, .h4 { font-weight: 600; font-family: $font-family-sans; }
     animation: none;
   }
 
-  .palm-spinner__arc { stroke-dashoffset: 0; }
   .palm-spinner__leaf { clip-path: inset(0% 0 0 0); }
 }
 

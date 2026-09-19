@@ -1,8 +1,8 @@
 ---
-// Brand loading indicator — a palm/leaf mark inside a frame that traces
-// itself closed, then wipes the mark into view (bottom to top, like growth),
-// holds, and retracts to loop (see .palm-spinner__arc / __leaf keyframes in
-// main.scss). Color comes from currentColor via the same text-color
+// Brand loading indicator — a palm/leaf mark inside a frame with four
+// dashes circulating continuously around it, while the mark wipes into view
+// (bottom to top, like growth), holds, and retracts to loop (see
+// .palm-spinner__arc / __leaf keyframes in main.scss). Color comes from currentColor via the same text-color
 // utilities the stock Bootstrap spinners use; "inverted" (text-white) is
 // for on-dark contexts.
 export interface Props {
@@ -41,7 +41,7 @@ const classes = ['palm-spinner', VARIANT_CLASS[variant], extraClass]
   xmlns="http://www.w3.org/2000/svg"
 >
   <rect class="palm-spinner__track" x="1.5" y="1.5" width="77" height="97" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.2" />
-  <rect class="palm-spinner__arc" x="1.5" y="1.5" width="77" height="97" fill="none" stroke="currentColor" stroke-width="1.6" pathLength="400" stroke-dasharray="0 400" />
+  <rect class="palm-spinner__arc" x="1.5" y="1.5" width="77" height="97" fill="none" stroke="currentColor" stroke-width="1.6" pathLength="400" />
 
   <g class="palm-spinner__leaf" transform="translate(16 15.6) scale(0.8)" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round">
     <path d="M30 78V38" />
