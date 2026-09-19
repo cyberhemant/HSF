@@ -556,6 +556,50 @@ h4, .h4 { font-weight: 600; font-family: $font-family-sans; }
 // §4 Tag — Bootstrap has no letter-spacing utility.
 .ls-tag { letter-spacing: .1em; }
 
+// §4 Tag — "rule" variant: a left-rule badge. The accent drives the border,
+// the text and (at 10%) the background. `--on-dark` swaps to a cream accent
+// over a translucent black wash for use on photography / dark surfaces.
+.tag-rule {
+  --tag-rule-accent: #{$ochre};
+  --tag-rule-color: #{$ink-soft};
+  --tag-rule-bg: #{rgba($ochre, .1)};
+
+  display: inline-flex;
+  align-self: flex-start;
+  padding: 4px;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--tag-rule-color);
+  background-color: var(--tag-rule-bg);
+  border-left: 2px solid var(--tag-rule-accent);
+  border-radius: 0;
+
+  &--muted {
+    --tag-rule-color: #{$ink-faint};
+  }
+
+  &--success {
+    --tag-rule-accent: #{$success};
+    --tag-rule-color: #{$success};
+    --tag-rule-bg: #{rgba($success, .1)};
+  }
+
+  &--danger {
+    --tag-rule-accent: #{$error};
+    --tag-rule-color: #{$error};
+    --tag-rule-bg: #{rgba($error, .1)};
+  }
+
+  &--on-dark {
+    --tag-rule-accent: #{$cream};
+    --tag-rule-color: #{$cream};
+    --tag-rule-bg: #{rgba(#000, .45)};
+  }
+}
+
 // §4 Progress — thin (.5rem) variant; Bootstrap has no size modifier
 // out of the box, so override its own height custom property.
 .progress-thin { --#{$prefix}progress-height: .5rem; }

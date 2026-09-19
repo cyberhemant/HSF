@@ -1,19 +1,24 @@
 ---
 // §4 Tag / Badge — small taxonomy chips, e.g. "Now Booking". Square corners.
+// `variant="rule"` is the left-rule badge; `tone` picks its colour and is
+// ignored by the other variants.
 export interface Props {
-  variant?: 'outline' | 'filled' | 'plain';
+  variant?: 'outline' | 'filled' | 'plain' | 'rule';
+  tone?: 'neutral' | 'muted' | 'success' | 'danger' | 'on-dark';
   class?: string;
 }
 
-const { variant = 'outline', class: extraClass = '' } = Astro.props;
+const { variant = 'outline', tone = 'neutral', class: extraClass = '' } = Astro.props;
 const variantClass = variant === 'filled'
   ? 'bg-beige text-maroon'
   : variant === 'plain'
   ? 'bg-transparent text-ochre-deep border-0 p-0'
   : 'bg-transparent text-ochre-deep border';
 
-const classes = ['badge', 'text-uppercase', 'ls-tag', variantClass, extraClass]
-  .filter(Boolean).join(' ');
+const classes = (variant === 'rule'
+  ? ['tag-rule', tone !== 'neutral' && `tag-rule--${tone}`, extraClass]
+  : ['badge', 'text-uppercase', 'ls-tag', variantClass, extraClass]
+).filter(Boolean).join(' ');
 ---
 
 <span class={classes}><slot /></span>
