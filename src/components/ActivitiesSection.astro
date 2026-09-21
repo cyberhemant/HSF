@@ -6,6 +6,9 @@
 // arch-masked image (the pointed-arch mask from StaySection.astro, reused
 // here at a rounder radius to match the reference's round-top arch), and
 // scroll-reveal via .reveal (reveal.js).
+// Responsive: 2-up below lg, 4-up from lg (extra cards wrap and stay centred).
+// With an empty `activities` array the whole section is omitted rather than
+// leaving a heading over nothing.
 import Tag from './Tag.astro';
 
 export interface Props {
@@ -70,57 +73,32 @@ const {
 } = Astro.props;
 ---
 
-<section class={['activities-section ', extraClass].filter(Boolean).join(' ')}>
-  <div class="container">
-    <div class="activities-section__head  reveal text-center">
-     
-      <h2 class="mt-3 display-5">{heading}</h2>
-      <p class="mt-3  text-ink-faint">{lead}</p>
-    </div>
-
-    <div class="row g-4 g-lg-5 mt-1 justify-content-center">
-      {activities.map((activity, i) => (
-        <div class="col-6 col-lg-3 reveal" style={`transition-delay:${i * 90}ms`}>
-          <a class="activity-card" href={activity.href}>
-            <div class="activity-card__frame">
-              <img class="activity-card__img" src={activity.image} alt={activity.name} loading="lazy" />
-            </div>
-            <h3 class="h5 mt-4 text-center">{activity.name}</h3>
-            <p class="small text-ink-soft text-center mt-2">{activity.description}</p>
-          </a>
-        </div>
-      ))}
-    </div>
-  </div>
-</section>
-
-<!-- <section class={['activities-section', extraClass].filter(Boolean).join(' ')}>
-  <div class="container-fluid ">
-    <div class="row">
-      <div class="col-12 col-lg-3 bg-beige p-5">
-        <Tag variant='plain'>{eyebrow}</Tag>
-      <h2 class=" display-5 mt-3">{heading}</h2>
-      <p class="mt-3 fs-3 text-ink-soft">{lead}</p>
+{activities.length > 0 && (
+  <section class={['activities-section', extraClass].filter(Boolean).join(' ')}>
+    <div class="container">
+      <div class="activities-section__head reveal text-center">
+        <h2 class="mt-3 display-5">{heading}</h2>
+        <p class="mt-3 text-ink-soft">{lead}</p>
       </div>
-      <div class="col-12 col-lg-9 px-0 px-lg-5">
-        <div class="row g-4 g-lg-5 mt-1">
-            {activities.map((activity, i) => (
-              <div class="col-6 col-lg-4 reveal" style={`transition-delay:${i * 90}ms`}>
-                <div class="activity-card">
-                  <div class="activity-card__frame">
-                    <img class="activity-card__img" src={activity.image} alt={activity.name} loading="lazy" />
-                  </div>
-                  <h3 class="h5 mt-4 text-center">{activity.name}</h3>
-                  <p class="small text-ink-soft text-center mt-2">{activity.description}</p>
-                </div>
+
+      <div class="row g-4 g-lg-5 mt-1 justify-content-center">
+        {activities.map((activity, i) => (
+          <div class="col-6 col-lg-3 reveal" style={`transition-delay:${i * 90}ms`}>
+            <a class="activity-card" href={activity.href}>
+              <div class="activity-card__frame">
+                {/* Decorative: the activity name is right below, inside the same link. */}
+                <img class="activity-card__img" src={activity.image} alt="" loading="lazy" />
               </div>
-            ))}
-        </div>
+              <h3 class="h5 mt-4 text-center">{activity.name}</h3>
+              <p class="small text-ink-soft text-center mt-2">{activity.description}</p>
+            </a>
+          </div>
+        ))}
       </div>
     </div>
-  </div>  
-    
-</section> -->
+  </section>
+)}
+
 
 <style>
   .activities-section {
@@ -136,7 +114,7 @@ const {
   .activity-card:focus-visible {
     outline: 2px solid var(--bs-ochre-deep);
     outline-offset: 4px;
-    border-radius: 4px;
+    border-radius: var(--bs-border-radius);
   }
 
   .activity-card__frame {
@@ -166,5 +144,16 @@ const {
   .activity-card:hover h3,
   .activity-card:focus-visible h3 {
     color: var(--bs-ochre-deep);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .activity-card__img {
+      transition: none;
+    }
+
+    .activity-card:hover .activity-card__img,
+    .activity-card:focus-visible .activity-card__img {
+      transform: none;
+    }
   }
 </style>

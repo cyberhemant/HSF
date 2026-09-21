@@ -18,6 +18,9 @@ export interface Props {
   eyebrow?: string;
   heading?: string;
   lead?: string;
+  cardCtaLabel?: string;
+  allEventsLabel?: string;
+  allEventsHref?: string;
   events?: { title: string; description: string; date: string; time: string; image: string; alt?: string; href: string }[];
   interval?: number | false;
   class?: string;
@@ -29,6 +32,9 @@ const {
   eyebrow = 'What’s On',
   heading = 'Upcoming At The Farm',
   lead = 'From market evenings to sunrise wellness rituals — join us for gatherings that bring the farm’s rhythm to life.',
+  cardCtaLabel = 'Explore',
+  allEventsLabel = 'View All Events',
+  allEventsHref = `${base}/events/`,
   events = [
     {
       title: 'Open Mic Night',
@@ -107,12 +113,11 @@ const nextEvent = events[wrapIndex(1, total)];
                 <img src={event.image} alt={event.alt || event.title} loading={i === 0 ? 'eager' : 'lazy'} />
               </div>
               <div class="events-bs-carousel__card">
-                <span class="events-bs-carousel__meta text-uppercase ls-tag text-ochre-deep small fw-semibold">
-                  {event.date} &middot; {event.time}
-                </span>
+                <Tag variant="plain">{event.date} &middot; {event.time}</Tag>
                 <h3 class="events-bs-carousel__title mt-2">{event.title}</h3>
                 <p class="events-bs-carousel__desc mt-3 text-ink-soft mb-0">{event.description}</p>
-                <span class="events-bs-carousel__cta mt-4">Explore</span>
+                <span class="events-bs-carousel__cta mt-3">{cardCtaLabel}</span>
+                
               </div>
             </a>
           </div>
@@ -154,9 +159,9 @@ const nextEvent = events[wrapIndex(1, total)];
     </div>
   )}
 
-  <div class=" text-center position-relative z-1" style="margin-top: clamp(3rem, 6vw, 6rem);">
-    <AnimatedOutlineButton variant="outline-primary" arrow={true} href={`${base}/events/`}>
-      View All Events
+  <div class="events-bs-carousel__all text-center position-relative z-1">
+    <AnimatedOutlineButton variant="outline-primary" arrow={true} href={allEventsHref}>
+      {allEventsLabel}
     </AnimatedOutlineButton>
   </div>
 </section>
@@ -213,6 +218,10 @@ const nextEvent = events[wrapIndex(1, total)];
   }
 
  
+
+  .events-bs-carousel__all {
+    margin-top: clamp(3rem, 6vw, 6rem);
+  }
 
   .events-bs-carousel__stage {
     display: flex;

@@ -1,0 +1,92 @@
+---
+// §9 Known Gaps "Footer component" — not in the source guidelines. Built in
+// Figma 01 Sep 2026: three link columns (THE FARM / VISIT / CONNECT), divider,
+// copyright line. Link labels and copyright are the real terms pulled from
+// the live site's own footer markup — column grouping is a proposed curation.
+
+import Tag from "./Tag.astro";
+import IconButton from "./IconButton.astro";
+import { socialLinks } from "../data/social.js";
+
+export interface Props {
+  social?: { icon: string; label: string; href: string }[];
+  newsletterTag?: string;
+  newsletterHeading?: string;
+  newsletterPlaceholder?: string;
+  newsletterAction?: string;
+  emailId?: string;
+  submitLabel?: string;
+  socialTag?: string;
+  socialHeading?: string;
+  class?: string;
+}
+
+const {
+  social = socialLinks,
+  newsletterTag = "Newsletter",
+  newsletterHeading = "Stay connected",
+  newsletterPlaceholder = "name@example.com",
+  newsletterAction,
+  emailId = "newsletter-email",
+  submitLabel = "Subscribe",
+  socialTag = "Find us on social media",
+  socialHeading = "Follow Heenat Salma",
+  class: extraClass = "",
+} = Astro.props;
+---
+
+<section class="position-relative" style="z-index: 1;">
+  <div class="container">
+    <div class="row justify-content-between">
+      <div class="col-12 col-lg-5 py-5 reveal">
+        <div>
+          <Tag variant="plain">{newsletterTag}</Tag>
+        </div>
+        <div>
+          <h3 class="h1">{newsletterHeading}</h3>
+          <form class="d-flex mt-1" action={newsletterAction} method={newsletterAction ? "post" : undefined}>
+            <div class="col-8">
+              <input
+                required="required"
+                type="email"
+                class="form-control"
+                id={emailId}
+                name="email"
+                aria-label="Email address"
+                placeholder={newsletterPlaceholder}
+              />
+            </div>
+            <div class="col-4 d-flex align-items-end">
+              <button type="submit" class="btn btn-primary w-100"
+                >{submitLabel}</button
+              >
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="col-12 col-lg-5 py-5 reveal">
+        <div>
+          <Tag variant="plain">{socialTag}</Tag>
+        </div>
+        <div>
+          <h3 class="h1">{socialHeading}</h3>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+          {
+            social.map((item) => (
+              <IconButton
+                icon={item.icon}
+                label={item.label}
+                href={item.href}
+                variant="outline"
+                shape="square"
+                size={20}
+              />
+            ))
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

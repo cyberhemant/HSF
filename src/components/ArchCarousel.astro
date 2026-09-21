@@ -1,0 +1,144 @@
+---
+// Arch-masked image carousel — the pointed-arch photo frame used by the
+// split promo sections (StaySection, KitchenSection). Built on Bootstrap's
+// own .carousel (autoplay, swipe, prev/next, dots); the pointed-arch mask is
+// applied to each slide image. Prev/next arrows fade in on hover or keyboard
+// focus; the dots are always visible. With a single image there is nothing
+// to navigate, so the arrows and dots are not rendered. With no images the
+// arch renders as an empty beige frame so the surrounding layout holds.
+//
+// `id` must be unique on the page — Bootstrap's data-bs-target wiring uses it.
+// Scroll-reveal is the parent's call: wrap the component in a `data-aos`
+// element rather than passing it here.
+//
+// States: default, hover (arrows revealed), focus (arrows revealed, Bootstrap's
+// focus ring on the controls). Active, disabled, loading, skeleton and error are
+// n.a. — the parent supplies static images and there is no input to validate.
+// Responsive: does not change — the frame scales to its column up to 30rem.
+// Motion: the arrow fade is disabled under prefers-reduced-motion.
+export interface Props {
+  images?: { src: string; alt: string }[];
+  id: string;
+  label?: string;
+  class?: string;
+}
+
+const {
+  images = [],
+  id,
+  label = 'Photo carousel',
+  class: extraClass = '',
+} = Astro.props;
+---
+
+<div class={['arch-carousel', extraClass].filter(Boolean).join(' ')}>
+  {images.length === 0 ? (
+    <div class="arch-carousel__img bg-beige" aria-hidden="true"></div>
+  ) : (
+    <div
+      id={id}
+      class="carousel slide h-100"
+      data-bs-ride="carousel"
+      data-bs-touch="true"
+      aria-roledescription="carousel"
+      aria-label={label}
+    >
+      <div class="carousel-inner h-100">
+        {images.map((img, i) => (
+          <div class={['carousel-item h-100', i === 0 && 'active'].filter(Boolean).join(' ')}>
+            <img class="arch-carousel__img" src={img.src} alt={img.alt} loading={i === 0 ? 'eager' : 'lazy'} />
+          </div>
+        ))}
+      </div>
+      {images.length > 1 && (
+        <>
+          <button class="carousel-control-prev" type="button" data-bs-target={`#${id}`} data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
+          </button>
+          <button class="carousel-control-next" type="button" data-bs-target={`#${id}`} data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
+          </button>
+          <div class="carousel-indicators arch-carousel__indicators">
+            {images.map((_, i) => (
+              <button
+                type="button"
+                data-bs-target={`#${id}`}
+                data-bs-slide-to={i}
+                class={i === 0 ? 'active' : ''}
+                aria-current={i === 0 ? 'true' : undefined}
+                aria-label={`Slide ${i + 1}`}
+              />
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  )}
+</div>
+
+<style>
+  .arch-carousel {
+    aspect-ratio: 5 / 6;
+    width: 100%;
+    max-width: 30rem;
+    margin-inline: auto;
+    display: block;
+    position: relative;
+  }
+
+  .arch-carousel__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 480'%3E%3Cpath d='M0,480 L0,210 Q0,20 200,0 Q400,20 400,210 L400,480 Z'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 480'%3E%3Cpath d='M0,480 L0,210 Q0,20 200,0 Q400,20 400,210 L400,480 Z'/%3E%3C/svg%3E");
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+  }
+
+  /* Carousel controls/indicators sit inside the arch's full-width lower
+     half (see mask path above — rectangular below y=210 of 480), so they
+     never get clipped by the mask. */
+  .arch-carousel .carousel-control-prev,
+  .arch-carousel .carousel-control-next {
+    width: 15%;
+    opacity: 0;
+    transition: opacity .3s ease;
+  }
+
+  .arch-carousel:hover .carousel-control-prev,
+  .arch-carousel:hover .carousel-control-next,
+  .arch-carousel:focus-within .carousel-control-prev,
+  .arch-carousel:focus-within .carousel-control-next {
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .arch-carousel .carousel-control-prev,
+    .arch-carousel .carousel-control-next {
+      transition: none;
+    }
+  }
+
+  .arch-carousel__indicators {
+    margin-bottom: 0.75rem;
+  }
+
+  .arch-carousel__indicators button {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: var(--bs-white);
+    border: none;
+    opacity: .6;
+  }
+
+  .arch-carousel__indicators button.active {
+    opacity: 1;
+  }
+</style>

@@ -46,6 +46,7 @@ $dark: $ink;
 $body-bg: $cream;
 $body-color: $ink-soft;
 $min-contrast-ratio: 4.5;
+$color-contrast-dark: $ink; // text on light fills (btn-light hover etc.) — brand ink, not pure black
 
 // =============================================================================
 // §3 Typography — serif carries the brand moment, sans carries function.
@@ -478,6 +479,11 @@ h1, .h1 { font-weight: 800; }
 h2, .h2 { font-weight: 700; }
 h3, .h3 { font-weight: 700; }
 h4, .h4 { font-weight: 600; font-family: $font-family-sans; }
+
+// Overlay scrim — the dark warm-brown wash laid over photography and video so
+// cream text keeps its contrast. Emitted as an RGB triplet so each caller sets
+// its own alpha: rgba(var(--bs-scrim-rgb), .55).
+:root { --#{$prefix}scrim-rgb: 20, 8, 5; }
 
 // §3 Running text stays 60–65 characters wide regardless of viewport.
 .measure { max-width: 62ch; }

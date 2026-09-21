@@ -3,27 +3,67 @@
 // pinned to its bottom-right corner, and a row of square thumbnails below
 // that scrolls horizontally once it outgrows the available width. On mobile
 // the arrows and thumbnail strip give way to a row of dots under the stage.
+// With a single image there is nothing to navigate, so the arrows, thumbnails
+// and dots are not rendered at all — just the stage.
+//
+// `state` is owned by the parent (which knows whether the photos are being
+// fetched or failed to load): 'ready' renders the images; 'loading' shows a
+// skeleton of the stage and thumbnail row; 'empty' and 'error' replace the
+// stage with a short message (override the copy with `message`). A 'ready'
+// gallery given no images falls back to 'empty' rather than a blank stage.
+// Responsive: only the thumbnail-row skeleton changes at `md` (hidden below,
+// like the real thumbnails); the stage and messages do not change.
 import Icon from './Icon.astro';
 
 export interface Props {
   images?: { src: string; alt?: string }[];
+  state?: 'ready' | 'loading' | 'empty' | 'error';
+  message?: string;
   class?: string;
 }
 
 const {
   images = [],
+  state = 'ready',
+  message,
   class: extraClass = '',
 } = Astro.props;
+
+const resolvedState = state === 'ready' && images.length === 0 ? 'empty' : state;
+const isReady = resolvedState === 'ready';
+const hasMultiple = isReady && images.length > 1;
+const statusMessage = message ?? (resolvedState === 'error'
+  ? "Couldn't load photos."
+  : 'No photos available.');
 ---
 
 <div
   class={['product-gallery', extraClass].filter(Boolean).join(' ')}
   data-product-gallery
-  data-count={images.length}
-  tabindex="0"
+  data-count={isReady ? images.length : 0}
+  data-state={resolvedState}
+  aria-busy={resolvedState === 'loading' ? 'true' : undefined}
+  tabindex={hasMultiple ? 0 : undefined}
 >
-  <div class="product-gallery__stage">
-    {images.map((image, i) => (
+  <div class="product-gallery__stage" class:list={[{ 'placeholder-glow': resolvedState === 'loading' }]}>
+    {resolvedState === 'loading' && (
+      <>
+        <span class="placeholder product-gallery__skeleton" aria-hidden="true"></span>
+        <span class="visually-hidden" role="status">Loading photos</span>
+      </>
+    )}
+
+    {(resolvedState === 'empty' || resolvedState === 'error') && (
+      <div
+        class="product-gallery__message"
+        role={resolvedState === 'error' ? 'alert' : 'status'}
+      >
+        <Icon name={resolvedState === 'error' ? 'broken-image' : 'image'} size={32} />
+        <p class="product-gallery__message-text">{statusMessage}</p>
+      </div>
+    )}
+
+    {isReady && images.map((image, i) => (
       <img
         class="product-gallery__image"
         class:list={[{ 'is-active': i === 0 }]}
@@ -34,51 +74,67 @@ const {
       />
     ))}
 
-    <div class="product-gallery__arrows d-none d-md-flex">
-      <button type="button" class="product-gallery__arrow" data-action="prev" aria-label="Previous image">
-        <Icon name="chevron-left" size={24} />
-      </button>
-      <button type="button" class="product-gallery__arrow" data-action="next" aria-label="Next image">
-        <Icon name="chevron-right" size={24} />
-      </button>
+    {hasMultiple && (
+      <div class="product-gallery__arrows d-none d-md-flex">
+        <button type="button" class="product-gallery__arrow" data-action="prev" aria-label="Previous image">
+          <Icon name="chevron-left" size={24} />
+        </button>
+        <button type="button" class="product-gallery__arrow" data-action="next" aria-label="Next image">
+          <Icon name="chevron-right" size={24} />
+        </button>
+      </div>
+    )}
+  </div>
+
+  {resolvedState === 'loading' && (
+    <div class="product-gallery__thumbs d-none d-md-flex placeholder-glow" aria-hidden="true">
+      {[0, 1, 2, 3].map(() => (
+        <span class="placeholder product-gallery__thumb-skeleton"></span>
+      ))}
     </div>
-  </div>
+  )}
 
-  <div class="product-gallery__thumbs d-none d-md-flex" data-role="thumbs">
-    {images.map((image, i) => (
-      <button
-        type="button"
-        class="product-gallery__thumb"
-        class:list={[{ 'is-active': i === 0 }]}
-        data-action="thumb"
-        data-index={i}
-        aria-label={`Show image ${i + 1}`}
-        aria-current={i === 0 ? 'true' : 'false'}
-      >
-        <img src={image.src} alt="" loading="lazy" />
-      </button>
-    ))}
-  </div>
+  {hasMultiple && (
+    <div class="product-gallery__thumbs d-none d-md-flex" data-role="thumbs">
+      {images.map((image, i) => (
+        <button
+          type="button"
+          class="product-gallery__thumb"
+          class:list={[{ 'is-active': i === 0 }]}
+          data-action="thumb"
+          data-index={i}
+          aria-label={`Show image ${i + 1}`}
+          aria-current={i === 0 ? 'true' : 'false'}
+        >
+          <img src={image.src} alt="" loading="lazy" />
+        </button>
+      ))}
+    </div>
+  )}
 
-  <div class="product-gallery__dots d-flex d-md-none" role="tablist" aria-label="Select image">
-    {images.map((_, i) => (
-      <button
-        type="button"
-        class="product-gallery__dot"
-        class:list={[{ 'is-active': i === 0 }]}
-        data-action="dot"
-        data-index={i}
-        aria-label={`Go to image ${i + 1}`}
-        aria-current={i === 0 ? 'true' : 'false'}
-      ></button>
-    ))}
-  </div>
+  {hasMultiple && (
+    <div class="product-gallery__dots d-flex d-md-none" role="tablist" aria-label="Select image">
+      {images.map((_, i) => (
+        <button
+          type="button"
+          class="product-gallery__dot"
+          class:list={[{ 'is-active': i === 0 }]}
+          data-action="dot"
+          data-index={i}
+          aria-label={`Go to image ${i + 1}`}
+          aria-current={i === 0 ? 'true' : 'false'}
+        ></button>
+      ))}
+    </div>
+  )}
 </div>
 
 <script>
   document.querySelectorAll<HTMLElement>('[data-product-gallery]').forEach((root) => {
     const count = Number(root.dataset.count) || 0;
-    if (count < 1) return;
+    // Nothing to navigate with 0–1 images: no controls are rendered, so skip
+    // wiring up keyboard and swipe handling too.
+    if (count < 2) return;
 
     const images = Array.from(root.querySelectorAll<HTMLImageElement>('.product-gallery__image'));
     const thumbs = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-action="thumb"]'));
@@ -137,7 +193,7 @@ const {
     // nothing here ever calls preventDefault — a mostly-vertical drag is
     // left alone to scroll the page as normal.
     const stage = root.querySelector<HTMLElement>('.product-gallery__stage');
-    if (stage && count > 1) {
+    if (stage) {
       const SWIPE_THRESHOLD = 40;
       let startX = 0;
       let startY = 0;
@@ -175,6 +231,39 @@ const {
     aspect-ratio: 1 / 1;
     background-color: var(--bs-sand);
     overflow: hidden;
+  }
+
+  .product-gallery__skeleton {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .product-gallery__thumb-skeleton {
+    flex: 0 0 auto;
+    display: block;
+    width: 5.5rem;
+    height: 5.5rem;
+  }
+
+  .product-gallery__message {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    padding: 1.5rem;
+    text-align: center;
+    color: var(--bs-ink-soft);
+  }
+
+  .product-gallery__message-text {
+    margin: 0;
+    overflow-wrap: anywhere;
   }
 
   .product-gallery__image {

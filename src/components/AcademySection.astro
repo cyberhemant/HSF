@@ -1,14 +1,12 @@
 ---
 // "Academy" promo — video-left / text-right split, referencing the
 // hotel-manager reference layout (poster + circular play button on the
-// left, eyebrow/heading/lead/quote on the right) but rebuilt on this
-// system's own components (Tag, Divider, AnimatedOutlineButton) and real
-// copy from heenatsalma.earth's Academy page. The reference's persona
-// quote+avatar has no equivalent here — Heenat's Academy content is
-// program-led, not manager-led — so that slot becomes a pull-quote plus
-// the section's own CTA instead.
+// left, eyebrow/heading/lead on the right) but rebuilt on this system's own
+// components (Tag, AnimatedOutlineButton) and real copy from
+// heenatsalma.earth's Academy page. The reference's persona quote+avatar has
+// no equivalent here — Heenat's Academy content is program-led, not
+// manager-led — so that slot is the section's own CTA instead.
 import Tag from './Tag.astro';
-import Divider from './Divider.astro';
 import Icon from './Icon.astro';
 import AnimatedOutlineButton from './AnimatedOutlineButton.astro';
 
@@ -16,7 +14,6 @@ export interface Props {
   eyebrow?: string;
   heading?: string;
   lead?: string;
-  quote?: string;
   ctaLabel?: string;
   ctaHref?: string;
   videoUrl?: string;
@@ -30,7 +27,6 @@ const {
   eyebrow = 'Academy',
   heading = 'Educational Programs At The Farm',
   lead = "Heenat Salma's Academy runs structured learning programmes around biodiversity and sustainability, alongside vocational education in arts and craft — open to primary, secondary, high school, and university students. Through hands-on, experiential learning, students follow the growing cycle from soil to harvest, engaging with the land, the seasons, and the food system.",
-  quote = 'A season-long journey that brings students closer to the land through the simple, meaningful act of growing food.',
   ctaLabel = 'Know More',
   ctaHref = `${base}/academy/`,
   videoUrl = 'https://www.youtube.com/watch?v=TYtZXVkq6M0',
@@ -63,12 +59,12 @@ const videoId = new URL(videoUrl).searchParams.get('v') ?? videoUrl.split('/').p
           <img class="academy-video__poster" src={poster} alt="" loading="lazy" />
           <span class="academy-video__play" aria-hidden="true">
             <span class="academy-video__play-ring"></span>
-            <Icon name="play_arrow" size={28} class="academy-video__play-icon text-cream" />
+            <span class="academy-video__play-icon">
+              <Icon name="play_arrow" size={28} />
+            </span>
           </span>
         </button>
       </div>
-
-      
     </div>
   </div>
 </section>
@@ -178,13 +174,13 @@ const videoId = new URL(videoUrl).searchParams.get('v') ?? videoUrl.split('/').p
     content: '';
     position: absolute;
     inset: 0;
-    background: rgba(20, 8, 5, 0.28);
+    background: rgba(var(--bs-scrim-rgb), 0.28);
     transition: background-color .25s ease;
   }
 
   .academy-video:hover .academy-video__play::before,
   .academy-video:focus-visible .academy-video__play::before {
-    background: rgba(20, 8, 5, 0.4);
+    background: rgba(var(--bs-scrim-rgb), 0.4);
   }
 
   .academy-video__play-ring,
@@ -198,7 +194,7 @@ const videoId = new URL(videoUrl).searchParams.get('v') ?? videoUrl.split('/').p
     width: 88px;
     height: 88px;
     border-radius: 50%;
-    border: 1px solid rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(var(--bs-white-rgb), 0.7);
     animation: academy-ring-pulse 2.4s ease-out infinite;
   }
 
@@ -225,22 +221,11 @@ const videoId = new URL(videoUrl).searchParams.get('v') ?? videoUrl.split('/').p
     100% { transform: scale(1.15); opacity: 0; }
   }
 
-  .academy-section__quote {
-    font-family: var(--bs-font-serif, 'Alegreya', serif);
-    font-style: italic;
-    font-size: 1.15rem;
-    line-height: 1.6;
-    text-decoration: underline;
-    text-decoration-color: var(--bs-ochre);
-    text-underline-offset: 4px;
-    color: var(--bs-maroon);
-  }
-
   .academy-lightbox {
     position: fixed;
     inset: 0;
     z-index: 1080;
-    background: rgba(10, 4, 2, 0.94);
+    background: rgba(var(--bs-scrim-rgb), 0.94);
   }
 
   .academy-lightbox[hidden] {
@@ -266,15 +251,15 @@ const videoId = new URL(videoUrl).searchParams.get('v') ?? videoUrl.split('/').p
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    background: rgba(255, 255, 255, 0.08);
-    color: #fff;
+    border: 1px solid rgba(var(--bs-white-rgb), 0.4);
+    background: rgba(var(--bs-white-rgb), 0.08);
+    color: var(--bs-white);
     cursor: pointer;
     transition: background-color .2s ease;
   }
 
   .academy-lightbox__close:hover,
   .academy-lightbox__close:focus-visible {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(var(--bs-white-rgb), 0.2);
   }
 </style>

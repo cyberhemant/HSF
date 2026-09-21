@@ -9,6 +9,7 @@ import Icon from '../../components/Icon.astro';
 import Divider from '../../components/Divider.astro';
 import PalmSpinner from '../../components/PalmSpinner.astro';
 import ProductGallery from '../../components/ProductGallery.astro';
+import ArchCarousel from '../../components/ArchCarousel.astro';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
@@ -39,6 +40,7 @@ const toc = [
   ['tooltips-popovers', 'Tooltips & Popovers'],
   ['carousel', 'Carousel'],
   ['product-gallery', 'Product Gallery'],
+  ['arch-carousel', 'Arch Carousel'],
   ['placeholders', 'Placeholders'],
   ['close-button', 'Close Button'],
   ['tables', 'Tables'],
@@ -237,6 +239,18 @@ const experiences = [
             <Button variant="primary" disabled>Disabled</Button>
           </div>
 
+          <h3 class="h5 mt-5">Inverted</h3>
+          <p class="text-ink-soft">
+            Bootstrap's native <code>btn-light</code> / <code>btn-outline-light</code> (<code>$light</code> is cream)
+            for dark or image backgrounds. Pair with <code>text-light</code> for copy.
+          </p>
+          <div class="bg-primary p-4 d-flex flex-wrap gap-3 align-items-center">
+            <Button variant="light">Plan a Visit</Button>
+            <Button variant="outline-light">Plan a Visit</Button>
+            <Button variant="light" disabled>Disabled</Button>
+            <Button variant="outline-light" disabled>Disabled</Button>
+          </div>
+
           <h3 class="h5 mt-5">Animated Outline</h3>
           <p class="text-ink-soft">
             <code>AnimatedOutlineButton.astro</code> — border wipes away and an underline grows
@@ -319,6 +333,18 @@ const experiences = [
             <Tag variant="filled">Wellness</Tag>
             <Tag variant="plain">Farm Fresh</Tag>
             <span class="badge text-bg-danger">Sold Out</span>
+          </div>
+
+          <h3 class="h6 mt-5">Inverted (on dark)</h3>
+          <p class="text-ink-soft">
+            <code>tone="on-dark"</code> — cream text for dark surfaces. Works on <code>outline</code>,
+            <code>filled</code> (translucent black fill) and <code>plain</code>, as well as
+            <code>rule</code>.
+          </p>
+          <div class="p-3 bg-dark d-flex flex-wrap gap-2 align-items-center mt-3">
+            <Tag tone="on-dark">Now Booking</Tag>
+            <Tag variant="filled" tone="on-dark">Wellness</Tag>
+            <Tag variant="plain" tone="on-dark">Farm Fresh</Tag>
           </div>
 
           <h3 class="h6 mt-5">Left-rule badge</h3>
@@ -786,7 +812,11 @@ const experiences = [
           <p class="text-ink-soft">
             A large stage image with prev/next arrows pinned to its corner, backed by a
             clickable thumbnail strip that scrolls horizontally once it outgrows the
-            available width. On mobile the arrows and thumbnails give way to dots.
+            available width. On mobile the arrows and thumbnails give way to dots. With a
+            single image, only the stage is rendered — no arrows, thumbnails or dots.
+            The parent sets <code>state</code> (<code>ready</code>, <code>loading</code>,
+            <code>empty</code>, <code>error</code>); <code>message</code> overrides the
+            copy on the empty and error states.
           </p>
           <div class="mt-3" style="max-width: 32rem;">
             <ProductGallery
@@ -799,6 +829,64 @@ const experiences = [
                 { src: `${base}/images/gallery-open-mic.webp`, alt: 'Open Mic Night' },
               ]}
             />
+          </div>
+          <p class="text-ink-soft mt-4 mb-0">Single image</p>
+          <div class="mt-2" style="max-width: 32rem;">
+            <ProductGallery
+              images={[
+                { src: `${base}/images/lodge-one.webp`, alt: 'Lodge exterior at golden hour' },
+              ]}
+            />
+          </div>
+          <p class="text-ink-soft mt-4 mb-0">Loading</p>
+          <div class="mt-2" style="max-width: 32rem;">
+            <ProductGallery state="loading" />
+          </div>
+          <p class="text-ink-soft mt-4 mb-0">Empty</p>
+          <div class="mt-2" style="max-width: 32rem;">
+            <ProductGallery state="empty" />
+          </div>
+          <p class="text-ink-soft mt-4 mb-0">Error</p>
+          <div class="mt-2" style="max-width: 32rem;">
+            <ProductGallery state="error" />
+          </div>
+        </section>
+
+        <!-- ================= ARCH CAROUSEL ================= -->
+        <section id="arch-carousel" class="pb-6 mb-6 border-bottom">
+          <h2>Arch Carousel</h2>
+          <p class="text-ink-soft">
+            The pointed-arch photo frame from the Stay and Kitchen promo sections: a
+            Bootstrap carousel with the arch mask on each slide, autoplay and swipe.
+            Prev/next arrows fade in on hover or keyboard focus; dots are always visible.
+            <code>id</code> is required and must be unique on the page; <code>label</code>
+            names the carousel for assistive tech. With a single image the arrows and dots
+            are not rendered; with no images an empty beige arch holds the layout. The
+            frame scales to its column up to 30rem and does not change at <code>md</code>.
+          </p>
+          <div class="row g-4 mt-2">
+            <div class="col-md-4">
+              <p class="text-ink-soft mb-2">Multiple images</p>
+              <ArchCarousel
+                id="ds-arch-carousel"
+                images={[
+                  { src: `${base}/images/lodge-two.webp`, alt: 'An outdoor terrace at Heenat Salma Farm' },
+                  { src: `${base}/images/lodge-one.webp`, alt: 'Lodge One at Heenat Salma Farm' },
+                  { src: `${base}/images/lodge-three.webp`, alt: 'Lodge Three at Heenat Salma Farm' },
+                ]}
+              />
+            </div>
+            <div class="col-md-4">
+              <p class="text-ink-soft mb-2">Single image</p>
+              <ArchCarousel
+                id="ds-arch-carousel-single"
+                images={[{ src: `${base}/images/lodge-one.webp`, alt: 'Lodge One at Heenat Salma Farm' }]}
+              />
+            </div>
+            <div class="col-md-4">
+              <p class="text-ink-soft mb-2">Empty</p>
+              <ArchCarousel id="ds-arch-carousel-empty" />
+            </div>
           </div>
         </section>
 

@@ -2,9 +2,11 @@
 // §4 Buttons — thin wrapper over Bootstrap's native btn/outline system.
 // primary → btn-primary, outline-primary → btn-outline-primary (Bootstrap's
 // own outline convention, which is exactly what we hand-built before),
-// secondary → btn-outline-secondary, text → btn-link.
+// secondary → btn-outline-secondary, text → btn-link. light / outline-light
+// are the inverted pair for dark or image backgrounds (Bootstrap's own
+// btn-light / btn-outline-light, $light = cream).
 export interface Props {
-  variant?: 'primary' | 'outline-primary' | 'secondary' | 'text';
+  variant?: 'primary' | 'outline-primary' | 'secondary' | 'text' | 'light' | 'outline-light';
   href?: string;
   disabled?: boolean;
   type?: 'button' | 'submit' | 'reset';
@@ -16,6 +18,8 @@ const VARIANT_CLASS: Record<string, string> = {
   'outline-primary': 'btn-outline-primary',
   secondary: 'btn-outline-secondary',
   text: 'btn-link text-decoration-underline',
+  light: 'btn-light',
+  'outline-light': 'btn-outline-light',
 };
 
 const {

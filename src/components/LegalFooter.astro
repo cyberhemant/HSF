@@ -1,0 +1,46 @@
+---
+// §9 Known Gaps "Footer component" — not in the source guidelines. Built in
+// Figma 01 Sep 2026: three link columns (THE FARM / VISIT / CONNECT), divider,
+// copyright line. Link labels and copyright are the real terms pulled from
+// the live site's own footer markup — column grouping is a proposed curation.
+import Divider from "./Divider.astro";
+export interface Props {
+  copyright?: string;
+  links?: { label: string; href: string }[];
+  class?: string;
+}
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+const {
+  copyright = "© 2026 Heenat Salma Farm by Caravane Earth Foundation",
+  links = [
+    { label: "Terms of Use", href: `${base}/terms/` },
+    { label: "Privacy Policy", href: `${base}/privacy/` },
+  ],
+  class: extraClass = "",
+} = Astro.props;
+---
+<section class={["pb-4", extraClass].filter(Boolean).join(" ")}>
+    <div class="container">
+      <Divider variant="palm" />
+      <div class="row flex-wrap-reverse px-4">
+        <div class="col-12 col-lg-6 text-center text-lg-start">
+          <span>{copyright}</span>
+        </div>
+        <div class="col-12 col-lg-6">
+          <ul class="list-unstyled d-flex justify-content-center justify-content-lg-end gap-4 mb-0">
+            {links.map((link) => (
+              <li>
+                <a
+                  class="link-ink-soft link-underline-opacity-0 link-underline-opacity-100-hover"
+                  href={link.href}>{link.label}</a
+                >
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+

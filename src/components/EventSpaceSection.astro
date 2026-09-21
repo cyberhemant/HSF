@@ -1,7 +1,7 @@
 ---
 // "Event Space" promo — full-bleed parallax banner (fixed background-attachment)
 // with a dark overlay for contrast, centered eyebrow/heading/lead/CTA in
-// cream text. Same overlay-on-image treatment as the Hero video section,
+// light (cream) text via Bootstrap's text-light / btn-outline-light. Same overlay-on-image treatment as the Hero video section,
 // just as a static background image rather than video.
 import Tag from './Tag.astro';
 import Button from './Button.astro';
@@ -31,16 +31,16 @@ const {
 
 <section
   class={['event-space', extraClass].filter(Boolean).join(' ')}
-  style={`background-image: linear-gradient(rgba(20, 8, 5, 0.55), rgba(20, 8, 5, 0.55)), url(${image});`}
+  style={`--event-space-image: url(${image});`}
 >
   <div class="container px-5">
     <div class="event-space__content mx-auto " data-aos="fade-right">
      <div class="border-start border-2 ps-2">
-       <Tag variant="plain" class="event-space__eyebrow pb-3 text-cream">{eyebrow}</Tag>
-      <h2 class="display-4  text-cream">{heading}</h2>
+       <Tag variant="plain" tone="on-dark" class="">{eyebrow}</Tag>
+      <h2 class="display-4 text-light">{heading}</h2>
      </div>
-      <p class="mt-4 fs-3 fs-md-2 event-space__lead mx-auto">{lead}</p>
-      <Button variant="outline-primary" href={ctaHref} class="event-space__btn mt-4">{ctaLabel}</Button>
+      <p class="mt-4 fs-3 fs-md-2 text-light mx-auto">{lead}</p>
+      <Button variant="outline-light" href={ctaHref} class="mt-4">{ctaLabel}</Button>
     </div>
   </div>
 </section>
@@ -48,6 +48,10 @@ const {
 <style>
   .event-space {
     position: relative;
+    /* Scrim over the image (--event-space-image is set per instance above). */
+    background-image:
+      linear-gradient(rgba(var(--bs-scrim-rgb), 0.55), rgba(var(--bs-scrim-rgb), 0.55)),
+      var(--event-space-image);
     background-size: auto;
     background-position: left 0 bottom 50%;
     background-repeat: repeat-x;
@@ -69,30 +73,6 @@ const {
     max-width: 40rem;
   }
 
-  .event-space__eyebrow {
-    color: var(--bs-cream) !important;
-    opacity: .85;
-  }
-
-  .text-cream {
-    color: var(--bs-cream);
-  }
-
-  .event-space__lead {
-    color: var(--bs-cream);
-    opacity: .9;
-  }
-
-  .event-space__btn {
-    --bs-btn-color: var(--bs-cream);
-    --bs-btn-border-color: var(--bs-cream);
-    --bs-btn-hover-bg: var(--bs-cream);
-    --bs-btn-hover-color: var(--bs-maroon);
-    --bs-btn-hover-border-color: var(--bs-cream);
-    --bs-btn-active-bg: var(--bs-cream);
-    --bs-btn-active-color: var(--bs-maroon);
-    --bs-btn-active-border-color: var(--bs-cream);
-  }
 @media screen and (min-width: 768px) {
   .event-space{
     /* Animation attaches only when screen width is 768px or wider */

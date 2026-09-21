@@ -7,6 +7,7 @@
 // backdrop, Escape-to-close, and focus handling all come from
 // bootstrap.bundle.js — no custom JS needed.
 import Icon from './Icon.astro';
+import Tag from "./Tag.astro";
 
 export interface Props {
   logotree?: { src: string; alt: string };
@@ -78,7 +79,8 @@ const {
   <div class="offcanvas-body d-flex flex-column">
     {groups.map((group) => (
       <div class="nav-group mb-4">
-        <span class="badge bg-transparent text-ochre-deep text-uppercase ls-tag p-0 pb-2 mb-2 d-inline-block border-bottom">{group.heading}</span>
+        
+        <Tag variant="plain" class="pb-2 mb-2 border-bottom">{group.heading}</Tag>
         <ul class="list-unstyled mb-0">
           {group.items.map((link) => (
             <li class="reveal">
@@ -110,8 +112,6 @@ const {
     transition: background-size .3s ease-in-out;
   }
   .show.menu-tree {
-   
-     background-size: 40% auto;
-   
+    background-size: 40% auto;
   }
 </style>
