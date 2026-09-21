@@ -43,6 +43,10 @@ When applicable: keyboard spec for composite widgets, 44px touch targets and no 
 
 Label components experimental (one use), beta (2+ uses, merge gate met) or stable (merge gate and applicable items met). Additive changes (new optional prop or variant) are safe; renames and removals are breaking and need a deprecation note naming the replacement.
 
+### Colour source of truth
+
+Every colour comes from the design-system variables in [main.scss](src/styles/main.scss) (or their `--bs-*` / utility-class equivalents, e.g. `bg-cream`). When given a colour (hex or description), map it to an existing variable. Never hard-code hex, `rgb()`/`rgba()` literals or named colours (`white`, `black`) in SCSS, `<style>` blocks or inline styles. If no variable matches, ask before adding a new one; do not add it silently. Alpha is fine when applied to a token (`rgba($maroon, .1)`).
+
 ### Dark mode readiness
 
 Dark mode is not a current requirement, so do not build it. Do keep it cheap to add later:
