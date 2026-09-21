@@ -1,0 +1,193 @@
+---
+// §4 Autocomplete — searchable single/multiple select (WAI-ARIA combobox +
+// listbox). This file renders the static shell; scripts/autocomplete.js
+// hydrates it (options, chips, keyboard, remote search, mobile fullscreen).
+// Nothing here is dataset-specific: options are plain objects
+// { value, label, secondaryLabel?, image?, imageAlt?, icon?, disabled?, ...meta }.
+//
+// Callbacks can't be props on a build-time component, so each onX prop from the
+// spec is a bubbling DOM event instead: autocomplete:change | select | remove |
+// clear | search | input | focus | blur | open | close | fullscreen | error.
+// Programmatic control (remote source, setValue, setState...) goes through
+// getAutocomplete(el) from scripts/autocomplete.js.
+//
+// `loading` is the `state` enum here ('ready' | 'loading' | 'error'); "empty"
+// is derived from the results, per the project's data-component convention.
+import Icon from './Icon.astro';
+import IconButton from './IconButton.astro';
+import Button from './Button.astro';
+import PalmSpinner from './PalmSpinner.astro';
+
+export interface AutocompleteOption {
+  value: string;
+  label: string;
+  secondaryLabel?: string;
+  image?: string;
+  imageAlt?: string;
+  icon?: string;
+  disabled?: boolean;
+  [key: string]: unknown;
+}
+
+export interface Props {
+  options: AutocompleteOption[];
+  label?: string;
+  ariaLabel?: string;
+  id?: string;
+  name?: string;
+  placeholder?: string;
+  help?: string;
+  invalidFeedback?: string;
+  selectionMode?: 'single' | 'multiple';
+  value?: string | string[];
+  defaultValue?: string | string[];
+  disabled?: boolean;
+  readonly?: boolean;
+  required?: boolean;
+  clearable?: boolean;
+  maxSelections?: number;
+  maxVisibleChips?: number;
+  state?: 'ready' | 'loading' | 'error';
+  searchUrl?: string;
+  debounce?: number;
+  minSearchLength?: number;
+  openOnFocus?: boolean;
+  autoFocus?: boolean;
+  closeOnSelect?: boolean;
+  closeOnEscape?: boolean;
+  closeOnOutsideClick?: boolean;
+  closeOnBack?: boolean;
+  toggleOnEnter?: boolean;
+  backspaceRemovesLast?: boolean;
+  wrapNavigation?: boolean;
+  pageNavigation?: boolean;
+  validateOnBlur?: boolean;
+  highlightMatch?: boolean;
+  showRecent?: boolean;
+  showPopular?: boolean;
+  placement?: 'auto' | 'top' | 'bottom';
+  mobileMode?: 'adaptive' | 'dropdown' | 'fullscreen';
+  keyboardAware?: boolean;
+  viewportAware?: boolean;
+  safeAreaAware?: boolean;
+  maxHeight?: 'auto' | number | string;
+  positionStrategy?: 'adaptive' | 'absolute' | 'fixed';
+  lockBodyScroll?: boolean;
+  showApplyButton?: boolean;
+  applyLabel?: string;
+  inputMode?: string;
+  enterKeyHint?: string;
+  labels?: Record<string, string>;
+  class?: string;
+}
+
+const {
+  options,
+  label,
+  ariaLabel,
+  id = `ac-${Math.random().toString(36).slice(2, 9)}`,
+  name,
+  placeholder = '',
+  help,
+  defaultValue,
+  class: extraClass = '',
+  ...config
+} = Astro.props;
+
+const value = config.value ?? defaultValue;
+const multiple = config.selectionMode === 'multiple';
+const labels = { back: 'Close search', clear: 'Clear selection', ...config.labels };
+const listId = `${id}-list`;
+const labelId = `${id}-label`;
+const helpId = help ? `${id}-help` : undefined;
+const feedbackId = `${id}-feedback`;
+
+// Values are resolved in the browser; the server only needs the label to
+// pre-fill a single select so the field doesn't flash empty before hydration.
+const selectedLabel = !multiple && typeof value === 'string'
+  ? options.find((o) => o.value === value)?.label
+  : undefined;
+
+const json = (data: unknown) => JSON.stringify(data).replace(/</g, '\\u003c');
+const clientConfig = { ...config, value, placeholder };
+---
+
+<div
+  class={['ac', extraClass].filter(Boolean).join(' ')}
+  data-autocomplete
+  data-name={name}
+  data-config={json(clientConfig)}
+>
+  {label && <label class="form-label" id={labelId} for={id}>{label}</label>}
+  <div class="ac__field">
+    <div class="ac__shell">
+      <div class="ac__bar">
+        <IconButton icon="arrow_back" label={labels.back} variant="plain" class="ac__back" />
+        <span class="ac__title" aria-hidden="true">{label ?? ariaLabel ?? placeholder}</span>
+      </div>
+
+      <div class="ac__control form-control">
+        <ul class="ac__chips" aria-label={labels.selectedItems ?? 'Selected items'} hidden></ul>
+        <input
+          type="text"
+          class="ac__input"
+          id={id}
+          role="combobox"
+          aria-autocomplete="list"
+          aria-haspopup="listbox"
+          aria-expanded="false"
+          aria-controls={listId}
+          aria-label={label ? undefined : (ariaLabel ?? placeholder ?? undefined)}
+          aria-describedby={helpId}
+          data-describedby={helpId}
+          autocomplete="off"
+          autocapitalize="off"
+          spellcheck="false"
+          placeholder={placeholder}
+          value={selectedLabel}
+        />
+        <button type="button" class="btn-close ac__clear" aria-label={labels.clear} hidden></button>
+        <span class="ac__toggle" aria-hidden="true"><Icon name="expand_more" size={24} /></span>
+      </div>
+
+      <div class="ac__panel dropdown-menu">
+        <div class="ac__note" hidden></div>
+        <div class="ac__status" hidden></div>
+        <ul
+          class="ac__list"
+          id={listId}
+          role="listbox"
+          aria-multiselectable={multiple ? 'true' : undefined}
+          aria-labelledby={label ? labelId : undefined}
+          aria-label={label ? undefined : (ariaLabel ?? placeholder ?? undefined)}
+          hidden
+        ></ul>
+      </div>
+
+      <div class="ac__footer" hidden>
+        <Button variant="primary" class="ac__done w-100">{config.applyLabel ?? 'Done'}</Button>
+      </div>
+
+      <div class="visually-hidden" role="status" aria-live="polite" aria-atomic="true" data-ac-live></div>
+    </div>
+  </div>
+  <div class="invalid-feedback" id={feedbackId}>{config.invalidFeedback}</div>
+  {help && <div class="form-text" id={helpId}>{help}</div>}
+  <div data-ac-hidden></div>
+
+  <!-- Icons and the spinner are cloned by the script so the option list uses the
+       same Icon / PalmSpinner markup as the rest of the system. -->
+  <template data-ac-tpl>
+    <span data-icon="check"><Icon name="check" size={20} /></span>
+    <span data-icon="block"><Icon name="block" size={20} /></span>
+    <span data-icon="generic"><Icon name="widgets" size={16} /></span>
+    <span data-icon="spinner" aria-hidden="true"><PalmSpinner size={20} label="" /></span>
+  </template>
+  <script type="application/json" data-ac-options set:html={json(options)} />
+</div>
+
+<script>
+  import { initAutocompletes } from '../scripts/autocomplete.js';
+
+  initAutocompletes();
+</script>

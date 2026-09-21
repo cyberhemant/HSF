@@ -181,6 +181,11 @@ $box-shadow: 0 1px 2px rgba($maroon, .06), 0 6px 20px rgba($maroon, .05);
 $box-shadow-sm: 0 1px 2px rgba($maroon, .06);
 $box-shadow-lg: 0 4px 12px rgba($maroon, .10), 0 16px 40px rgba($maroon, .12); // §4 Modal
 
+// Dropdown — sand wash on item hover/focus (also drives Autocomplete's
+// highlighted option), and the large shadow (shadow-lg) on the menu.
+$dropdown-link-hover-bg: $sand;
+$dropdown-box-shadow: $box-shadow-lg;
+
 // =============================================================================
 // Focus ring — one ochre ring everywhere (§6), not a per-variant tint.
 // This single override cascades into buttons, inputs, form-checks, nav
@@ -714,6 +719,410 @@ h4, .h4 { font-weight: 600; font-family: $font-family-sans; }
   vertical-align: middle;
   user-select: none;
   color: currentcolor;
+}
+
+// §4 Dropdown — Bootstrap's box-shadow mixin is a no-op while $enable-shadows
+// is false (the project default), so .dropdown-menu never emits the declaration
+// even though --bs-dropdown-box-shadow is set. Apply it directly rather than
+// enabling shadows globally. Kept above Autocomplete so .ac__panel can still
+// reset it on mobile.
+.dropdown-menu {
+  box-shadow: var(--#{$prefix}dropdown-box-shadow);
+}
+
+// §4 Autocomplete — Bootstrap has no combobox. The control is a
+// .form-control wrapper (so validation/disabled/focus read like every other
+// field) holding chips, the input and the clear/toggle affordances; the popup
+// is a .dropdown-menu. Behaviour lives in scripts/autocomplete.js; these rules
+// only cover what Bootstrap's classes can't. Active (highlighted), selected
+// and disabled are separate classes, and each carries an icon or weight
+// change so none of them relies on colour alone.
+$ac-max-height-auto: 22rem; // cap for maxHeight="auto" on tall screens
+$ac-option-min-height: 2.75rem; // 44px touch target
+$ac-option-min-height-touch: 3rem; // 48px on coarse pointers
+
+.ac {
+  --ac-safe-top: env(safe-area-inset-top, 0px);
+  --ac-safe-right: env(safe-area-inset-right, 0px);
+  --ac-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --ac-safe-left: env(safe-area-inset-left, 0px);
+
+  position: relative;
+
+  &[data-safe-area='false'] {
+    --ac-safe-top: 0px;
+    --ac-safe-right: 0px;
+    --ac-safe-bottom: 0px;
+    --ac-safe-left: 0px;
+  }
+}
+
+.ac__field,
+.ac__shell {
+  position: relative;
+}
+
+// The display rules below would otherwise beat the UA [hidden] rule.
+.ac [hidden] {
+  display: none !important;
+}
+
+.ac__bar,
+.ac__footer {
+  display: none;
+}
+
+.ac__control {
+  // Define local padding variables
+  --ac-padding-y: 0.375rem;
+  --ac-padding-x: 0.75rem;
+  --ac-padding-end: 2.5rem; // Clear/toggle icon clearance area
+
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .25rem .5rem;
+  cursor: text;
+  // Apply padding using shorthand: top | right | bottom | left
+  padding: var(--ac-padding-y) var(--ac-padding-end) var(--ac-padding-y) var(--ac-padding-x);
+
+  &:focus-within:not(.is-invalid, .is-valid) {
+    border-color: $input-focus-border-color;
+  }
+
+  // Bootstrap's validation icon would sit under the clear/toggle controls.
+  &.is-invalid,
+  &.is-valid {
+    padding: var(--ac-padding-y) var(--ac-padding-end) var(--ac-padding-y) var(--ac-padding-x);
+    background-image: none;
+  }
+}
+
+.ac__input {
+  flex: 1 1 6rem;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+
+  &::placeholder {
+    color: var(--#{$prefix}secondary-color);
+  }
+}
+
+.ac__toggle {
+  // display: inline-flex;
+  // flex: 0 0 auto;
+  // margin-left: auto;
+  color: var(--#{$prefix}secondary-color);
+  transition: transform .15s ease;
+  position: absolute;
+  right: 9px;
+  .ac.is-open:not(.is-fullscreen) & {
+    transform: rotate(180deg);
+  }
+}
+
+.ac__clear {
+  flex: 0 0 auto;
+  padding: .5rem;
+  background-size: .7em;
+}
+
+.ac.is-disabled .ac__control {
+  background-color: var(--#{$prefix}secondary-bg);
+  cursor: not-allowed;
+}
+
+.ac.is-readonly .ac__control {
+  background-color: var(--#{$prefix}secondary-bg);
+}
+
+.ac.is-invalid .invalid-feedback {
+  display: block;
+}
+
+// Chips
+.ac__chips {
+  display: flex;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  gap: .25rem;
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ac__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .25rem;
+  max-width: 100%;
+  padding: .125rem ;
+  background-color: var(--#{$prefix}beige);
+  color: var(--#{$prefix}maroon);
+  font-size: $font-size-sm;
+  line-height: 1.5;
+
+  &.is-locked {
+    padding-right: .5rem;
+  }
+}
+
+.ac__chip-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// btn-close is 1em; the pseudo-element widens the tap area without making
+// the chip taller.
+.ac__chip-remove {
+  position: relative;
+  width: .625rem;
+  height: .625rem;
+  background-size: .7em;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: -.5rem;
+    
+  }
+}
+
+.ac__more {
+  padding: 0 .25rem;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-weight: 600;
+}
+
+// Popup
+.ac__panel {
+  --ac-avail: #{$ac-max-height-auto};
+  --ac-max: #{$ac-max-height-auto};
+
+  top: 100%;
+  right: 0;
+  left: 0;
+  width: 100%;
+  max-height: min(var(--ac-avail), var(--ac-max), #{$ac-max-height-auto});
+  margin-top: .125rem;
+  padding: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+
+  &.is-top {
+    top: auto;
+    bottom: 100%;
+    margin-top: 0;
+    margin-bottom: .125rem;
+  }
+
+  &.is-fixed {
+    position: fixed;
+    right: auto;
+    margin: 0;
+  }
+}
+
+.ac__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  &[aria-busy='true'] {
+    opacity: .5;
+    pointer-events: none;
+  }
+}
+
+.ac__note,
+.ac__status {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .5rem var(--#{$prefix}dropdown-item-padding-x, 1rem);
+  color: var(--#{$prefix}secondary-color);
+  font-size: $font-size-sm;
+}
+
+.ac__note {
+  border-bottom: var(--#{$prefix}border-width) solid var(--#{$prefix}border-color);
+}
+
+.ac__status[data-kind='error'] {
+  color: var(--#{$prefix}danger);
+}
+
+.ac__group-label {
+  display: block;
+  padding: .5rem var(--#{$prefix}dropdown-item-padding-x, 1rem) .25rem;
+  color: var(--#{$prefix}secondary-color);
+  font-size: $font-size-sm;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.ac__option {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  min-height: $ac-option-min-height;
+  padding: .5rem var(--#{$prefix}dropdown-item-padding-x, 1rem);
+  color: var(--#{$prefix}dropdown-link-color);
+  cursor: pointer;
+
+  @media (pointer: coarse) {
+    min-height: $ac-option-min-height-touch;
+  }
+
+  // Active = highlighted for navigation; not the same as selected.
+  &.is-active {
+    background-color: var(--#{$prefix}dropdown-link-hover-bg);
+    color: var(--#{$prefix}dropdown-link-hover-color);
+  }
+
+  &.is-selected .ac__label {
+    font-weight: 700;
+  }
+
+  &.is-disabled,
+  &.is-limited {
+    color: var(--#{$prefix}secondary-color);
+    cursor: not-allowed;
+
+    .ac__thumb {
+      opacity: .5;
+    }
+  }
+
+  &.is-disabled .ac__label {
+    text-decoration: line-through;
+  }
+}
+
+.ac__text {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.ac__secondary {
+  flex: 0 0 auto;
+  color: var(--#{$prefix}secondary-color);
+  font-size: $font-size-sm;
+}
+
+.ac__mark {
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
+.ac__hit {
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font-weight: 700;
+}
+
+// img { width: 100% } is global (above), hence the explicit auto.
+.ac__thumb {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  max-width: 2rem;
+  height: 1.5rem;
+  border: var(--#{$prefix}border-width) solid var(--#{$prefix}border-color);
+  object-fit: cover;
+
+  &--fallback,
+  &--icon {
+    width: 1.5rem;
+    background-color: var(--#{$prefix}beige);
+    color: var(--#{$prefix}maroon);
+    font-size: $font-size-sm;
+    font-weight: 600;
+  }
+}
+
+.ac__footer {
+  padding: 1rem;
+  border-top: var(--#{$prefix}border-width) solid var(--#{$prefix}border-color);
+}
+
+// Fullscreen: the same shell, pulled out of flow. --ac-vv-* follow
+// visualViewport (set from JS) so the results stop above the keyboard;
+// 100dvh is the fallback where it isn't available.
+.ac.is-fullscreen {
+  .ac__shell {
+    position: fixed;
+    top: var(--ac-vv-top, 0);
+    right: 0;
+    left: 0;
+    z-index: $zindex-modal;
+    display: flex;
+    flex-direction: column;
+    height: var(--ac-vv-height, 100dvh);
+    padding: var(--ac-safe-top) var(--ac-safe-right) var(--ac-safe-bottom) var(--ac-safe-left);
+    overscroll-behavior: contain;
+    background-color: var(--#{$prefix}body-bg);
+  }
+
+  .ac__bar {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .25rem 1rem;
+  }
+
+  .ac__title {
+    font-family: $font-family-serif;
+    font-size: $h5-font-size;
+    font-weight: 700;
+  }
+
+  .ac__control {
+    flex: 0 0 auto;
+    margin: 0 1rem .5rem;
+  }
+
+  .ac__panel {
+    position: static;
+    display: block;
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none;
+    margin: 0;
+    border: 0;
+    box-shadow: none;
+    background-color: transparent;
+  }
+
+  .ac__footer:not([hidden]) {
+    display: block;
+  }
+}
+
+.ac-scroll-lock {
+  overflow: hidden;
+  overscroll-behavior: contain;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ac__toggle {
+    transition: none;
+  }
 }
 
 // §4 Palm Spinner — brand loading indicator (PalmSpinner.astro): four evenly

@@ -10,6 +10,7 @@ import Divider from '../../components/Divider.astro';
 import PalmSpinner from '../../components/PalmSpinner.astro';
 import ProductGallery from '../../components/ProductGallery.astro';
 import ArchCarousel from '../../components/ArchCarousel.astro';
+import Autocomplete from '../../components/Autocomplete.astro';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
@@ -24,6 +25,7 @@ const toc = [
   ['badges', 'Badges / Tags'],
   ['dividers', 'Dividers'],
   ['forms', 'Forms'],
+  ['autocomplete', 'Autocomplete'],
   ['navs-tabs', 'Navs & Tabs'],
   ['navbar-offcanvas', 'Navbar & Offcanvas'],
   ['cards', 'Cards'],
@@ -67,6 +69,30 @@ const toastDemos = [
   { group: 'Position', items: [
     'top-start', 'top-center', 'top-end', 'bottom-start', 'bottom-center', 'bottom-end',
   ].map((position) => ({ label: position, toast: { body: position, position } }))},
+];
+
+const flag = (code: string) => `${base}/flags/${code}.svg`;
+const countries = [
+  { value: 'in', label: 'India', secondaryLabel: '+91', image: flag('in'), popular: true, dialCode: '+91' },
+  { value: 'us', label: 'United States', secondaryLabel: '+1', image: flag('us'), popular: true, dialCode: '+1' },
+  { value: 'gb', label: 'United Kingdom', secondaryLabel: '+44', image: flag('gb'), popular: true, dialCode: '+44' },
+  { value: 'ca', label: 'Canada', secondaryLabel: '+1', image: flag('ca'), disabled: true },
+  { value: 'id', label: 'Indonesia', secondaryLabel: '+62', image: flag('id') },
+  { value: 'ie', label: 'Ireland', secondaryLabel: '+353', image: flag('ie') },
+  { value: 'it', label: 'Italy', secondaryLabel: '+39', image: flag('it') },
+  { value: 'fr', label: 'France', secondaryLabel: '+33', image: flag('fr') },
+  { value: 'de', label: 'Germany', secondaryLabel: '+49', image: flag('de') },
+  { value: 'nl', label: 'Netherlands', secondaryLabel: '+31', image: flag('nl') },
+  { value: 'jp', label: 'Japan', secondaryLabel: '+81', image: flag('jp') },
+  { value: 'ae', label: 'United Arab Emirates', secondaryLabel: '+971', image: flag('ae') },
+];
+const plainCountries = countries.map(({ value, label, disabled }) => ({ value, label, disabled }));
+const acExperiences = [
+  { value: 'walk', label: 'Sunrise Farm Walk', icon: 'hiking', secondaryLabel: '2 h' },
+  { value: 'kitchen', label: 'Artisanal Kitchen Workshop', icon: 'skillet', secondaryLabel: '3 h' },
+  { value: 'yoga', label: 'Morning Yoga', icon: 'self_improvement', secondaryLabel: '1 h' },
+  { value: 'pottery', label: 'Pottery', icon: 'palette', secondaryLabel: '2 h' },
+  { value: 'stargaze', label: 'Stargazing', icon: 'nightlight', secondaryLabel: '1.5 h' },
 ];
 
 const colorGroups = [
@@ -478,6 +504,143 @@ const experiences = [
               <div class="valid-feedback">Looks good.</div>
             </div>
           </form>
+        </section>
+
+        <!-- ================= AUTOCOMPLETE ================= -->
+        <section id="autocomplete" class="pb-6 mb-6 border-bottom">
+          <h2>Autocomplete</h2>
+          <p class="text-ink-soft">
+            <code>Autocomplete.astro</code> — searchable single or multiple select (ARIA combobox +
+            listbox). Generic: it renders whatever <code>options</code> it is given. Status: experimental
+            (this page is its only use).
+          </p>
+
+          <div class="row g-4 mt-1">
+            <div class="col-md-6">
+              <h3 class="h6">1 · Basic single select</h3>
+              <Autocomplete id="ds-ac-basic" label="Search country" placeholder="Search countries…" options={plainCountries} help="Selecting closes the list and keeps focus on the field." />
+            </div>
+            <div class="col-md-6">
+              <h3 class="h6">2 · Country flags (image assets)</h3>
+              <Autocomplete id="ds-ac-flags" label="Country" placeholder="Search countries…" options={countries} name="country" defaultValue="in" />
+            </div>
+            <div class="col-md-6">
+              <h3 class="h6">3 · Multiple select</h3>
+              <Autocomplete id="ds-ac-multi" label="Countries visited" placeholder="Search countries…" selectionMode="multiple" options={countries} defaultValue={['in', 'us', 'gb']} maxVisibleChips={2} help="maxVisibleChips=2 — the rest collapse into “+N”." />
+            </div>
+            <div class="col-md-6">
+              <h3 class="h6">4 · Maximum 3 selections</h3>
+              <Autocomplete id="ds-ac-max" label="Pick up to three" placeholder="Search countries…" selectionMode="multiple" maxSelections={3} options={countries} defaultValue={['in', 'us']} />
+              <div class="form-text" id="ds-ac-max-hint" aria-live="polite">You can select up to 3 items.</div>
+            </div>
+            <div class="col-md-6">
+              <h3 class="h6">5 · Disabled option</h3>
+              <Autocomplete id="ds-ac-disabled-opt" label="Country" placeholder="Try to pick Canada…" options={countries} help="Canada is visible but unavailable: skipped by the arrow keys, ignored by click, tap and Enter." />
+            </div>
+            <div class="col-md-6">
+              <h3 class="h6">6 · Remote search</h3>
+              <Autocomplete id="ds-ac-remote" label="Search the directory" placeholder="Type 2+ letters…" options={[]} minSearchLength={2} debounce={300} help="Debounced, cancelable, cached. Try “xyz” for the empty state." />
+              <div class="form-check mt-2">
+                <input class="form-check-input" type="checkbox" id="ds-ac-fail" />
+                <label class="form-check-label" for="ds-ac-fail">Make the next request fail</label>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <h3 class="h6">7 · Mobile fullscreen (multiple)</h3>
+              <Autocomplete id="ds-ac-fs" label="Experiences" placeholder="Search experiences…" selectionMode="multiple" mobileMode="fullscreen" options={acExperiences} help="Below 768px this opens a fullscreen search with a Done button." />
+            </div>
+            <div class="col-md-6">
+              <h3 class="h6">Adaptive on mobile (default)</h3>
+              <Autocomplete id="ds-ac-adaptive" label="Country" placeholder="Search countries…" options={countries} help="Dropdown while there is room; fullscreen when the keyboard or viewport leaves under 200px." />
+            </div>
+          </div>
+
+          <h3 class="h5 mt-5">States</h3>
+          <form class="row g-4 mt-0" id="ds-ac-form" novalidate>
+            <div class="col-md-6">
+              <Autocomplete id="ds-ac-required" label="Required" placeholder="Choose a country" options={plainCountries} name="required-country" required validateOnBlur invalidFeedback="Please choose a country." />
+              <button type="submit" class="btn btn-outline-primary btn-sm mt-3">Submit form</button>
+              <span class="small text-ink-soft ms-2" id="ds-ac-form-out"></span>
+            </div>
+            <div class="col-md-6">
+              <Autocomplete id="ds-ac-disabled" label="Disabled" options={plainCountries} defaultValue="fr" disabled />
+            </div>
+            <div class="col-md-6">
+              <Autocomplete id="ds-ac-readonly" label="Readonly" options={plainCountries} defaultValue="jp" readonly />
+            </div>
+            <div class="col-md-6">
+              <Autocomplete id="ds-ac-popular" label="Recent &amp; popular" placeholder="Search countries…" options={countries} showPopular showRecent help="With no query: Recent (this session), then Popular." />
+            </div>
+            <div class="col-md-6">
+              <Autocomplete id="ds-ac-loading" label="Loading" placeholder="Search…" options={plainCountries} state="loading" />
+            </div>
+            <div class="col-md-6">
+              <Autocomplete id="ds-ac-error" label="Error" placeholder="Search…" options={plainCountries} state="error" />
+            </div>
+          </form>
+
+          <p class="small text-ink-soft mt-4 mb-0">
+            Event log: <span id="ds-ac-log">nothing yet</span>
+          </p>
+
+          <h3 class="h5 mt-5">Props</h3>
+          <div class="table-responsive">
+            <table class="table table-sm small align-middle">
+              <thead><tr><th>Prop</th><th>Default</th><th>Notes</th></tr></thead>
+              <tbody>
+                <tr><td><code>options</code></td><td>required</td><td><code>&#123; value, label, secondaryLabel?, image?, imageAlt?, icon?, disabled?, …meta &#125;</code>. Any extra keys are kept and returned in events.</td></tr>
+                <tr><td><code>label</code> / <code>ariaLabel</code></td><td>—</td><td>One is required for an accessible name.</td></tr>
+                <tr><td><code>selectionMode</code></td><td><code>single</code></td><td><code>single | multiple</code></td></tr>
+                <tr><td><code>value</code> / <code>defaultValue</code></td><td>—</td><td>String, or string[] for multiple. Values are looked up in <code>options</code>; for remote data use <code>setValue(values, optionObjects)</code>.</td></tr>
+                <tr><td><code>name</code></td><td>—</td><td>Submitted via hidden inputs (one per value; repeated name for multiple).</td></tr>
+                <tr><td><code>maxSelections</code></td><td>none</td><td>Multiple only. Disabled options never count.</td></tr>
+                <tr><td><code>maxVisibleChips</code></td><td>all</td><td>Extra chips collapse to a “+N” button.</td></tr>
+                <tr><td><code>disabled</code> / <code>readonly</code> / <code>required</code></td><td><code>false</code></td><td>Required is validated natively and shown with Bootstrap's <code>is-invalid</code>.</td></tr>
+                <tr><td><code>clearable</code></td><td><code>true</code></td><td>“Clear selection” button, single select only (multi-select removes items via chips); locked (disabled + selected) items stay.</td></tr>
+                <tr><td><code>state</code></td><td><code>ready</code></td><td><code>ready | loading | error</code> — replaces a <code>loading</code> boolean (project rule: enums, not booleans). “Empty” is derived from the results.</td></tr>
+                <tr><td><code>searchUrl</code></td><td>—</td><td>GET <code>url?q=…</code> returning an options array. For anything else call <code>setSource((query, &#123; signal &#125;) =&gt; Promise&lt;options[]&gt;)</code>.</td></tr>
+                <tr><td><code>debounce</code> / <code>minSearchLength</code></td><td><code>250</code> / <code>0</code></td><td>Remote only. Stale requests are aborted; results are cached per query.</td></tr>
+                <tr><td><code>openOnFocus</code> · <code>autoFocus</code></td><td><code>true</code> · <code>false</code></td><td></td></tr>
+                <tr><td><code>closeOnSelect</code></td><td>single <code>true</code> · multiple <code>false</code></td><td></td></tr>
+                <tr><td><code>closeOnEscape</code> · <code>closeOnOutsideClick</code> · <code>closeOnBack</code></td><td><code>true</code></td><td></td></tr>
+                <tr><td><code>toggleOnEnter</code></td><td><code>true</code></td><td>Multiple: Enter on a selected option deselects it.</td></tr>
+                <tr><td><code>backspaceRemovesLast</code></td><td><code>true</code></td><td>Only when the query is empty.</td></tr>
+                <tr><td><code>wrapNavigation</code> · <code>pageNavigation</code></td><td><code>false</code> · <code>true</code></td><td></td></tr>
+                <tr><td><code>validateOnBlur</code></td><td><code>false</code></td><td></td></tr>
+                <tr><td><code>placement</code></td><td><code>auto</code></td><td><code>auto | top | bottom</code>. Auto opens below unless there is more room above.</td></tr>
+                <tr><td><code>positionStrategy</code></td><td><code>adaptive</code></td><td><code>adaptive | absolute | fixed</code>. Adaptive uses <code>fixed</code> when an ancestor clips overflow.</td></tr>
+                <tr><td><code>maxHeight</code></td><td><code>auto</code></td><td><code>auto</code> = available room, capped at 22rem; or a number (px) / CSS length.</td></tr>
+                <tr><td><code>mobileMode</code></td><td><code>adaptive</code></td><td><code>adaptive | dropdown | fullscreen</code>. No bottom sheet.</td></tr>
+                <tr><td><code>keyboardAware</code> · <code>viewportAware</code> · <code>safeAreaAware</code></td><td><code>true</code></td><td>See “Mobile”.</td></tr>
+                <tr><td><code>lockBodyScroll</code></td><td><code>true</code></td><td>Fullscreen only.</td></tr>
+                <tr><td><code>showApplyButton</code> · <code>applyLabel</code></td><td><code>true</code> · <code>Done</code></td><td>Multiple + fullscreen only.</td></tr>
+                <tr><td><code>inputMode</code> · <code>enterKeyHint</code></td><td><code>search</code> · <code>done</code> (<code>search</code> when remote)</td><td></td></tr>
+                <tr><td><code>highlightMatch</code> · <code>showRecent</code> · <code>showPopular</code></td><td><code>true</code> · <code>false</code> · <code>false</code></td><td>Popular uses <code>popular: true</code> on options; Recent is per page load (<code>setRecent()</code> to seed).</td></tr>
+                <tr><td><code>labels</code></td><td>English</td><td>Override any string (<code>empty</code>, <code>loading</code>, <code>error</code>, <code>retry</code>, <code>remove</code>, <code>limitReached</code>…).</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3 class="h5 mt-4">Events</h3>
+          <p class="text-ink-soft small">
+            Bubbling <code>CustomEvent</code>s on the root, named <code>autocomplete:&lt;name&gt;</code> (the
+            spec's <code>onX</code> callbacks): <code>change</code>, <code>select</code>, <code>remove</code>,
+            <code>clear</code>, <code>search</code>, <code>input</code>, <code>focus</code>, <code>blur</code>,
+            <code>open</code>, <code>close</code>, <code>fullscreen</code>, <code>error</code>. <code>detail</code> on
+            change: <code>value, values, options, count, max, remaining, limitReached, reason</code> — enough to render
+            “You can select up to 3 items” (example 4 does).
+          </p>
+
+          <h3 class="h5 mt-4">Behaviour</h3>
+          <ul class="text-ink-soft small">
+            <li><strong>Active ≠ selected ≠ disabled.</strong> Arrow keys and hover only highlight; only Enter, click or tap commits. The query is never the value: after searching “United”, the selection is unchanged until you pick another option, and the input reverts to it on close.</li>
+            <li><strong>Selection limit.</strong> At the limit, unselected options stay visible, dimmed, <code>aria-disabled</code> with a “Selection limit reached” cue; chips stay removable and removing one frees a slot. Mouse, touch, keyboard and Enter all respect it.</li>
+            <li><strong>Disabled options</strong> stay visible, struck through with a block icon, are skipped by arrows/Home/End/Page keys, and can never be selected. A selected + disabled option is a locked chip: no remove button, not cleared, not counted.</li>
+            <li><strong>Keys.</strong> ↓/↑ move (↓ on a closed list opens it); Home/End jump when navigating the list, and move the caret while you are editing text; PageUp/PageDown move a page; Enter selects the highlighted option and never submits the form (with nothing highlighted it is left alone, so the form submits); Esc closes; Tab/Shift+Tab close without selecting and move focus normally; Backspace on an empty query removes the last chip.</li>
+            <li><strong>Remote.</strong> Loading keeps previous results visible but inert; error shows “Unable to load results” with a Try again button (Enter or ↓ also retries); minimum length shows a hint instead of an empty state.</li>
+            <li><strong>Mobile.</strong> Adaptive: below 768px (or a short touch screen) the list is a dropdown while at least 200px fits above or below the field, measured on <code>visualViewport</code> (which excludes the keyboard and browser chrome); otherwise the field becomes a fullscreen search in place. The input is not recreated, so focus and the keyboard survive the switch. Fullscreen locks page scroll, makes the page inert, respects safe areas, closes on Back (history entry), Esc, the back arrow or Done, and returns focus to the field without reopening the list.</li>
+            <li><strong>Accessibility.</strong> <code>role=combobox</code> with <code>aria-expanded/controls/activedescendant/autocomplete</code>; <code>role=listbox</code> (<code>aria-multiselectable</code>); options with <code>aria-selected</code>/<code>aria-disabled</code>; a polite live region announces result counts, loading, errors, limit and selection changes; chips have “Remove &#123;label&#125;” buttons; the “+N” button lists what it hides.</li>
+          </ul>
         </section>
 
         <!-- ================= NAVS & TABS ================= -->
@@ -1035,6 +1198,7 @@ const experiences = [
 
 <script>
   import { showToast } from '../../scripts/toast.js';
+  import { getAutocomplete } from '../../scripts/autocomplete.js';
 
   // Every demo toast reports its close to the log line, which shows onClose
   // firing per toast for both timeout and manual dismissal.
@@ -1056,5 +1220,53 @@ const experiences = [
     ['info', 'success', 'warning', 'error'].forEach((theme) => {
       show({ body: `${theme[0].toUpperCase()}${theme.slice(1)} toast`, theme });
     });
+  });
+
+  // ---- Autocomplete demos ------------------------------------------------
+  // The `id` prop lands on the input; events fire on the component root.
+  const acRoot = (id) => document.getElementById(id)?.closest('[data-autocomplete]');
+  const acLog = document.getElementById('ds-ac-log');
+  document.addEventListener('autocomplete:change', (e) => {
+    const { id } = e.target.querySelector('input');
+    if (acLog) acLog.textContent = `${id}: ${JSON.stringify(e.detail.values)}`;
+  });
+
+  // Example 4 — a consumer-rendered message from the exposed limit state.
+  const maxHint = document.getElementById('ds-ac-max-hint');
+  acRoot('ds-ac-max')?.addEventListener('autocomplete:change', (e) => {
+    const { limitReached, max, remaining } = e.detail;
+    if (maxHint) maxHint.textContent = limitReached ? `Maximum ${max} selections reached.` : `You can select up to ${max} items (${remaining} left).`;
+  });
+
+  // Example 6 — a fake API: 700ms latency, optional failure.
+  const directory = ['Alice Ndlovu', 'Amir Haddad', 'Ana Ribeiro', 'Bao Tran', 'Chen Wei', 'Chloe Martin', 'Dev Patel', 'Diego Alvarez', 'Elena Petrova', 'Farah Khan', 'Grace Okafor', 'Hiro Tanaka'];
+  const remoteRoot = acRoot('ds-ac-remote');
+  if (remoteRoot) {
+    getAutocomplete(remoteRoot).setSource((query, { signal }) => new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        if (document.getElementById('ds-ac-fail')?.checked) {
+          document.getElementById('ds-ac-fail').checked = false;
+          reject(new Error('Simulated failure'));
+          return;
+        }
+        const q = query.toLowerCase();
+        resolve(directory.filter((n) => n.toLowerCase().includes(q)).map((n) => ({ value: n, label: n, secondaryLabel: 'Team' })));
+      }, 700);
+      signal.addEventListener('abort', () => { clearTimeout(timer); reject(new DOMException('Aborted', 'AbortError')); });
+    }));
+  }
+
+  // The forced error state has no source to re-run; Try again just recovers it.
+  acRoot('ds-ac-error')?.addEventListener('autocomplete:retry', () => {
+    getAutocomplete(acRoot('ds-ac-error')).setState('ready');
+  });
+
+  // States form — submit is intercepted so the demo shows native validation.
+  const acForm = document.getElementById('ds-ac-form');
+  acForm?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const out = document.getElementById('ds-ac-form-out');
+    const valid = acForm.checkValidity();
+    if (out) out.textContent = valid ? `Submitted: ${new URLSearchParams(new FormData(acForm)).toString()}` : 'Not submitted — fix the highlighted field.';
   });
 </script>
