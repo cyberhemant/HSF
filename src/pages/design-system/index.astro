@@ -47,6 +47,28 @@ const toc = [
   ['scrollspy', 'Scrollspy'],
 ];
 
+const BOOKING = 'Your booking request was sent.';
+const toastDemos = [
+  { group: 'Themes', items: [
+    { label: 'Info (default)', toast: { body: BOOKING } },
+    { label: 'Success', toast: { body: BOOKING, theme: 'success' } },
+    { label: 'Warning', toast: { body: 'Some experiences are weather-dependent this season.', theme: 'warning' } },
+    { label: 'Error', toast: { body: 'That date is fully booked — try another week.', theme: 'error' } },
+  ]},
+  { group: 'Content & behaviour', items: [
+    { label: 'Custom icon', toast: { body: BOOKING, theme: 'success', icon: 'favorite' } },
+    { label: 'With link', toast: { body: BOOKING, theme: 'success', linkLabel: 'View booking', linkUrl: '/bookings/12345' } },
+    { label: 'Link, new tab', toast: { body: BOOKING, linkLabel: 'View booking', linkUrl: 'https://example.com', linkTarget: '_blank' } },
+    { label: 'Duration 6s', toast: { body: 'This stays for six seconds.', duration: 6000 } },
+    { label: 'Persistent', toast: { body: 'Stays until you close it.', autoHide: false } },
+    { label: 'Not dismissible', toast: { body: 'No close button — it hides itself.', dismissible: false } },
+    { label: 'Long text', toast: { body: 'Your booking request for the Heenat Salma Farm lodge has been sent — the farm team will confirm availability by email within one working day.', autoHide: false } },
+  ]},
+  { group: 'Position', items: [
+    'top-start', 'top-center', 'top-end', 'bottom-start', 'bottom-center', 'bottom-end',
+  ].map((position) => ({ label: position, toast: { body: position, position } }))},
+];
+
 const colorGroups = [
   { group: 'Primary', swatches: [
     { name: 'Maroon', cls: 'primary', hex: '#491010', note: 'Headings, primary button fill. AAA everywhere.' },
@@ -746,10 +768,14 @@ const experiences = [
         <!-- ================= TOASTS ================= -->
         <section id="toasts" class="pb-6 mb-6 border-bottom">
           <h2>Toasts</h2>
-          <button type="button" class="btn btn-outline-primary mt-3" id="ds-toast-trigger">Show toast</button>
+          <p class="text-ink-soft">
+            Bootstrap's native Toast. Two forms: the default, with a header, and the themed toast
+            below, created on demand with <code>showToast()</code>.
+          </p>
+          <button type="button" class="btn btn-outline-primary mt-3" id="ds-toast-trigger">Show default toast</button>
           <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1080;">
-            <div id="ds-toast" class="toast" role="status" aria-live="polite" aria-atomic="true">
-              <div class="toast-header">
+            <div id="ds-toast" class="toast bg-cream border-0" role="status" aria-live="polite" aria-atomic="true">
+              <div class="toast-header bg-cream">
                 <strong class="me-auto">Heenat Salma Farm</strong>
                 <small class="text-ink-faint">just now</small>
                 <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
@@ -757,6 +783,39 @@ const experiences = [
               <div class="toast-body">Your booking request was sent.</div>
             </div>
           </div>
+
+          <h3 class="h5 mt-5">Themed toast</h3>
+          <p class="text-ink-soft">
+            <code>import &#123; showToast &#125; from '../scripts/toast.js'</code>. Only <code>body</code> is
+            required. Every toast has its own id, timer and <code>onClose</code>, and toasts in the same
+            position stack.
+          </p>
+          <ul class="text-ink-soft small">
+            <li><code>theme</code> <code>info | success | warning | error</code> — sets the border, icon colour and default icon (<code>chat_info</code>, <code>task_alt</code>, <code>warning</code>, <code>error</code>). Default <code>info</code>.</li>
+            <li><code>icon</code> — any Material Symbols name; replaces the theme icon.</li>
+            <li><code>position</code> <code>top-start | top-center | top-end | bottom-start | bottom-center | bottom-end</code>. Default <code>top-center</code>.</li>
+            <li><code>autoHide</code> (<code>true</code>) and <code>duration</code> (<code>3000</code> ms). The timer pauses while the toast is hovered or focused.</li>
+            <li><code>dismissible</code> (<code>true</code>) — renders the close button.</li>
+            <li><code>linkLabel</code>, <code>linkUrl</code>, <code>linkTarget</code> (<code>_self | _blank</code>) — the link renders only when both label and URL are given.</li>
+            <li><code>id</code> — optional; generated when omitted. <code>onClose</code> — called once the toast has fully closed, whether it timed out or was dismissed.</li>
+          </ul>
+
+          {toastDemos.map((g) => (
+            <>
+              <h4 class="h6 mt-4">{g.group}</h4>
+              <div class="d-flex flex-wrap gap-2">
+                {g.items.map((item) => (
+                  <button type="button" class="btn btn-outline-secondary btn-sm" data-toast={JSON.stringify(item.toast)}>{item.label}</button>
+                ))}
+              </div>
+            </>
+          ))}
+
+          <h4 class="h6 mt-4">Stacking</h4>
+          <button type="button" class="btn btn-outline-secondary btn-sm" id="ds-toast-stack">Show all four themes</button>
+          <p class="small text-ink-soft mt-3 mb-0">
+            <code>onClose</code> log: <span id="ds-toast-log">nothing closed yet</span>
+          </p>
         </section>
 
         <!-- ================= TOOLTIPS & POPOVERS ================= -->
@@ -973,3 +1032,29 @@ const experiences = [
     </div>
   </div>
 </Base>
+
+<script>
+  import { showToast } from '../../scripts/toast.js';
+
+  // Every demo toast reports its close to the log line, which shows onClose
+  // firing per toast for both timeout and manual dismissal.
+  const log = document.getElementById('ds-toast-log');
+  const show = (options) => {
+    const toast = showToast({
+      ...options,
+      onClose: () => {
+        if (log) log.textContent = `"${options.body}" closed (${toast?.id})`;
+      },
+    });
+  };
+
+  document.querySelectorAll('[data-toast]').forEach((button) => {
+    button.addEventListener('click', () => show(JSON.parse(button.dataset.toast)));
+  });
+
+  document.getElementById('ds-toast-stack')?.addEventListener('click', () => {
+    ['info', 'success', 'warning', 'error'].forEach((theme) => {
+      show({ body: `${theme[0].toUpperCase()}${theme.slice(1)} toast`, theme });
+    });
+  });
+</script>

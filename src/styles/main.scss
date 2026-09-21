@@ -125,8 +125,8 @@ $btn-padding-x-lg: 2rem;
 
 // Square corners for the remaining components called out as flat in the
 // brief: Input, Tabs, Pills, Card, Alert, List Group, Checkbox, Progress Bar,
-// Accordion, Pagination, Dropdown, Modal. Left independent of $border-radius
-// above so anything NOT listed here (Badge, Toast, Tooltip, Popover,
+// Accordion, Pagination, Dropdown, Modal, Toast. Left independent of $border-radius
+// above so anything NOT listed here (Badge, Tooltip, Popover,
 // Thumbnail) keeps the general radius scale.
 $input-border-radius: 0;
 $input-border-radius-sm: 0;
@@ -142,6 +142,7 @@ $accordion-border-radius: 0;
 $pagination-border-radius: 0;
 $dropdown-border-radius: 0;
 $modal-content-border-radius: 0;
+$toast-border-radius: 0;
 
 // §4 Nav — Underline Tabs (proposed extension, not in DESIGN.md's original
 // component list). Bootstrap's built-in .nav-underline variant themed to the
