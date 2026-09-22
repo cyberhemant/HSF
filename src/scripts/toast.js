@@ -25,11 +25,23 @@
 //               follow-up the guest can run right there (e.g. Retry). Clicking
 //               it calls onClick, then closes the toast. Both need a value or
 //               the button is omitted. Can be combined with a link.
+//   dedupe      A repeat call matching an already-open (or still-queued)
+//               toast bumps that one instead of stacking a duplicate — the
+//               common case is a flaky retry firing the same error twice.
+//               Set false to always stack.                        (true)
+//   dedupeKey   What "the same toast" means. Defaults to `${theme}::${body}`;
+//               pass one explicitly if two calls with different text should
+//               still count as duplicates.
 //   onClose     Called once, after the toast has fully closed
 //
-// Returns { id, element, hide } — `hide()` closes it programmatically (the only
-// way to close a toast that is neither auto-hiding nor dismissible) — or null
-// if `body` is missing.
+// At most MAX_VISIBLE_PER_POSITION toasts are shown at once per position;
+// a burst of further calls queues and appears as earlier ones close, rather
+// than stacking the whole screen.
+//
+// Returns { id, element, hide } — `hide()` closes it programmatically (the
+// only way to close a toast that is neither auto-hiding nor dismissible),
+// cancels it if it's still queued and never shown, or is a no-op if it's
+// already closed/closing — or null if `body` is missing.
 import { Toast } from 'bootstrap';
 
 const DEFAULTS = {
@@ -39,6 +51,7 @@ const DEFAULTS = {
   duration: 3000,
   dismissible: true,
   linkTarget: '_self',
+  dedupe: true,
 };
 
 // `color` is the Bootstrap theme colour: error is "danger" in Bootstrap.
@@ -62,6 +75,13 @@ const POSITIONS = {
 
 const ICON_SIZE = 36;
 const SAFE_LINK_PROTOCOLS = ['http:', 'https:', 'mailto:', 'tel:'];
+
+// At most this many toasts are visible per position at once; the rest wait
+// in `queues` and get shown as earlier ones close (see presentNext below).
+const MAX_VISIBLE_PER_POSITION = 3;
+const visibleCounts = new Map(); // position -> number currently shown
+const queues = new Map(); // position -> [{ instance, status }], oldest first
+const activeByDedupeKey = new Map(); // dedupeKey -> { handle, instance, status }
 
 let sequence = 0;
 
@@ -139,6 +159,16 @@ const buildIcon = (name, colorClass) => {
   return icon;
 };
 
+// Shows the next queued toast for a position, called whenever a visible one
+// finishes closing and frees up a slot.
+const presentNext = (positionKey) => {
+  const next = queues.get(positionKey)?.shift();
+  if (!next) return;
+  visibleCounts.set(positionKey, (visibleCounts.get(positionKey) ?? 0) + 1);
+  next.status.state = 'visible';
+  next.instance.show();
+};
+
 export function showToast(options = {}) {
   const {
     id,
@@ -153,6 +183,8 @@ export function showToast(options = {}) {
     linkUrl,
     linkTarget,
     action,
+    dedupe = DEFAULTS.dedupe,
+    dedupeKey,
     onClose,
   } = options;
 
@@ -163,6 +195,16 @@ export function showToast(options = {}) {
 
   const themeKey = Object.hasOwn(THEMES, theme) ? theme : DEFAULTS.theme;
   const { color, icon: themeIcon } = THEMES[themeKey];
+
+  const key = dedupe ? (dedupeKey ?? `${themeKey}::${body}`) : null;
+  const existing = key ? activeByDedupeKey.get(key) : null;
+  if (existing) {
+    // Visible: bump the auto-hide timer. Still queued: nothing to bump yet —
+    // the call is simply absorbed into the one already waiting its turn.
+    if (existing.status.state === 'visible') existing.instance.show();
+    return existing.handle;
+  }
+
   const positionKey = Object.hasOwn(POSITIONS, position) ? position : DEFAULTS.position;
   const delay = Number.isFinite(duration) && duration > 0 ? duration : DEFAULTS.duration;
   const target = linkTarget === '_blank' ? '_blank' : DEFAULTS.linkTarget;
@@ -195,21 +237,48 @@ export function showToast(options = {}) {
   getContainer(positionKey).append(toastEl);
 
   // Each toast gets its own Bootstrap instance, so timers, dismissal and
-  // callbacks never cross between toasts. `hidden.bs.toast` fires after the
-  // fade-out finishes, for both timeout and manual close.
+  // callbacks never cross between toasts. A toast created over the visible
+  // cap stays in the DOM (Bootstrap's own `.toast:not(.show)` keeps it
+  // invisible) until presentNext() calls show() on it later.
   const instance = new Toast(toastEl, { autohide: autoHide, delay });
-  toastEl.addEventListener('hidden.bs.toast', () => {
+  const status = { state: 'queued' }; // 'queued' | 'visible' | 'closed'
+  const queueEntry = { instance, status };
+
+  const teardown = () => {
     instance.dispose();
     toastEl.remove();
+    activeByDedupeKey.delete(key);
     if (typeof onClose === 'function') onClose();
+  };
+
+  // `hidden.bs.toast` fires after the fade-out finishes, for both timeout
+  // and manual close — but only for a toast that actually got shown; one
+  // still sitting in the queue never reaches Bootstrap at all, so hide()
+  // below tears it down directly instead of relying on this event.
+  toastEl.addEventListener('hidden.bs.toast', () => {
+    teardown();
+    status.state = 'closed';
+    visibleCounts.set(positionKey, visibleCounts.get(positionKey) - 1);
+    presentNext(positionKey);
   }, { once: true });
+
   // hide() is safe to call more than once, and after the toast has closed:
   // Bootstrap queues a callback per call, and the second one would run against
   // a disposed toast. `hide.bs.toast` fires for every route (timer, close
   // button, this function), so it marks the toast as closing.
   let closing = false;
   toastEl.addEventListener('hide.bs.toast', () => { closing = true; });
-  const hide = () => { if (!closing) instance.hide(); };
+  const hide = () => {
+    if (status.state === 'queued') {
+      const queue = queues.get(positionKey);
+      const idx = queue ? queue.indexOf(queueEntry) : -1;
+      if (idx !== -1) queue.splice(idx, 1);
+      status.state = 'closed';
+      teardown();
+    } else if (status.state === 'visible' && !closing) {
+      instance.hide();
+    }
+  };
 
   // The action runs first; a throwing handler must not leave the toast stuck.
   actionButton?.addEventListener('click', () => {
@@ -219,7 +288,19 @@ export function showToast(options = {}) {
       hide();
     }
   });
-  instance.show();
 
-  return { id: toastId, element: toastEl, hide };
+  const handle = { id: toastId, element: toastEl, hide };
+  if (key) activeByDedupeKey.set(key, { handle, instance, status });
+
+  const count = visibleCounts.get(positionKey) ?? 0;
+  if (count < MAX_VISIBLE_PER_POSITION) {
+    visibleCounts.set(positionKey, count + 1);
+    status.state = 'visible';
+    instance.show();
+  } else {
+    if (!queues.has(positionKey)) queues.set(positionKey, []);
+    queues.get(positionKey).push(queueEntry);
+  }
+
+  return handle;
 }
