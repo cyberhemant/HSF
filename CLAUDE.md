@@ -4,6 +4,10 @@
 
 Before creating any new component or variant, check [src/components/](src/components/) and the [design-system page](src/pages/design-system/index.astro) for something that already covers the need. Extend an existing component (new prop/variant) over creating a new file. If nothing fits, say so and propose the new component before building it, rather than creating it silently.
 
+### Container context
+
+Before designing any new component or variant, ask whether it will be used inside a Bootstrap modal or offcanvas, rather than assuming the page background. Both are their own stacking context and can scroll or clip their content (`.modal` itself scrolls via `overflow-y: auto`; `.modal-dialog-scrollable` additionally gives `.modal-content` `overflow: hidden`). A component whose own panel escapes its box — a dropdown, a popover, a full-screen sheet — needs its positioning and z-index reasoned about against that container up front, not discovered later. If the answer is yes, check it against the [Component Testing](src/pages/design-system/component-testing.astro) page's modal scenarios (or add one) before calling it done.
+
 ### Decision order
 
 Walk these top to bottom and stop at the first yes:

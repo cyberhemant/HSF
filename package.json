@@ -8,6 +8,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "check": "astro check",
+    "test": "node --test",
     "lint:astro": "eslint .",
     "lint:css": "stylelint \"src/**/*.{css,scss}\"",
     "lint": "npm run lint:astro && npm run lint:css"

@@ -19,6 +19,8 @@
 // setReadonly, setRecent, open, close, clear, focus. Events are DOM
 // CustomEvents named `autocomplete:<name>` (bubbling), see emit() below.
 
+import { lockScroll, unlockScroll, inertOutside } from './dom-overlay.js';
+
 const DEFAULTS = {
   selectionMode: 'single',
   value: undefined,
@@ -96,31 +98,6 @@ const CACHE_MAX = 20;
 const fill = (template, values) => template.replace(/\{(\w+)\}/g, (_, k) => values[k] ?? '');
 const fold = (s) => String(s).normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
 const isFiniteNumber = (n) => typeof n === 'number' && Number.isFinite(n);
-
-// Document-level scroll lock, reference-counted so two instances can't unlock
-// each other.
-let scrollLocks = 0;
-const lockScroll = () => {
-  if (scrollLocks++ === 0) document.documentElement.classList.add('ac-scroll-lock');
-};
-const unlockScroll = () => {
-  if (--scrollLocks === 0) document.documentElement.classList.remove('ac-scroll-lock');
-};
-
-// Makes everything outside `el` inert (unreachable by pointer, keyboard and
-// screen reader) and returns the function that undoes exactly that.
-const inertOutside = (el) => {
-  const changed = [];
-  for (let node = el; node.parentElement; node = node.parentElement) {
-    for (const sibling of node.parentElement.children) {
-      if (sibling !== node && !sibling.inert) {
-        sibling.inert = true;
-        changed.push(sibling);
-      }
-    }
-  }
-  return () => changed.forEach((s) => { s.inert = false; });
-};
 
 const FOCUSABLE = 'button:not([disabled]):not([hidden]), input:not([disabled]):not([type="hidden"]), [tabindex]:not([tabindex="-1"])';
 

@@ -21,6 +21,10 @@
 //   dismissible Render the close button                         (true)
 //   linkLabel, linkUrl   Optional link; rendered only when both are given
 //   linkTarget  '_self' | '_blank'                              (_self)
+//   action      { label, onClick } — a button beside the message, for a
+//               follow-up the guest can run right there (e.g. Retry). Clicking
+//               it calls onClick, then closes the toast. Both need a value or
+//               the button is omitted. Can be combined with a link.
 //   onClose     Called once, after the toast has fully closed
 //
 // Returns { id, element, hide } — `hide()` closes it programmatically (the only
@@ -98,6 +102,17 @@ const isSafeUrl = (url) => {
   }
 };
 
+const buildAction = (action) => {
+  const label = typeof action?.label === 'string' ? action.label.trim() : '';
+  if (!label || typeof action.onClick !== 'function') {
+    if (action) console.warn('showToast: action omitted, it needs a `label` and an `onClick` function.');
+    return null;
+  }
+  const button = create('button', 'btn btn-sm btn-outline-secondary flex-shrink-0 me-2', { type: 'button' });
+  button.textContent = label;
+  return button;
+};
+
 const buildLink = (label, url, target) => {
   const text = typeof label === 'string' ? label.trim() : '';
   const href = typeof url === 'string' ? url.trim() : '';
@@ -137,6 +152,7 @@ export function showToast(options = {}) {
     linkLabel,
     linkUrl,
     linkTarget,
+    action,
     onClose,
   } = options;
 
@@ -163,7 +179,9 @@ export function showToast(options = {}) {
   const link = buildLink(linkLabel, linkUrl, target);
   if (link) message.append(link);
 
+  const actionButton = buildAction(action);
   row.append(buildIcon(icon || themeIcon, `text-${color}`), message);
+  if (actionButton) row.append(actionButton);
   if (dismissible) {
     row.append(create('button', 'btn-close flex-shrink-0', {
       type: 'button',
@@ -185,7 +203,23 @@ export function showToast(options = {}) {
     toastEl.remove();
     if (typeof onClose === 'function') onClose();
   }, { once: true });
+  // hide() is safe to call more than once, and after the toast has closed:
+  // Bootstrap queues a callback per call, and the second one would run against
+  // a disposed toast. `hide.bs.toast` fires for every route (timer, close
+  // button, this function), so it marks the toast as closing.
+  let closing = false;
+  toastEl.addEventListener('hide.bs.toast', () => { closing = true; });
+  const hide = () => { if (!closing) instance.hide(); };
+
+  // The action runs first; a throwing handler must not leave the toast stuck.
+  actionButton?.addEventListener('click', () => {
+    try {
+      action.onClick();
+    } finally {
+      hide();
+    }
+  });
   instance.show();
 
-  return { id: toastId, element: toastEl, hide: () => instance.hide() };
+  return { id: toastId, element: toastEl, hide };
 }

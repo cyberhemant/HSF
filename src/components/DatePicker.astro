@@ -1,0 +1,46 @@
+---
+// §4 Date Picker — one date, availability-aware. It is DateRangePicker.astro
+// run in its single-date mode (same field, dropdown / full-screen sheet, month
+// grid, per-month availability with skeleton, error + Retry toast, keyboard
+// grid), so it isn't a second calendar: this file only gives the single-date
+// API a name of its own, so consumers never see range-only props.
+//
+// Differences from the range picker:
+//   • value is one 'YYYY-MM-DD' string (hidden input: that string, or empty)
+//   • one month on desktop as well as mobile; no hover preview
+//   • no footer (no summary, Apply or Clear): picking a date commits and closes,
+//     on desktop and on the mobile sheet alike
+//   • no minNights / maxNights / presets. The stay-only availability states
+//     (check-in-only, check-out-only) mean nothing for one day, so they count as
+//     available; taken, disabled and not-yet-loaded dates are not selectable
+//   • wording: a taken date is "unavailable" everywhere (message, screen-reader
+//     label, key), never "booked"
+//   • change detail is { value, reason } (no nights); no `invalid` event
+//
+// Events, script API (getDateRangePicker(el).setValue / setSource / setRules …)
+// and behaviour are otherwise the DateRangePicker's: see its design-system entry.
+//
+// Status: experimental (one use, the design-system page).
+import DateRangePicker from './DateRangePicker.astro';
+
+export interface Props {
+  label?: string;
+  ariaLabel?: string;
+  id?: string;
+  name?: string;
+  placeholder?: string;
+  help?: string;
+  error?: string;
+  value?: string | null;
+  defaultValue?: string | null;
+  disabled?: boolean;
+  minDate?: string;
+  maxDate?: string;
+  blackoutDates?: string[];
+  class?: string;
+}
+
+const props = Astro.props;
+---
+
+<DateRangePicker mode="single" {...props} />

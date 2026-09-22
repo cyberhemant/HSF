@@ -1,0 +1,827 @@
+---
+// Internal QA page — not part of the public site, not linked from primary
+// nav. One job: put DatePicker/DateRangePicker/Autocomplete inside a
+// Bootstrap modal or offcanvas and make it easy to tell whether their
+// escaping panel (dropdown, full-screen sheet) clips, gets covered, or
+// fights the container's own backdrop, scroll lock and focus trap. Per the
+// "Container context" rule in CLAUDE.md: any component with a panel that
+// leaves its own box gets checked here before being called done. Scenarios
+// are chosen to hit the specific ancestors that can clip an escaping panel:
+//   .modal          { overflow-x: hidden; overflow-y: auto; z-index: $zindex-modal (1055) }
+//   .modal-dialog-scrollable .modal-content { overflow: hidden }
+//   .offcanvas-body { overflow-y: auto }                    (.offcanvas itself: z-index 1045)
+// A shared diagnostics panel measures the open panel against the viewport,
+// walks its ancestors for clipping overflow, and samples whether anything
+// paints above it — see the script at the bottom.
+import Base from '../../layouts/Base.astro';
+import Button from '../../components/Button.astro';
+import DatePicker from '../../components/DatePicker.astro';
+import DateRangePicker from '../../components/DateRangePicker.astro';
+import Autocomplete from '../../components/Autocomplete.astro';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+// Enough filler to push a field below the fold of a modal at ordinary
+// viewport heights, so the "field near the bottom" scenarios are reliable
+// rather than depending on how tall someone's window happens to be.
+const filler = Array.from({ length: 14 }, (_, i) => i);
+
+// A longer option list than the design-system page's own demos: enough rows
+// that the open panel is tall, so "does it fit / does it flip" scenarios
+// have something real to fail against.
+const experiences = [
+  { value: 'walk', label: 'Sunrise Farm Walk', icon: 'hiking', secondaryLabel: '2 h' },
+  { value: 'kitchen', label: 'Artisanal Kitchen Workshop', icon: 'skillet', secondaryLabel: '3 h' },
+  { value: 'yoga', label: 'Morning Yoga', icon: 'self_improvement', secondaryLabel: '1 h' },
+  { value: 'pottery', label: 'Pottery', icon: 'palette', secondaryLabel: '2 h' },
+  { value: 'stargaze', label: 'Stargazing', icon: 'nightlight', secondaryLabel: '1.5 h' },
+  { value: 'weave', label: 'Palm Weaving', icon: 'texture', secondaryLabel: '1.5 h' },
+  { value: 'dates', label: 'Date Harvest Tour', icon: 'nutrition', secondaryLabel: '2 h' },
+  { value: 'bread', label: 'Sourdough Bread Making', icon: 'bakery_dining', secondaryLabel: '2.5 h' },
+  { value: 'falconry', label: 'Falconry Demonstration', icon: 'flutter_dash', secondaryLabel: '1 h' },
+  { value: 'camel', label: 'Camel Trek', icon: 'landscape', secondaryLabel: '2 h' },
+  { value: 'garden', label: 'Kitchen Garden Tour', icon: 'yard', secondaryLabel: '1 h' },
+  { value: 'ceramics', label: 'Ceramics Studio', icon: 'category', secondaryLabel: '2 h' },
+];
+---
+
+<Base title="Component Testing — Modal & Offcanvas Interaction" description="QA harness: DatePicker, DateRangePicker and Autocomplete inside a Bootstrap modal or offcanvas.">
+  <div class="container py-6">
+    <header class="measure mb-6">
+      <span class="badge bg-danger-subtle text-danger border border-danger-subtle mb-2">Internal QA — not part of the public site</span>
+      <h1>Components inside a modal or offcanvas</h1>
+      <p class="mt-3 fs-5">
+        Any component whose own panel escapes its box — a dropdown, a full-screen sheet — gets
+        checked here against a Bootstrap <code>.modal</code> and <code>.offcanvas</code> before
+        being called done (the "Container context" rule in CLAUDE.md). Two groups below:
+        <a href="#date-pickers">Date Range Picker / Date Picker</a> and
+        <a href="#autocomplete">Autocomplete</a>. Resize the window (or use devtools' device
+        toolbar) across the <code>768px</code> breakpoint while a modal or offcanvas is open to
+        test both the desktop and mobile presentation. Each scenario notes exactly what to look
+        for; a diagnostics panel (bottom-right) measures the open panel automatically.
+      </p>
+      <p class="mt-2"><a href={`${base}/design-system/`}>&larr; Back to the design system</a></p>
+    </header>
+
+    <h2 id="date-pickers" class="h4">Date Range Picker &amp; Date Picker</h2>
+    <p class="text-ink-soft small mb-4">Six scenarios, inside a Bootstrap <code>.modal</code> only — <code>DatePicker.astro</code> / <code>DateRangePicker.astro</code>.</p>
+
+    <section class="mb-6 p-3 border rounded-3 bg-white">
+      <h3 class="h5">Known risks — verified against this page</h3>
+      <p class="text-ink-soft small mb-2">
+        Run headlessly (desktop 1280×800 and mobile 390×844, production build) against every
+        scenario below before this note was written. Re-run scenario 4 yourself to reproduce #1.
+      </p>
+      <ol class="text-ink-soft small mb-0">
+        <li class="mb-2">
+          <strong>Confirmed: the desktop dropdown is hard-clipped inside <code>.modal-dialog-scrollable</code>.</strong>
+          That variant gives <code>.modal-content</code> <code>overflow: hidden</code>. The dropdown
+          panel is <code>position: absolute</code>, contained within that box, so a two-month panel
+          (672px) wider than the ~500px dialog gets its right edge genuinely cut off — confirmed both
+          by geometry and by sampling what actually paints there. See scenario 4 (desktop). The
+          full-screen sheet is <strong>not</strong> affected by this — see #3.
+        </li>
+        <li class="mb-2">
+          <strong>Partially confirmed, more nuanced than expected: <code>alignPanel()</code> never
+          checks vertical space.</strong> Reading <code>scripts/date-range-picker.js</code> confirms
+          it only ever checks the panel's right edge and flips horizontally
+          (<code>.is-end</code>) — never the bottom edge, never upward. In practice this rarely
+          <em>visibly</em> overflows in a plain (non-scrollable) modal: opening the picker focuses a
+          calendar day cell, and the browser's own "scroll the focused element into view" behaviour
+          incidentally pulls the whole panel back into the modal's scrollable area. That's a side
+          effect of focus management, not something <code>alignPanel()</code> does on purpose, so it
+          isn't a guarantee — it has no scroll room to work with inside a hard <code>overflow: hidden</code>
+          box (doesn't help scenario 4's clipping above), and a taller panel or shorter viewport could
+          still genuinely overflow. Treat the gap as real; treat "it always self-corrects" as false.
+        </li>
+        <li class="mb-2">
+          <strong>Not observed to cause a defect, but still structurally fragile: the sheet's
+          z-index ties Bootstrap's own <code>.modal</code>.</strong> Both are <code>$zindex-modal</code>
+          (1055). Across all twelve scenarios the sheet painted correctly every time, including inside
+          a scrollable dialog and a fullscreen-on-mobile modal — because <code>.modal</code> establishes
+          its own stacking context and the sheet is its topmost descendant, not because of the numeric
+          value. That's a coincidence of DOM structure, not a guarantee a future change (a second open
+          modal, a reordered sibling) couldn't break. A value structurally above <code>$zindex-modal</code>
+          would remove the coincidence, but there's no evidence today that it's actually broken.
+        </li>
+        <li>
+          <strong>Not a bug — confirmed correct: everything else held up.</strong> No visible clipping
+          on the mobile sheet in any scenario, including the scrollable-dialog case that clips the
+          desktop dropdown (#1) — <code>position: fixed; inset: 0</code> escapes
+          <code>.modal-content</code>'s <code>overflow: hidden</code> entirely, since nothing gives
+          that ancestor a transform/filter/perspective to make it a containing block for fixed
+          elements. Opening one picker cleanly closes another (scenario 6); a sheet correctly makes a
+          second field unreachable until it closes, and reachable immediately after. Double-Escape
+          always leaves the modal closed, the backdrop gone, scroll unlocked and nothing
+          <code>inert</code> — the picker's own scroll-lock/inert (<code>dom-overlay.js</code>) and
+          Bootstrap's own coexist without conflict in every scenario tested, including the
+          fullscreen-modal nesting (scenario 5).
+        </li>
+      </ol>
+    </section>
+
+    <div class="row g-4">
+      <!-- ========== 1 · Single Date Picker, baseline ========== -->
+      <div class="col-12 col-lg-6">
+        <div class="p-3 border rounded-3 bg-white h-100 d-flex flex-column">
+          <h3 class="h6">1 · Single Date Picker — baseline</h3>
+          <p class="small text-ink-soft">Field near the top of a plain modal. Should behave exactly as it does outside a modal.</p>
+          <ul class="small text-ink-soft">
+            <li>Panel opens fully visible, not clipped on any edge.</li>
+            <li>Esc closes the picker only; a second Esc closes the modal.</li>
+            <li>Tab out of the picker stays trapped inside the modal (Bootstrap's focus trap), not lost to the page behind it.</li>
+          </ul>
+          <Button type="button" variant="secondary" class="btn-sm mt-auto" data-bs-toggle="modal" data-bs-target="#mt-basic-single">Open modal</Button>
+        </div>
+      </div>
+
+      <!-- ========== 2 · Date Range Picker, baseline (width) ========== -->
+      <div class="col-12 col-lg-6">
+        <div class="p-3 border rounded-3 bg-white h-100 d-flex flex-column">
+          <h3 class="h6">2 · Date Range Picker — baseline (width)</h3>
+          <p class="small text-ink-soft">Field near the top, but the two-month dropdown (672px) is wider than the default modal (500px).</p>
+          <ul class="small text-ink-soft">
+            <li>Does the panel get clipped sideways by <code>.modal</code>'s own <code>overflow-x: hidden</code>?</li>
+            <li>Does it visually escape the modal's card, over the backdrop — and does that read as broken or as acceptable?</li>
+            <li>Below md it becomes a single-month sheet, so this is desktop-only.</li>
+          </ul>
+          <Button type="button" variant="secondary" class="btn-sm mt-auto" data-bs-toggle="modal" data-bs-target="#mt-basic-range">Open modal</Button>
+        </div>
+      </div>
+
+      <!-- ========== 3 · Single Date Picker, field near the bottom ========== -->
+      <div class="col-12 col-lg-6">
+        <div class="p-3 border rounded-3 bg-white h-100 d-flex flex-column">
+          <h3 class="h6">3 · Single Date Picker — field near the bottom</h3>
+          <p class="small text-ink-soft">Filler content pushes the field low in a plain (non-scrollable) modal, which itself scrolls via <code>overflow-y: auto</code>.</p>
+          <ul class="small text-ink-soft">
+            <li>Does the panel open below the field and run off the bottom, with no upward flip?</li>
+            <li>If it runs past the modal's visible area, can you still reach it by scrolling the <em>modal</em> (not the page)?</li>
+            <li>Below md this is a full-screen sheet regardless of field position — confirm that case is unaffected.</li>
+          </ul>
+          <Button type="button" variant="secondary" class="btn-sm mt-auto" data-bs-toggle="modal" data-bs-target="#mt-bottom-single">Open modal</Button>
+        </div>
+      </div>
+
+      <!-- ========== 4 · Date Range Picker, scrollable modal, field near the bottom ========== -->
+      <div class="col-12 col-lg-6">
+        <div class="p-3 border rounded-3 bg-white h-100 d-flex flex-column">
+          <h3 class="h6">4 · Date Range Picker — scrollable modal, field near the bottom</h3>
+          <p class="small text-ink-soft">
+            <code>.modal-dialog-scrollable</code>, which gives <code>.modal-content</code>
+            <code>overflow: hidden</code> — a harder clip than scenario 3's <code>auto</code>.
+          </p>
+          <ul class="small text-ink-soft">
+            <li>Is the tall two-month panel hard-clipped by <code>.modal-content</code>, with no way to scroll to see the rest?</li>
+            <li>"Fail the next load" shows the inline Retry <em>and</em> a toast — confirm the toast renders above the backdrop and its Retry button is clickable.</li>
+          </ul>
+          <div class="form-check mt-2">
+            <input class="form-check-input" type="checkbox" id="mt-drp-4-fail" />
+            <label class="form-check-label small" for="mt-drp-4-fail">Fail the next availability load</label>
+          </div>
+          <Button type="button" variant="secondary" class="btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#mt-bottom-range">Open modal</Button>
+        </div>
+      </div>
+
+      <!-- ========== 5 · Date Range Picker, fullscreen-on-mobile modal ========== -->
+      <div class="col-12 col-lg-6">
+        <div class="p-3 border rounded-3 bg-white h-100 d-flex flex-column">
+          <h3 class="h6">5 · Date Range Picker — fullscreen-on-mobile modal</h3>
+          <p class="small text-ink-soft">
+            <code>.modal-fullscreen-sm-down</code> — the realistic shape of a booking flow modal.
+            Below <code>sm</code> this nests one full-screen sheet (the picker) inside another (the modal).
+          </p>
+          <ul class="small text-ink-soft">
+            <li>Two independent scroll locks stack (the modal's on <code>&lt;body&gt;</code>, the picker's on <code>&lt;html&gt;</code>, see <code>dom-overlay.js</code>) — confirm no double scrollbar, layout shift, or the page behind scrolling.</li>
+            <li>The picker's <code>inertOutside()</code> also inerts the modal's own header/footer — confirm they're genuinely unreachable while the sheet is open, and reachable again once it closes.</li>
+            <li>Tapping what looks like the modal backdrop is impossible while the sheet covers the screen — confirm that's actually true, not just visually.</li>
+          </ul>
+          <div class="form-check mt-2">
+            <input class="form-check-input" type="checkbox" id="mt-drp-5-fail" />
+            <label class="form-check-label small" for="mt-drp-5-fail">Fail the next availability load</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="mt-drp-5-slow" />
+            <label class="form-check-label small" for="mt-drp-5-slow">Slow load (3s) — shows the skeleton</label>
+          </div>
+          <Button type="button" variant="secondary" class="btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#mt-fullscreen-range">Open modal</Button>
+        </div>
+      </div>
+
+      <!-- ========== 6 · Both pickers in one modal ========== -->
+      <div class="col-12 col-lg-6">
+        <div class="p-3 border rounded-3 bg-white h-100 d-flex flex-column">
+          <h3 class="h6">6 · Both pickers in one modal</h3>
+          <p class="small text-ink-soft">Two fields side by side in the same modal — checks that opening one cleanly closes the other rather than stacking two full-screen sheets or two scroll locks.</p>
+          <ul class="small text-ink-soft">
+            <li>Desktop: open the Date Picker, then click the Date Range Picker field without closing the first — exactly one panel should end up open, and the click on field 2 should actually reach it (not land on field 1's panel).</li>
+            <li>Tab order should move sensibly between the two fields when both are closed.</li>
+            <li>Below md: field 2 is correctly unreachable while sheet 1 covers the screen; closing sheet 1 should not leave scroll locked or the page inert, and field 2 should be usable again immediately.</li>
+          </ul>
+          <Button type="button" variant="secondary" class="btn-sm mt-auto" data-bs-toggle="modal" data-bs-target="#mt-both">Open modal</Button>
+        </div>
+      </div>
+    </div>
+
+    <!--
+      Modal markup lives outside .row.g-4 on purpose: Bootstrap's grid
+      applies margin-top: var(--bs-gutter-y) to every direct child of .row,
+      which offsets a position: fixed .modal by the row's own gutter
+      (1.5rem here) and makes it overflow the viewport bottom by that much
+      — caught empirically while verifying this page, not a component bug.
+    -->
+    <div class="modal fade" id="mt-basic-single" tabindex="-1" aria-labelledby="mt-basic-single-label" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h3 class="modal-title h5" id="mt-basic-single-label">1 · Single Date Picker — baseline</h3>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <DatePicker id="mt-dp-1" name="visit-date" label="Visit date" help="No availability source: every date in the window is available." />
+            </div>
+            <div class="modal-footer">
+              <Button variant="secondary" class="btn-sm" data-bs-dismiss="modal">Close</Button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal fade" id="mt-basic-range" tabindex="-1" aria-labelledby="mt-basic-range-label" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h3 class="modal-title h5" id="mt-basic-range-label">2 · Date Range Picker — baseline (width)</h3>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <DateRangePicker id="mt-drp-2" name="stay" label="Stay dates" help="No availability source: every date in the window is available." />
+            </div>
+            <div class="modal-footer">
+              <Button variant="secondary" class="btn-sm" data-bs-dismiss="modal">Close</Button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal fade" id="mt-bottom-single" tabindex="-1" aria-labelledby="mt-bottom-single-label" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h3 class="modal-title h5" id="mt-bottom-single-label">3 · Single Date Picker — field near the bottom</h3>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <p class="text-ink-soft">Scroll down inside this modal to reach the field.</p>
+              {filler.map((i) => (
+                <p class="text-ink-soft">
+                  Filler paragraph {i + 1} of {filler.length} — pushes the field below the fold so the panel opens near the bottom of the visible modal.
+                </p>
+              ))}
+              <DatePicker id="mt-dp-3" name="visit-date-2" label="Visit date" />
+            </div>
+            <div class="modal-footer">
+              <Button variant="secondary" class="btn-sm" data-bs-dismiss="modal">Close</Button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal fade" id="mt-bottom-range" tabindex="-1" aria-labelledby="mt-bottom-range-label" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h3 class="modal-title h5" id="mt-bottom-range-label">4 · Date Range Picker — scrollable modal, field near the bottom</h3>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <p class="text-ink-soft">Scroll down inside this modal to reach the field.</p>
+              {filler.map((i) => (
+                <p class="text-ink-soft">
+                  Filler paragraph {i + 1} of {filler.length} — pushes the field below the fold.
+                </p>
+              ))}
+              <DateRangePicker id="mt-drp-4" name="stay-2" label="Stay dates" help="Uses the fake, occasionally-failing availability source above." />
+            </div>
+            <div class="modal-footer">
+              <Button variant="secondary" class="btn-sm" data-bs-dismiss="modal">Close</Button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal fade" id="mt-fullscreen-range" tabindex="-1" aria-labelledby="mt-fullscreen-range-label" aria-hidden="true">
+        <div class="modal-dialog modal-fullscreen-sm-down modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h3 class="modal-title h5" id="mt-fullscreen-range-label">5 · Book a stay</h3>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <DateRangePicker
+                id="mt-drp-5"
+               
+                name="stay-3"
+                label="Stay dates"
+                presets={[{ label: 'This weekend', range: 'this-weekend' }]}
+                help="Fake availability source; the two checkboxes above control it."
+              />
+            </div>
+            <div class="modal-footer">
+              <Button variant="secondary" class="btn-sm" data-bs-dismiss="modal">Close</Button>
+              <Button variant="primary" class="btn-sm">Request booking</Button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal fade" id="mt-both" tabindex="-1" aria-labelledby="mt-both-label" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h3 class="modal-title h5" id="mt-both-label">6 · Both pickers in one modal</h3>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body row g-3">
+              <div class="col-12 col-sm-6">
+                <DatePicker id="mt-dp-6" name="visit-date-3" label="Visit date" />
+              </div>
+              <div class="col-12 col-sm-6">
+                <DateRangePicker id="mt-drp-6" name="stay-4" label="Stay dates" />
+              </div>
+            </div>
+            <div class="modal-footer">
+              <Button variant="secondary" class="btn-sm" data-bs-dismiss="modal">Close</Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    <h2 id="autocomplete" class="h4 mt-6">Autocomplete</h2>
+    <p class="text-ink-soft small mb-4">
+      Five scenarios — a modal and, per the "Container context" rule, an offcanvas too —
+      <code>Autocomplete.astro</code>. Its positioning is more elaborate than the date pickers':
+      <code>positionStrategy: 'adaptive'</code> already walks ancestors for a clipping
+      <code>overflow</code> and switches to <code>position: fixed</code> to escape it, and
+      <code>viewportAware</code> already flips the panel upward (<code>.is-top</code>) when there
+      isn't room below — both gaps the date pickers' dropdown has. The scenarios below check
+      whether that holds up inside a modal/offcanvas specifically, not just on the open page.
+    </p>
+
+    <section class="mb-6 p-3 border rounded-3 bg-white">
+      <h3 class="h5">Known risks — verified against this page</h3>
+      <p class="text-ink-soft small mb-2">
+        Run headlessly (desktop 1280×800 and mobile 390×844, production build) against every
+        scenario below before this note was written.
+      </p>
+      <ol class="text-ink-soft small mb-0">
+        <li class="mb-2">
+          <strong>Confirmed: <code>resolveStrategy()</code> does escape a clipping modal/offcanvas
+          ancestor.</strong> Its ancestor walk (<code>scripts/autocomplete.js</code>) checks
+          <code>overflowX</code>/<code>overflowY</code> up to <code>document.body</code>, so
+          <code>.modal-content</code>'s <code>overflow: hidden</code> (scenario 2) and
+          <code>.offcanvas-body</code>'s <code>overflow-y: auto</code> (scenario 5) are both caught,
+          switching the panel to <code>position: fixed</code> — unlike the date pickers' dropdown
+          (Known risk #1 on the date-picker group above), this panel is not hard-clipped.
+        </li>
+        <li class="mb-2">
+          <strong>Confirmed: <code>viewportAware</code> genuinely flips the panel upward.</strong>
+          With the field scrolled to the bottom of a modal (scenario 3), <code>position()</code>
+          measures the room above and below the control and sets <code>.is-top</code> when there
+          isn't enough below — the panel opens upward instead of running off-screen, which is
+          exactly the case the date pickers' <code>alignPanel()</code> doesn't handle.
+        </li>
+        <li class="mb-2">
+          <strong>Same structural z-index coincidence as the date picker sheet, not observed to
+          fail.</strong> Fullscreen mode (<code>.ac.is-fullscreen .ac__shell</code>) also uses
+          <code>z-index: $zindex-modal</code> (1055) — a value that means nothing special once
+          nested inside an offcanvas (<code>z-index: 1045</code>, its own, lower stacking context):
+          it still paints correctly in scenario 5 because the offcanvas is what establishes the
+          context, not the raw number. Same caveat as before: not a numeric guarantee.
+        </li>
+        <li>
+          <strong>Confirmed correct: scroll lock and outside-close.</strong> Fullscreen mode's own
+          scroll lock/inert (<code>dom-overlay.js</code>) coexists with both Bootstrap's modal lock
+          and its offcanvas lock with no leftover state after close, in every scenario tested.
+        </li>
+      </ol>
+    </section>
+
+    <div class="row g-4">
+      <!-- ========== A1 · Baseline (plain modal, top) ========== -->
+      <div class="col-12 col-lg-6">
+        <div class="p-3 border rounded-3 bg-white h-100 d-flex flex-column">
+          <h3 class="h6">A1 · Baseline</h3>
+          <p class="small text-ink-soft">Single-select field near the top of a plain modal. Should behave exactly as it does outside a modal.</p>
+          <ul class="small text-ink-soft">
+            <li>Desktop: the dropdown opens fully visible, not clipped on any edge.</li>
+            <li>Esc closes the list only; a second Esc closes the modal.</li>
+          </ul>
+          <Button type="button" variant="secondary" class="btn-sm mt-auto" data-bs-toggle="modal" data-bs-target="#mt-ac-basic">Open modal</Button>
+        </div>
+      </div>
+
+      <!-- ========== A2 · Scrollable modal (ancestor-clip detection) ========== -->
+      <div class="col-12 col-lg-6">
+        <div class="p-3 border rounded-3 bg-white h-100 d-flex flex-column">
+          <h3 class="h6">A2 · Scrollable modal (ancestor-clip detection)</h3>
+          <p class="small text-ink-soft"><code>.modal-dialog-scrollable</code>, which gives <code>.modal-content</code> <code>overflow: hidden</code> — the exact case that hard-clips the date pickers' dropdown.</p>
+          <ul class="small text-ink-soft">
+            <li>Does <code>resolveStrategy()</code> detect the clip and switch to <code>position: fixed</code> (<code>.ac__panel.is-fixed</code>), or does the list get cut off like the date range dropdown did?</li>
+            <li>If fixed, does the panel track the field correctly as you scroll the modal?</li>
+          </ul>
+          <Button type="button" variant="secondary" class="btn-sm mt-auto" data-bs-toggle="modal" data-bs-target="#mt-ac-scrollable">Open modal</Button>
+        </div>
+      </div>
+
+      <!-- ========== A3 · Field near the bottom (viewport-aware flip) ========== -->
+      <div class="col-12 col-lg-6">
+        <div class="p-3 border rounded-3 bg-white h-100 d-flex flex-column">
+          <h3 class="h6">A3 · Field near the bottom (viewport-aware flip)</h3>
+          <p class="small text-ink-soft">Filler content pushes the field low in a plain modal — tests whether the panel opens upward when there's no room below.</p>
+          <ul class="small text-ink-soft">
+            <li>Does the panel gain <code>.is-top</code> and open above the field, fully visible?</li>
+            <li>Compare with date-picker scenario 3, where the equivalent case has no such flip.</li>
+          </ul>
+          <Button type="button" variant="secondary" class="btn-sm mt-auto" data-bs-toggle="modal" data-bs-target="#mt-ac-bottom">Open modal</Button>
+        </div>
+      </div>
+
+      <!-- ========== A4 · Multi-select, fullscreen-on-mobile modal ========== -->
+      <div class="col-12 col-lg-6">
+        <div class="p-3 border rounded-3 bg-white h-100 d-flex flex-column">
+          <h3 class="h6">A4 · Multi-select, fullscreen-on-mobile modal</h3>
+          <p class="small text-ink-soft"><code>.modal-fullscreen-sm-down</code> with a multi-select field — below <code>md</code> (or whenever space runs out) Autocomplete goes fullscreen too, nesting one full-screen surface inside another.</p>
+          <ul class="small text-ink-soft">
+            <li>Does the Autocomplete fullscreen shell paint above the modal's own header/footer, with chips and the Done button reachable?</li>
+            <li><code>closeOnBack</code> pushes a history entry — does the phone/browser Back button close only the search, not the modal, the first time?</li>
+          </ul>
+          <Button type="button" variant="secondary" class="btn-sm mt-auto" data-bs-toggle="modal" data-bs-target="#mt-ac-fullscreen">Open modal</Button>
+        </div>
+      </div>
+
+      <!-- ========== A5 · Inside an offcanvas ========== -->
+      <div class="col-12 col-lg-6">
+        <div class="p-3 border rounded-3 bg-white h-100 d-flex flex-column">
+          <h3 class="h6">A5 · Inside an offcanvas</h3>
+          <p class="small text-ink-soft">An end offcanvas (<code>z-index: 1045</code>, lower than a modal's 1055) with <code>.offcanvas-body</code> scrolling (<code>overflow-y: auto</code>) — the "Container context" rule's other named container.</p>
+          <ul class="small text-ink-soft">
+            <li>Does the dropdown escape <code>.offcanvas-body</code>'s clip the same way it escapes a modal's?</li>
+            <li>On mobile, does the fullscreen shell paint above the offcanvas and its backdrop, not just above the offcanvas's own content?</li>
+          </ul>
+          <Button type="button" variant="secondary" class="btn-sm mt-auto" data-bs-toggle="offcanvas" data-bs-target="#mt-ac-offcanvas" aria-controls="mt-ac-offcanvas">Open offcanvas</Button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal/offcanvas markup lives outside .row.g-4 — see the comment above the date-picker modals. -->
+    <div class="modal fade" id="mt-ac-basic" tabindex="-1" aria-labelledby="mt-ac-basic-label" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 class="modal-title h5" id="mt-ac-basic-label">A1 · Autocomplete — baseline</h3>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <Autocomplete id="mt-ac-1" name="experience-1" label="Experience" placeholder="Search experiences…" options={experiences} />
+          </div>
+          <div class="modal-footer">
+            <Button variant="secondary" class="btn-sm" data-bs-dismiss="modal">Close</Button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal fade" id="mt-ac-scrollable" tabindex="-1" aria-labelledby="mt-ac-scrollable-label" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 class="modal-title h5" id="mt-ac-scrollable-label">A2 · Autocomplete — scrollable modal</h3>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <Autocomplete id="mt-ac-2" name="experience-2" label="Experience" placeholder="Search experiences…" options={experiences} />
+          </div>
+          <div class="modal-footer">
+            <Button variant="secondary" class="btn-sm" data-bs-dismiss="modal">Close</Button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal fade" id="mt-ac-bottom" tabindex="-1" aria-labelledby="mt-ac-bottom-label" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 class="modal-title h5" id="mt-ac-bottom-label">A3 · Autocomplete — field near the bottom</h3>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p class="text-ink-soft">Scroll down inside this modal to reach the field.</p>
+            {filler.map((i) => (
+              <p class="text-ink-soft">
+                Filler paragraph {i + 1} of {filler.length} — pushes the field below the fold.
+              </p>
+            ))}
+            <Autocomplete id="mt-ac-3" name="experience-3" label="Experience" placeholder="Search experiences…" options={experiences} />
+          </div>
+          <div class="modal-footer">
+            <Button variant="secondary" class="btn-sm" data-bs-dismiss="modal">Close</Button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal fade" id="mt-ac-fullscreen" tabindex="-1" aria-labelledby="mt-ac-fullscreen-label" aria-hidden="true">
+      <div class="modal-dialog modal-fullscreen-sm-down modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 class="modal-title h5" id="mt-ac-fullscreen-label">A4 · Choose experiences</h3>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <Autocomplete id="mt-ac-4" name="experience-4" label="Experiences" placeholder="Search experiences…" selectionMode="multiple" mobileMode="fullscreen" options={experiences} />
+          </div>
+          <div class="modal-footer">
+            <Button variant="secondary" class="btn-sm" data-bs-dismiss="modal">Close</Button>
+            <Button variant="primary" class="btn-sm">Save</Button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="mt-ac-offcanvas" aria-labelledby="mt-ac-offcanvas-label">
+      <div class="offcanvas-header">
+        <h3 class="offcanvas-title h5" id="mt-ac-offcanvas-label">A5 · Filter by experience</h3>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+      </div>
+      <div class="offcanvas-body">
+        <Autocomplete id="mt-ac-5" name="experience-5" label="Experience" placeholder="Search experiences…" options={experiences} />
+      </div>
+    </div>
+  </div>
+
+  <!-- Diagnostics overlay: always on top, regardless of what's under test. -->
+  <div class="mt-diag" id="mt-diag">
+    <div class="mt-diag__bar">
+      <strong class="small">Diagnostics</strong>
+      <span class="small text-ink-faint" id="mt-diag-viewport"></span>
+      <div class="ms-auto d-flex gap-1">
+        <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2" id="mt-diag-recheck">Re-check</button>
+        <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2" id="mt-diag-clear">Clear</button>
+      </div>
+    </div>
+    <pre class="mt-diag__log" id="mt-diag-log">Open any modal or offcanvas above — each component's open/close logs a measurement here.</pre>
+  </div>
+</Base>
+
+<style>
+  /* Layout only — no color here, so no token decision to make. This overlay
+     is a QA instrument, not a themed UI surface. */
+  .mt-diag {
+    /* Hidden for now — set back to `display: flex` (and drop this line) to
+       bring the diagnostics box back for a future round of testing. */
+    display: none;
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    z-index: 2000; /* clear of $zindex-toast (1090), the highest z-index anything under test can reach */
+    width: min(26rem, calc(100vw - 2rem));
+    max-height: 45vh;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: var(--bs-border-radius);
+    box-shadow: var(--bs-box-shadow);
+  }
+
+  .mt-diag__bar {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .375rem .5rem;
+    border-bottom: var(--bs-border-width) solid var(--bs-border-color);
+    background: var(--bs-body-bg);
+  }
+
+  .mt-diag__log {
+    margin: 0;
+    padding: .5rem;
+    overflow: auto;
+    font-size: .7rem;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    background: var(--bs-body-bg);
+    color: var(--bs-body-color);
+  }
+</style>
+
+<script>
+  import { getDateRangePicker } from '../../scripts/date-range-picker.js';
+  import { daysInMonth, todayISO, addDays } from '../../scripts/date-only.js';
+
+  // ---- A fake availability source, shared by scenarios 4 and 5 --------------
+  // Same shape as the design-system page's demo source: a handful of booked
+  // clusters, availability derived from the two neighbouring nights.
+  const today = todayISO();
+  const bookedNights = new Set();
+  for (let k = 0; k < 20; k += 1) {
+    const first = 3 + k * 9 + (k % 3);
+    for (let n = 0; n < 2 + (k % 3); n += 1) bookedNights.add(addDays(today, first + n));
+  }
+  const stateOf = (iso) => {
+    const before = bookedNights.has(addDays(iso, -1));
+    const on = bookedNights.has(iso);
+    if (before && on) return 'booked';
+    if (on) return 'checkout-only';
+    return before ? 'checkin-only' : 'available';
+  };
+  const makeSource = (failCheckbox, slowCheckbox) => (month) => new Promise((resolve, reject) => {
+    const slow = document.getElementById(slowCheckbox)?.checked;
+    setTimeout(() => {
+      const fail = document.getElementById(failCheckbox);
+      if (fail?.checked) {
+        fail.checked = false;
+        reject(new Error('Simulated failure'));
+        return;
+      }
+      resolve(Object.fromEntries(Array.from({ length: daysInMonth(month) }, (_, i) => {
+        const iso = `${month}-${String(i + 1).padStart(2, '0')}`;
+        return [iso, stateOf(iso)];
+      })));
+    }, slow ? 3000 : 500);
+  });
+
+  const drp4 = document.getElementById('mt-drp-4');
+  if (drp4) getDateRangePicker(drp4).setSource(makeSource('mt-drp-4-fail', null));
+  const drp5 = document.getElementById('mt-drp-5');
+  if (drp5) getDateRangePicker(drp5).setSource(makeSource('mt-drp-5-fail', 'mt-drp-5-slow'));
+
+  // ---- Diagnostics -----------------------------------------------------------
+  // Runs against whichever component root just opened — DateRangePicker/
+  // DatePicker (`date-range:*` events) or Autocomplete (`autocomplete:*`),
+  // each with its own panel selector and field-id selector. Three checks:
+  //   1. Does the panel's box run past the viewport?
+  //   2. Does an ancestor between the panel and its modal/offcanvas (or the
+  //      page root) clip it with overflow: hidden/clip (hard clip) or
+  //      auto/scroll (needs scrolling)?
+  //   3. Sampling the panel's corners and center with elementFromPoint — is
+  //      anything else actually painted on top of it?
+  const logEl = document.getElementById('mt-diag-log');
+  const viewportEl = document.getElementById('mt-diag-viewport');
+  let lastRoot = null;
+
+  const writeViewport = () => {
+    if (viewportEl) viewportEl.textContent = `${window.innerWidth}×${window.innerHeight}`;
+  };
+  writeViewport();
+  window.addEventListener('resize', writeViewport);
+
+  const log = (text) => {
+    if (!logEl) return;
+    logEl.textContent = `${text}\n\n${logEl.textContent}`;
+  };
+
+  // What differs between the two component kinds; everything past this is shared.
+  const describeRoot = (root) => {
+    if (root.matches('[data-date-range]')) {
+      const panel = root.querySelector('.date-range__panel');
+      return {
+        panel: panel && !panel.hidden ? panel : null,
+        scenario: root.querySelector('.date-range__field')?.id || 'unknown',
+        isOverlay: (pcs, rect, vw) => pcs.position === 'fixed' && rect.width >= vw - 1,
+        overlayLabel: 'sheet',
+      };
+    }
+    if (root.matches('[data-autocomplete]')) {
+      const panel = root.querySelector('.ac__panel');
+      return {
+        panel: panel && panel.classList.contains('show') ? panel : null,
+        scenario: root.querySelector('.ac__input')?.id || 'unknown',
+        isOverlay: () => root.classList.contains('is-fullscreen'),
+        overlayLabel: 'fullscreen',
+      };
+    }
+    return null;
+  };
+
+  const diagnose = (root) => {
+    const desc = describeRoot(root);
+    const panel = desc?.panel;
+    if (!panel) return;
+    const { scenario, isOverlay, overlayLabel } = desc;
+    // A modal and an offcanvas are both viable containers per the "Container
+    // context" rule — check for either.
+    const container = root.closest('.modal, .offcanvas');
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const rect = panel.getBoundingClientRect();
+    const pcs = getComputedStyle(panel);
+    const overlay = isOverlay(pcs, rect, vw);
+    const lines = [`[${scenario}] ${overlay ? overlayLabel : 'dropdown'} · viewport ${vw}×${vh}`];
+    lines.push(`  panel: top ${rect.top.toFixed(0)} left ${rect.left.toFixed(0)} right ${rect.right.toFixed(0)} bottom ${rect.bottom.toFixed(0)} (${rect.width.toFixed(0)}×${rect.height.toFixed(0)}) position:${pcs.position} z-index ${pcs.zIndex}`);
+
+    const off = [];
+    if (rect.top < 0) off.push('top');
+    if (rect.left < 0) off.push('left');
+    if (rect.right > vw) off.push('right');
+    if (rect.bottom > vh) off.push('bottom');
+    lines.push(off.length ? `  ⚠ past the viewport: ${off.join(', ')}` : '  ✓ fully within the viewport');
+
+    // Walk ancestors between the panel and the container (or the page root)
+    // looking for one whose overflow clips the panel's box. This only
+    // applies to a statically/relatively/absolutely-positioned panel: a
+    // `position: fixed` panel (a sheet, or Autocomplete's own `.is-fixed`
+    // strategy) is contained by the viewport, not by any ancestor's box, so
+    // an ancestor's overflow can only clip it if that ancestor also
+    // establishes a containing block for fixed elements
+    // (transform/filter/perspective/contain/will-change) — plain
+    // `overflow: hidden` alone does not. Skipping this avoids a false
+    // "clipped" reading that `elementFromPoint` below would correctly show
+    // as unobstructed.
+    const fixedContainerAncestor = (() => {
+      for (let node = panel.parentElement; node; node = node.parentElement) {
+        const ncs = getComputedStyle(node);
+        if (ncs.transform !== 'none' || ncs.filter !== 'none' || ncs.perspective !== 'none'
+          || (ncs.willChange && /transform|filter|perspective/.test(ncs.willChange))
+          || (ncs.contain && /paint|layout|strict|content/.test(ncs.contain))) return node;
+      }
+      return null;
+    })();
+    if (pcs.position === 'fixed' && !fixedContainerAncestor) {
+      lines.push('  (position: fixed, no ancestor establishes a containing block for it — ancestor overflow cannot clip it; see occlusion sample below instead)');
+    } else {
+      const stopAt = container ? container.parentElement : document.documentElement;
+      for (let node = panel.parentElement; node && node !== stopAt; node = node.parentElement) {
+        const ncs = getComputedStyle(node);
+        const clipsX = /(hidden|clip|auto|scroll)/.test(ncs.overflowX);
+        const clipsY = /(hidden|clip|auto|scroll)/.test(ncs.overflowY);
+        if (!clipsX && !clipsY) continue;
+        const nr = node.getBoundingClientRect();
+        const bad = [];
+        if (clipsY && rect.top < nr.top - 0.5) bad.push('top');
+        if (clipsY && rect.bottom > nr.bottom + 0.5) bad.push('bottom');
+        if (clipsX && rect.left < nr.left - 0.5) bad.push('left');
+        if (clipsX && rect.right > nr.right + 0.5) bad.push('right');
+        if (!bad.length) continue;
+        const hard = /(hidden|clip)/.test(ncs.overflowY) || /(hidden|clip)/.test(ncs.overflowX);
+        const name = `${node.tagName.toLowerCase()}${node.className ? `.${String(node.className).trim().split(/\s+/).join('.')}` : ''}`;
+        lines.push(`  ${hard ? '✗ CLIPPED' : '⚠ needs scrolling'} by <${name}> on: ${bad.join(', ')} (overflow-x:${ncs.overflowX} overflow-y:${ncs.overflowY})`);
+      }
+    }
+
+    // Sample corners + center; flag anything painted above the panel there.
+    const pad = 4;
+    const points = [
+      [rect.left + pad, rect.top + pad],
+      [rect.right - pad, rect.top + pad],
+      [rect.left + pad, rect.bottom - pad],
+      [rect.right - pad, rect.bottom - pad],
+      [(rect.left + rect.right) / 2, (rect.top + rect.bottom) / 2],
+    ].filter(([x, y]) => x >= 0 && y >= 0 && x <= vw && y <= vh);
+    // #mt-diag is this harness's own always-on-top overlay, not part of what's
+    // under test — it's expected to cover anything beneath it, so exclude it.
+    const diag = document.getElementById('mt-diag');
+    const coveredBy = new Set();
+    points.forEach(([x, y]) => {
+      const el = document.elementFromPoint(x, y);
+      if (el && el !== panel && !panel.contains(el) && !diag?.contains(el)) coveredBy.add(el.tagName.toLowerCase() + (el.className ? `.${String(el.className).trim().split(/\s+/)[0]}` : ''));
+    });
+    lines.push(coveredBy.size ? `  ✗ COVERED at ${coveredBy.size}/${points.length} sample point(s) by: ${[...coveredBy].join(', ')}` : `  ✓ nothing paints above the panel at the sampled points`);
+
+    if (container) {
+      const kind = container.classList.contains('offcanvas') ? 'offcanvas' : 'modal';
+      const ccs = getComputedStyle(container);
+      const tie = pcs.zIndex === ccs.zIndex ? '  (tied with the panel)' : '';
+      lines.push(`  enclosing .${kind}: z-index ${ccs.zIndex}, overflow-x:${ccs.overflowX} overflow-y:${ccs.overflowY}${tie}`);
+    }
+    const backdrop = document.querySelector('.modal-backdrop, .offcanvas-backdrop');
+    if (backdrop) lines.push(`  .${backdrop.classList.contains('offcanvas-backdrop') ? 'offcanvas' : 'modal'}-backdrop: z-index ${getComputedStyle(backdrop).zIndex}`);
+
+    log(lines.join('\n'));
+  };
+
+  [['date-range', '[data-date-range]'], ['autocomplete', '[data-autocomplete]']].forEach(([prefix, selector]) => {
+    ['open', 'close'].forEach((name) => {
+      document.addEventListener(`${prefix}:${name}`, (e) => {
+        const root = e.target.closest(selector);
+        if (!root) return;
+        if (name === 'open') {
+          lastRoot = root;
+          // Two frames: let the presentation (dropdown/sheet/fullscreen) and
+          // any positioning flip finish before measuring.
+          requestAnimationFrame(() => requestAnimationFrame(() => diagnose(root)));
+        } else {
+          log(`[${describeRoot(root)?.scenario ?? 'unknown'}] closed`);
+          if (lastRoot === root) lastRoot = null;
+        }
+      });
+    });
+  });
+  // Autocomplete's fullscreen mode can toggle without a close (e.g. viewport
+  // crossing the mobile threshold while the list is open) — re-measure then too.
+  document.addEventListener('autocomplete:fullscreen', (e) => {
+    const root = e.target.closest('[data-autocomplete]');
+    if (!root) return;
+    log(`[${describeRoot(root)?.scenario ?? 'unknown'}] fullscreen ${e.detail.active ? 'entered' : 'exited'}`);
+    requestAnimationFrame(() => requestAnimationFrame(() => diagnose(root)));
+  });
+
+  document.getElementById('mt-diag-recheck')?.addEventListener('click', () => {
+    if (lastRoot) diagnose(lastRoot);
+    else log('Nothing is currently open.');
+  });
+  document.getElementById('mt-diag-clear')?.addEventListener('click', () => {
+    if (logEl) logEl.textContent = 'Cleared.';
+  });
+</script>

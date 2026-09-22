@@ -1114,7 +1114,7 @@ $ac-option-min-height-touch: 3rem; // 48px on coarse pointers
   }
 }
 
-.ac-scroll-lock {
+.scroll-lock {
   overflow: hidden;
   overscroll-behavior: contain;
 }
@@ -1122,6 +1122,462 @@ $ac-option-min-height-touch: 3rem; // 48px on coarse pointers
 @media (prefers-reduced-motion: reduce) {
   .ac__toggle {
     transition: none;
+  }
+}
+
+// §4 Date Range Picker — Bootstrap has no range calendar. The field is a
+// .form-control button and the panel @extends .dropdown-menu (so surface,
+// border, radius and shadow are Bootstrap's own). It does not carry the class:
+// Bootstrap's dropdown key handler listens on every .dropdown-menu and throws
+// when there is no toggle. This block only covers the calendar grid and the
+// sheet. One DOM, two presentations: from md the panel is a
+// dropdown with two months; below md it is a fixed full-screen sheet with one
+// month and a sticky summary + Apply bar (safe-area aware). Behaviour lives in
+// scripts/date-range-picker.js. Every day state carries a non-colour cue: selected = filled + bold, range =
+// connecting band, preview = dashed band, today = dot, booked = strike-through,
+// disabled = faded (no strike-through), check-in/out-only = a login/logout icon,
+// focus = the shared ochre ring. Colours come from --bs-* roles only.
+$dr-cell: 2.75rem; // 44px touch target
+$dr-panel-width: 42rem; // two months side by side
+
+.date-range {
+  --dr-safe-top: env(safe-area-inset-top, 0px);
+  --dr-safe-right: env(safe-area-inset-right, 0px);
+  --dr-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --dr-safe-left: env(safe-area-inset-left, 0px);
+  --dr-band: rgb(var(--#{$prefix}primary-rgb), .1);
+  --dr-hover: rgb(var(--#{$prefix}primary-rgb), .06);
+  --dr-line: var(--#{$prefix}primary);
+
+  position: relative;
+}
+
+.date-range [hidden] {
+  display: none !important;
+}
+
+.date-range__anchor {
+  position: relative;
+}
+
+// Field
+.date-range__field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem;
+  text-align: start;
+  cursor: pointer;
+
+  // Bootstrap's validation icon would sit under the calendar icon.
+  &.is-invalid,
+  &.is-valid {
+    padding-right: $input-padding-x;
+    background-image: none;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+  }
+}
+
+.date-range.is-open .date-range__field:not(.is-invalid) {
+  border-color: $input-focus-border-color;
+}
+
+.date-range__value {
+  min-width: 0;
+
+  &.is-placeholder {
+    color: var(--#{$prefix}secondary-color);
+  }
+}
+
+.date-range__icon {
+  flex: 0 0 auto;
+  color: var(--#{$prefix}secondary-color);
+}
+
+.date-range.is-invalid .invalid-feedback {
+  display: block;
+}
+
+// Panel — a dropdown by default
+.date-range__panel {
+  // Bootstrap ships no placeholder selector for the dropdown surface.
+  // stylelint-disable-next-line scss/at-extend-no-missing-placeholder
+  @extend .dropdown-menu;
+
+  top: 100%;
+  left: 0;
+  width: min(#{$dr-panel-width}, calc(100vw - 2rem));
+  margin-top: .125rem;
+  padding: 0;
+
+  &.show {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &.is-end {
+    right: 0;
+    left: auto;
+  }
+}
+
+.date-range__bar {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: .25rem .5rem .25rem 1rem;
+  border-bottom: var(--#{$prefix}border-width) solid var(--#{$prefix}border-color);
+}
+
+.date-range__title {
+  font-family: $font-family-serif;
+  font-size: $h5-font-size;
+  font-weight: 700;
+}
+
+.date-range__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 1rem 1rem 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+// Months
+.date-range__months {
+  position: relative;
+}
+
+.date-range__nav {
+  position: absolute;
+  top: 0;
+  z-index: 1;
+}
+
+.date-range__prev {
+  left: 0;
+}
+
+.date-range__next {
+  right: 0;
+}
+
+.date-range__panes {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.5rem 2rem;
+
+  // Reserve a six-week month (title + weekday row + 6 weeks) so the panel
+  // doesn't jump between months.
+  min-height: calc(#{$dr-cell} * 5.65);
+
+  &[data-count='2'] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.date-range__pane {
+  min-width: 0;
+}
+
+.date-range__month {
+  margin: 0;
+  text-align: center;
+  line-height: $dr-cell;
+}
+
+.date-range__weekday {
+  padding: .25rem 0;
+  font-size: $small-font-size;
+  font-weight: 600;
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--#{$prefix}secondary-color);
+}
+
+.date-range__row,
+.date-range__skeleton {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.date-range__skeleton-cell {
+  display: grid;
+  place-items: center;
+  height: $dr-cell;
+
+  .placeholder {
+    width: 55%;
+    height: 1.25rem;
+  }
+}
+
+.date-range__blank {
+  min-height: $dr-cell;
+}
+
+// Day cells. The cell carries the range band; the button carries the fill.
+.date-range__cell {
+  position: relative;
+
+  &.is-range-mid {
+    background: var(--dr-band);
+  }
+
+  &.is-range-start {
+    background: linear-gradient(to right, transparent 50%, var(--dr-band) 50%);
+  }
+
+  &.is-range-end {
+    background: linear-gradient(to left, transparent 50%, var(--dr-band) 50%);
+  }
+
+  // Preview (hover / keyboard): dashed top and bottom edges instead of a fill,
+  // so it can never be mistaken for a committed range.
+  &.is-preview-mid,
+  &.is-preview-start,
+  &.is-preview-end {
+    background-image:
+      repeating-linear-gradient(to right, var(--dr-line) 0 4px, transparent 4px 8px),
+      repeating-linear-gradient(to right, var(--dr-line) 0 4px, transparent 4px 8px);
+    background-repeat: no-repeat;
+    background-size: 100% 1px;
+    background-position: left top, left bottom;
+  }
+
+  &.is-preview-start {
+    background-size: 50% 1px;
+    background-position: right top, right bottom;
+  }
+
+  &.is-preview-end {
+    background-size: 50% 1px;
+  }
+}
+
+.date-range__day {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: $dr-cell;
+  padding: 0;
+  border: 0;
+  border-radius: var(--#{$prefix}border-radius);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+
+  &:focus-visible {
+    z-index: 1;
+    outline: 0;
+    box-shadow: $focus-ring-box-shadow;
+  }
+
+  @media (hover: hover) {
+    &:hover:not([aria-disabled='true']) {
+      background: var(--dr-hover);
+      box-shadow: inset 0 0 0 1px var(--#{$prefix}primary);
+    }
+  }
+
+  // today: a dot above the numeral
+  &.is-today::before {
+    content: '';
+    position: absolute;
+    top: .3125rem;
+    width: .25rem;
+    height: .25rem;
+    border-radius: var(--#{$prefix}border-radius-pill);
+    background: currentcolor;
+  }
+
+  // Past, outside the window, blackout, availability not loaded: faded, no strike.
+  &.is-disabled,
+  &.is-unknown {
+    opacity: .35;
+    cursor: not-allowed;
+  }
+
+  // Booked: visible, muted and struck through, so it never reads as merely faded.
+  &.is-booked {
+    color: var(--#{$prefix}ink-faint);
+    cursor: not-allowed;
+
+    .date-range__num {
+      text-decoration: line-through;
+    }
+  }
+
+  &.is-selected,
+  &.is-selected:hover:not([aria-disabled='true']) {
+    background: var(--#{$prefix}primary);
+    box-shadow: none;
+    color: var(--#{$prefix}body-bg);
+    font-weight: 700;
+  }
+
+  &.is-selected:focus-visible {
+    box-shadow: $focus-ring-box-shadow;
+  }
+}
+
+.date-range__marker {
+  position: absolute;
+  bottom: .125rem;
+}
+
+// Messages
+.date-range__message {
+  display: flex;
+  align-items: flex-start;
+  gap: .5rem;
+  margin: .5rem 0 0;
+  color: var(--#{$prefix}danger);
+
+  &:empty {
+    margin: 0;
+  }
+}
+
+.date-range__error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .5rem;
+  margin-bottom: .5rem;
+  padding: .5rem .75rem;
+  border-left: .25rem solid var(--#{$prefix}danger);
+  background: rgb(var(--#{$prefix}danger-rgb), .08);
+  color: var(--#{$prefix}danger);
+
+  span:not(.material-symbols-outlined) {
+    flex: 1 1 auto;
+  }
+}
+
+.date-range__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .25rem 1rem;
+  margin: 1rem 0;
+  color: var(--#{$prefix}secondary-color);
+
+  li {
+    display: inline-flex;
+    align-items: center;
+    gap: .25rem;
+  }
+}
+
+.date-range__legend-booked {
+  color: var(--#{$prefix}ink-faint);
+  text-decoration: line-through;
+}
+
+// Footer: summary + actions. On mobile it is the sticky bottom bar.
+// Single date has no footer, so the body closes the panel itself.
+.date-range--single .date-range__body {
+  padding-bottom: 1rem;
+}
+
+.date-range__footer {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  padding: .75rem 1rem;
+  border-top: var(--#{$prefix}border-width) solid var(--#{$prefix}border-color);
+}
+
+.date-range__summary {
+  margin: 0;
+  font-weight: 600;
+  color: var(--#{$prefix}heading-color);
+}
+
+.date-range__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .5rem;
+}
+
+.date-range__apply {
+  display: none;
+}
+
+@include media-breakpoint-up(md) {
+  // Single date: one month, so the dropdown is one month wide.
+  .date-range--single .date-range__panel {
+    width: min(22rem, calc(100vw - 2rem));
+  }
+
+  .date-range__footer {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .date-range__actions {
+    justify-content: flex-end;
+  }
+}
+
+// Sheet: full screen, one month, Apply.
+@include media-breakpoint-down(md) {
+  .date-range__panel {
+    position: fixed;
+    inset: 0;
+    z-index: $zindex-modal;
+    width: auto;
+    height: 100vh;
+    height: 100dvh;
+    margin: 0;
+    padding: var(--dr-safe-top) var(--dr-safe-right) 0 var(--dr-safe-left);
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    background-color: var(--#{$prefix}body-bg);
+  }
+
+  .date-range__bar {
+    display: flex;
+  }
+
+  .date-range__footer {
+    padding-bottom: calc(.75rem + var(--dr-safe-bottom));
+  }
+
+  .date-range--single .date-range__body {
+    padding-bottom: calc(1rem + var(--dr-safe-bottom));
+  }
+
+  // Text buttons keep their words on one line; on the narrowest phones Apply
+  // wraps to its own row rather than squeezing them.
+  .date-range__preset,
+  .date-range__clear {
+    padding-inline: .5rem;
+    white-space: nowrap;
+  }
+
+  .date-range__apply {
+    display: inline-flex;
+    flex: 1 1 auto;
+    margin-left: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .date-range .placeholder-glow .placeholder {
+    animation: none;
   }
 }
 
