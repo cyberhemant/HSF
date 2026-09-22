@@ -11,6 +11,7 @@ import PalmSpinner from '../../components/PalmSpinner.astro';
 import ProductGallery from '../../components/ProductGallery.astro';
 import ArchCarousel from '../../components/ArchCarousel.astro';
 import Autocomplete from '../../components/Autocomplete.astro';
+import DateTimeSlotPicker from '../../components/DateTimeSlotPicker.astro';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
@@ -26,6 +27,7 @@ const toc = [
   ['dividers', 'Dividers'],
   ['forms', 'Forms'],
   ['autocomplete', 'Autocomplete'],
+  ['date-time-slot-picker', 'Date & Time Slot Picker'],
   ['navs-tabs', 'Navs & Tabs'],
   ['navbar-offcanvas', 'Navbar & Offcanvas'],
   ['cards', 'Cards'],
@@ -48,6 +50,41 @@ const toc = [
   ['tables', 'Tables'],
   ['scrollspy', 'Scrollspy'],
 ];
+
+// ---- Date & Time Slot Picker demo data -------------------------------
+// A fake availability source covering the default 30-day window — one
+// closed date (no slots) and one fully booked date, so both date-level
+// states are reachable without a real API, same approach the deleted
+// date-range picker's demo used ("fake availability source").
+const dtspPad2 = (n) => String(n).padStart(2, '0');
+const dtspIsoOffset = (n) => {
+  const d = new Date();
+  d.setDate(d.getDate() + n);
+  return `${d.getFullYear()}-${dtspPad2(d.getMonth() + 1)}-${dtspPad2(d.getDate())}`;
+};
+const DTSP_SLOT_TIMES = [
+  '08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00',
+  '12:00', '12:30', '13:00', '13:30', '14:00', '15:00', '15:30', '16:00',
+  '17:00', '17:30', '18:00', '18:30', '19:00', '19:30',
+];
+const dtspMakeSlots = (dayOffset, bookedTimes: string[] = []) => DTSP_SLOT_TIMES.map((time) => ({
+  id: `d${dayOffset}-${time.replace(':', '')}`,
+  time,
+  label: time,
+  status: bookedTimes.includes(time) ? 'booked' as const : 'available' as const,
+}));
+const dtspAvailability = Array.from({ length: 31 }, (_, i) => {
+  const date = dtspIsoOffset(i);
+  if (i === 3) return { date, status: 'closed' as const, slots: [] };
+  if (i === 5) return { date, status: 'full' as const, slots: dtspMakeSlots(i, DTSP_SLOT_TIMES) };
+  const bookedTimes = DTSP_SLOT_TIMES.filter((_, idx) => idx % 5 === i % 5).slice(0, 3);
+  return { date, status: 'available' as const, slots: dtspMakeSlots(i, bookedTimes) };
+});
+// One explicit holiday blackout (disabledDates) for the "disabled dates" demo —
+// the weekly closure on that same demo comes from isDateDisabled, wired in the
+// <script> below via setDateDisabledRule (it can't be a prop — see the
+// component's own header comment).
+const dtspHoliday = dtspIsoOffset(6);
 
 const BOOKING = 'Your booking request was sent.';
 const toastDemos = [
@@ -647,6 +684,125 @@ const experiences = [
           </ul>
         </section>
 
+        <!-- ================= DATE & TIME SLOT PICKER ================= -->
+        <section id="date-time-slot-picker" class="pb-6 mb-6 border-bottom">
+          <h2>Date &amp; Time Slot Picker</h2>
+          <p class="text-ink-soft">
+            <code>DateTimeSlotPicker.astro</code> — single date + single time-slot selector, in two
+            presentations: an inline <code>bootstrap.Collapse</code> panel embedded in its own container, or a
+            <code>bootstrap.Modal</code> the component owns end to end. There is no third mode and no
+            nested-modal support (<code>autoDetectModal</code>/<code>zIndex</code> props) by design — a
+            picker triggered from inside another modal should use <code>presentation="inline"</code> instead.
+            Status: experimental (this page is its only use).
+          </p>
+          <p class="text-ink-soft small">
+            Container-context scenarios (inline mode's Collapse panel inside a scrollable modal body and an
+            offcanvas body) are exercised on the
+            <a href={`${base}/design-system/component-testing/`}>Component Testing</a> QA page.
+          </p>
+
+          <div class="row g-4 mt-1">
+            <div class="col-md-6">
+              <h3 class="h6">1 · Modal (default)</h3>
+              <DateTimeSlotPicker id="ds-dtsp-modal" availability={dtspAvailability} />
+            </div>
+            <div class="col-md-6">
+              <h3 class="h6">2 · Inline</h3>
+              <DateTimeSlotPicker id="ds-dtsp-inline" presentation="inline" availability={dtspAvailability} />
+            </div>
+            <div class="col-md-6">
+              <h3 class="h6">3 · Disabled dates</h3>
+              <DateTimeSlotPicker
+                id="ds-dtsp-disabled-dates"
+                availability={dtspAvailability}
+                disabledDates={[dtspHoliday]}
+                triggerDescription="Closed Fridays, plus one holiday"
+              />
+              <p class="form-text">
+                The holiday ({dtspHoliday}) comes from <code>disabledDates</code>; every Friday is closed via
+                a <code>setDateDisabledRule()</code> call after hydration (<code>isDateDisabled</code> can't be
+                a prop — see below).
+              </p>
+            </div>
+            <div class="col-md-6">
+              <h3 class="h6">4 · No availability / fully booked</h3>
+              <DateTimeSlotPicker id="ds-dtsp-availability" availability={dtspAvailability} triggerDescription="Try the 4th and 6th dates in the strip" />
+              <p class="form-text">Date index 3 is closed (no slots); date index 5 is fully booked (every slot taken).</p>
+            </div>
+          </div>
+
+          <h3 class="h5 mt-5">States</h3>
+          <form class="row g-4 mt-0" id="ds-dtsp-form" novalidate>
+            <div class="col-md-6">
+              <DateTimeSlotPicker id="ds-dtsp-required" label="Booking Time" required name="Booking" availability={dtspAvailability} />
+              <button type="submit" class="btn btn-outline-primary btn-sm mt-3">Submit form</button>
+              <span class="small text-ink-soft ms-2" id="ds-dtsp-form-out"></span>
+            </div>
+            <div class="col-md-6">
+              <DateTimeSlotPicker id="ds-dtsp-disabled" availability={dtspAvailability} disabled />
+            </div>
+            <div class="col-md-6">
+              <DateTimeSlotPicker id="ds-dtsp-loading" availability={dtspAvailability} loading />
+            </div>
+          </form>
+
+          <p class="small text-ink-soft mt-4 mb-0">
+            Event log: <span id="ds-dtsp-log">nothing yet</span>
+          </p>
+
+          <h3 class="h5 mt-5">Props</h3>
+          <div class="table-responsive">
+            <table class="table table-sm small align-middle">
+              <thead><tr><th>Prop</th><th>Default</th><th>Notes</th></tr></thead>
+              <tbody>
+                <tr><td><code>presentation</code></td><td><code>modal</code></td><td><code>modal | inline</code></td></tr>
+                <tr><td><code>showHeader</code> · <code>showFooter</code></td><td><code>true</code></td><td>Modal only — the recorded inline panel has no title bar or footer.</td></tr>
+                <tr><td><code>label</code> · <code>modalSubtitle</code></td><td>“Select Date &amp; Time” · “Choose an available slot for your booking”</td><td></td></tr>
+                <tr><td><code>minDate</code> · <code>maxDate</code></td><td><code>today</code> · <code>+30days</code></td><td>Literal <code>YYYY-MM-DD</code> or a relative <code>±Ndays</code> string.</td></tr>
+                <tr><td><code>initialDate</code></td><td>—</td><td>A disabled value is a config error: falls back to the first enabled date in range and logs a warning.</td></tr>
+                <tr><td><code>dateFormat</code></td><td><code>ddd, MMM D</code></td><td>Split on the first comma for the date-strip pill's two lines; used whole for the trigger's summary line.</td></tr>
+                <tr><td><code>disabledDates</code></td><td><code>[]</code></td><td>Explicit blackout dates. For a recurring rule (e.g. “every Friday”), call <code>getDateTimeSlotPicker(el).setDateDisabledRule(date =&gt; boolean)</code> after hydration — a function can't be a prop on a build-time component.</td></tr>
+                <tr><td><code>timeFormat</code></td><td><code>12h</code></td><td><code>12h | 24h</code> — display only; the payload's <code>value.time</code> is always 24h.</td></tr>
+                <tr><td><code>showPeriodGroups</code> · <code>showPeriodTimeRange</code></td><td><code>true</code></td><td>Morning/Afternoon/Evening headers and their “(8:00 AM – 11:30 AM)” range, computed from that date's actual slots.</td></tr>
+                <tr><td><code>value</code> / <code>defaultValue</code></td><td>—</td><td>A full payload (see “Payload” below) — controlled / initial committed selection.</td></tr>
+                <tr><td><code>requireConfirmation</code></td><td><code>true</code></td><td>Modal: gates the Apply button. Inline: gates closing via the trigger (there's no separate Apply affordance inline). <code>false</code> commits on slot click instead.</td></tr>
+                <tr><td><code>resetTimeOnDateChange</code></td><td><code>true</code></td><td>Changing the date clears the in-progress time selection, never the already-committed value.</td></tr>
+                <tr><td><code>triggerLabel</code> · <code>triggerDescription</code></td><td>“Select Date &amp; Time” · “Choose an available slot”</td><td>Shown until a selection is committed, then replaced by the summary + “Click to modify selection”.</td></tr>
+                <tr><td><code>closeOnEscape</code> · <code>closeOnOutsideClick</code></td><td><code>true</code> · <code>false</code></td><td>Modal only — <code>keyboard</code> / <code>backdrop:'static'</code>. Always free of the selection-required gate.</td></tr>
+                <tr><td><code>required</code> / <code>disabled</code> / <code>loading</code></td><td><code>false</code></td><td>Required enforces on the closest <code>&lt;form&gt;</code>'s submit (the value carrier is a <code>type="hidden"</code> input, which native constraint validation can't target). Loading skeletons the trigger.</td></tr>
+                <tr><td><code>availability</code></td><td><code>[]</code></td><td><code>&#123; date, status?, slots: [&#123; id, time, label, status &#125;] &#125;[]</code>. Slot times/labels are never hard-coded by the component.</td></tr>
+                <tr><td><code>name</code></td><td>—</td><td>Hidden input value = <code>value.datetimeLocal</code> (native <code>datetime-local</code> format).</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3 class="h5 mt-4">Payload</h3>
+          <p class="text-ink-soft small">
+            One payload on <code>change</code>/<code>apply</code> covers native inputs, DB columns and display
+            text at once: <code>value.&#123;date, time, datetimeLocal&#125;</code> (DATE/TIME/<code>datetime-local</code>
+            formats), <code>slot.&#123;id, status, group&#125;</code>, and
+            <code>display.&#123;date, time, combined&#125;</code> (e.g. <code>"Sep 24, 2026 · 7:00 PM"</code>).
+          </p>
+
+          <h3 class="h5 mt-4">Events</h3>
+          <p class="text-ink-soft small">
+            Bubbling <code>CustomEvent</code>s on the root, named <code>dtsp:&lt;name&gt;</code> (the spec's
+            <code>onX</code> callbacks): <code>open</code>, <code>close</code>, <code>datechange</code>
+            (<code>&#123;date, previousDate&#125;</code>), <code>slotselect</code> (<code>&#123;slotId, time&#125;</code>),
+            <code>change</code> / <code>apply</code> (the full payload above), <code>cancel</code>,
+            <code>clear</code> (<code>&#123;previousValue&#125;</code>).
+          </p>
+
+          <h3 class="h5 mt-4">Behaviour</h3>
+          <ul class="text-ink-soft small">
+            <li><strong>Opening is always free; closing/confirming is gated.</strong> The modal's Apply button and inline's close-via-trigger gesture both refuse to proceed without a complete date + time selection, showing “Please select a time slot(&nbsp;to continue).” in place rather than as a toast. Cancel, the modal's × button, Escape and a static backdrop always close and discard the in-progress draft back to the last committed value — required selection never traps a guest who just wants to back out.</li>
+            <li><strong>Selected date and selected slot share one visual</strong> (solid dark fill, light text) — not two separate “selected” styles.</li>
+            <li><strong>Booked ≠ past ≠ disabled.</strong> A booked slot is muted <em>and</em> struck through; a date excluded by <code>disabledDates</code>/<code>setDateDisabledRule</code>/the min–max window is muted with no strikethrough and carries a real “Full”/unavailable label rather than colour alone.</li>
+            <li><strong>Keys.</strong> On the date strip and the slot grid: ←/→ move between enabled items (disabled ones are skipped entirely, never focused); Home/End jump to the first/last enabled item; ↑/↓ move between the Morning/Afternoon/Evening groups in the slot grid; Enter/Space selects; Esc closes only this picker (in inline mode, never a parent modal it happens to sit inside).</li>
+            <li><strong>Accessibility.</strong> Date and slot items use <code>role="option"</code>/<code>aria-selected</code>/<code>aria-disabled</code>; the modal has <code>aria-labelledby</code>, the inline panel <code>role="group"</code>; one polite live region announces date/slot changes and validation text, separate from the always-in-DOM validation row itself.</li>
+          </ul>
+        </section>
+
         <!-- ================= NAVS & TABS ================= -->
         <section id="navs-tabs" class="pb-6 mb-6 border-bottom">
           <h2>Navs &amp; Tabs</h2>
@@ -1207,6 +1363,7 @@ const experiences = [
 <script>
   import { showToast } from '../../scripts/toast.js';
   import { getAutocomplete } from '../../scripts/autocomplete.js';
+  import { getDateTimeSlotPicker } from '../../scripts/date-time-slot-picker.js';
 
   // Every demo toast reports its close to the log line, which shows onClose
   // firing per toast for both timeout and manual dismissal.
@@ -1288,4 +1445,48 @@ const experiences = [
     if (out) out.textContent = valid ? `Submitted: ${new URLSearchParams(new FormData(acForm)).toString()}` : 'Not submitted — fix the highlighted field.';
   });
 
+  // ---- Date & Time Slot Picker demos ------------------------------------
+  const dtspLog = document.getElementById('ds-dtsp-log');
+  document.addEventListener('dtsp:apply', (e) => {
+    if (dtspLog) dtspLog.textContent = `${e.target.id}: apply — ${e.detail.display.combined}`;
+  });
+  document.addEventListener('dtsp:cancel', (e) => {
+    if (dtspLog) dtspLog.textContent = `${e.target.id}: cancel`;
+  });
+  document.addEventListener('dtsp:datechange', (e) => {
+    if (dtspLog) dtspLog.textContent = `${e.target.id}: datechange — ${e.detail.date}`;
+  });
+
+  // Example 1 — briefly shows the date-change skeleton (slots-only, never a
+  // full-component spinner) on every date change. The availability for every
+  // date was already loaded at hydration (it's a synchronous prop here), so
+  // "loading" just needs to flip back — a real async caller would call
+  // setAvailability(freshData) instead once its fetch resolves.
+  const dtspModal = document.getElementById('ds-dtsp-modal');
+  dtspModal?.addEventListener('dtsp:datechange', () => {
+    const picker = getDateTimeSlotPicker(dtspModal);
+    picker.setSlotsState('loading');
+    setTimeout(() => picker.setSlotsState('ready'), 500);
+  });
+
+  // Example 3 — the recurring half of "disabled dates" (`isDateDisabled`
+  // can't be a prop, see the component's own header comment): every Friday.
+  const dtspDisabledDates = document.getElementById('ds-dtsp-disabled-dates');
+  if (dtspDisabledDates) {
+    getDateTimeSlotPicker(dtspDisabledDates).setDateDisabledRule((date) => new Date(`${date}T00:00:00`).getDay() === 5);
+  }
+
+  // States form — same "submit is intercepted" pattern as Autocomplete's.
+  // Validity can't come from form.checkValidity(): the picker's value
+  // carrier is a type="hidden" input, which the platform excludes from
+  // constraint validation entirely (see the component's own comment on
+  // handleFormSubmit) — so this checks the picker's committed value instead.
+  const dtspForm = document.getElementById('ds-dtsp-form');
+  const dtspRequiredEl = document.getElementById('ds-dtsp-required');
+  dtspForm?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const out = document.getElementById('ds-dtsp-form-out');
+    const valid = Boolean(dtspRequiredEl && getDateTimeSlotPicker(dtspRequiredEl).getValue());
+    if (out) out.textContent = valid ? `Submitted: ${new URLSearchParams(new FormData(dtspForm)).toString()}` : 'Not submitted — fix the highlighted field.';
+  });
 </script>

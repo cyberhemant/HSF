@@ -16,6 +16,7 @@
 import Base from '../../layouts/Base.astro';
 import Button from '../../components/Button.astro';
 import Autocomplete from '../../components/Autocomplete.astro';
+import DateTimeSlotPicker from '../../components/DateTimeSlotPicker.astro';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
@@ -41,6 +42,24 @@ const experiences = [
   { value: 'garden', label: 'Kitchen Garden Tour', icon: 'yard', secondaryLabel: '1 h' },
   { value: 'ceramics', label: 'Ceramics Studio', icon: 'category', secondaryLabel: '2 h' },
 ];
+
+// A small fixed availability set for the Date & Time Slot Picker scenarios
+// below — these only exercise the inline panel's container behaviour, not
+// the picker's own date/slot logic (already covered on the design-system
+// page), so a handful of slots on today + tomorrow is enough.
+const dtspPad2 = (n: number) => String(n).padStart(2, '0');
+const dtspIsoOffset = (n: number) => {
+  const d = new Date();
+  d.setDate(d.getDate() + n);
+  return `${d.getFullYear()}-${dtspPad2(d.getMonth() + 1)}-${dtspPad2(d.getDate())}`;
+};
+const dtspSlots = (dayOffset: number) => ['09:00', '09:30', '14:00', '14:30', '18:00', '18:30'].map((time) => ({
+  id: `mt-d${dayOffset}-${time.replace(':', '')}`,
+  time,
+  label: time,
+  status: 'available' as const,
+}));
+const dtspTestAvailability = [0, 1, 2].map((i) => ({ date: dtspIsoOffset(i), status: 'available' as const, slots: dtspSlots(i) }));
 ---
 
 <Base title="Component Testing — Modal & Offcanvas Interaction" description="QA harness: Autocomplete inside a Bootstrap modal or offcanvas.">
@@ -259,6 +278,75 @@ const experiences = [
       </div>
       <div class="offcanvas-body">
         <Autocomplete id="mt-ac-5" name="experience-5" label="Experience" placeholder="Search experiences…" options={experiences} />
+      </div>
+    </div>
+
+    <h2 id="date-time-slot-picker" class="h4 mt-6">Date &amp; Time Slot Picker — inline mode</h2>
+    <p class="text-ink-soft small mb-4">
+      Per the "Container context" rule: <code>presentation="inline"</code> renders a
+      <code>bootstrap.Collapse</code> panel directly in the flow, not an escaping popover — so the
+      risk here isn't clipping, it's whether the expanded panel scrolls into view inside a
+      container that scrolls itself, and whether the date strip's own horizontal scroll fights the
+      container's vertical one. (<code>presentation="modal"</code> nested inside another modal is
+      not a supported scenario — the component's own architecture rule is to use
+      <code>inline</code> there instead, so it isn't tested here.)
+    </p>
+
+    <div class="row g-4">
+      <div class="col-12 col-lg-6">
+        <div class="p-3 border rounded-3 bg-white h-100 d-flex flex-column">
+          <h3 class="h6">B1 · Inline, inside a scrollable modal body</h3>
+          <p class="small text-ink-soft"><code>.modal-dialog-scrollable</code>, which gives <code>.modal-content</code> <code>overflow: hidden</code> and <code>.modal-body</code> its own scroll — expanding the panel grows the body's content height.</p>
+          <ul class="small text-ink-soft">
+            <li>Does expanding the trigger scroll the newly revealed date strip/slot grid into view, rather than leaving it hidden below the fold?</li>
+            <li>Dragging left/right on the date strip scrolls the strip, not the modal body underneath it.</li>
+          </ul>
+          <Button type="button" variant="secondary" class="btn-sm mt-auto" data-bs-toggle="modal" data-bs-target="#mt-dtsp-scrollable">Open modal</Button>
+        </div>
+      </div>
+
+      <div class="col-12 col-lg-6">
+        <div class="p-3 border rounded-3 bg-white h-100 d-flex flex-column">
+          <h3 class="h6">B2 · Inline, inside an offcanvas body</h3>
+          <p class="small text-ink-soft">An end offcanvas with <code>.offcanvas-body</code> scrolling (<code>overflow-y: auto</code>) — the "Container context" rule's other named container.</p>
+          <ul class="small text-ink-soft">
+            <li>Same checks as B1, against the offcanvas's own scroll container instead of a modal's.</li>
+            <li>Escape closes only the picker's own panel while it's open, not the offcanvas underneath it.</li>
+          </ul>
+          <Button type="button" variant="secondary" class="btn-sm mt-auto" data-bs-toggle="offcanvas" data-bs-target="#mt-dtsp-offcanvas" aria-controls="mt-dtsp-offcanvas">Open offcanvas</Button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="mt-dtsp-scrollable" tabindex="-1" aria-labelledby="mt-dtsp-scrollable-label" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 class="modal-title h5" id="mt-dtsp-scrollable-label">B1 · Date &amp; Time — scrollable modal</h3>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p class="text-ink-soft">Scroll down inside this modal to reach the field, then expand it.</p>
+            {filler.map((i) => (
+              <p class="text-ink-soft">
+                Filler paragraph {i + 1} of {filler.length} — pushes the field below the fold.
+              </p>
+            ))}
+            <DateTimeSlotPicker id="mt-dtsp-1" name="slot-1" presentation="inline" availability={dtspTestAvailability} />
+          </div>
+          <div class="modal-footer">
+            <Button variant="secondary" class="btn-sm" data-bs-dismiss="modal">Close</Button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="mt-dtsp-offcanvas" aria-labelledby="mt-dtsp-offcanvas-label">
+      <div class="offcanvas-header">
+        <h3 class="offcanvas-title h5" id="mt-dtsp-offcanvas-label">B2 · Book a slot</h3>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+      </div>
+      <div class="offcanvas-body">
+        <DateTimeSlotPicker id="mt-dtsp-2" name="slot-2" presentation="inline" availability={dtspTestAvailability} />
       </div>
     </div>
   </div>

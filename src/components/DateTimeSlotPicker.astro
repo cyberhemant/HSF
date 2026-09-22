@@ -1,0 +1,282 @@
+---
+// §4 Date & Time Slot Picker — single date + single time-slot selector with
+// two presentations: an inline Bootstrap Collapse panel embedded in its own
+// container, or a Bootstrap Modal the component owns end to end. Renders one
+// or the other, never both (picking `presentation="inline"` is how a caller
+// avoids the modal-inside-modal problem — there is no nestedModal/zIndex
+// prop; see the design-system page's "Container context" note).
+//
+// This file renders the static shell only — the date strip and slot groups
+// start empty and are filled by scripts/date-time-slot-picker.js, same
+// division of labour as Autocomplete.astro/autocomplete.js. Callbacks can't
+// be props on a build-time component: every onX in the spec is a bubbling
+// `dtsp:x` DOM event instead (see the script's emit()), and the one function
+// prop (`isDateDisabled`) isn't a prop at all — call
+// getDateTimeSlotPicker(el).setDateDisabledRule(fn) after hydration.
+//
+// Recorded prototype behaviour (both presentations) this markup and its
+// script implement exactly: trigger card with a bold primary line + a
+// lighter secondary line that swaps to a "{Day}, {Mon} {D} · {h:mm AM/PM}" /
+// "Click to modify selection" summary once a slot is applied; inline mode
+// expands in place via Collapse with the trigger's chevron rotating; modal
+// mode opens a centered dialog with Cancel (left) / Apply Slot (right) in
+// the footer. Neither mode has a "Clear" button in the recording, but
+// clear()/onClear stay available programmatically (§15/§17).
+import Icon from './Icon.astro';
+import IconButton from './IconButton.astro';
+import Button from './Button.astro';
+
+export interface DateTimeSlot {
+  id: string;
+  time: string; // "HH:mm", 24h
+  label: string;
+  status: 'available' | 'booked';
+}
+
+export interface DateAvailability {
+  date: string; // "YYYY-MM-DD"
+  status?: 'available' | 'full' | 'closed';
+  slots: DateTimeSlot[];
+}
+
+export interface PickerPayload {
+  value: { date: string; time: string; datetimeLocal: string };
+  slot: { id: string; status: string; group: string };
+  display: { date: string; time: string; combined: string };
+}
+
+export interface Props {
+  presentation?: 'modal' | 'inline';
+  showHeader?: boolean; // modal only — the recorded inline panel has no header
+  showFooter?: boolean; // modal only — the recorded inline panel has no footer
+  label?: string;
+  modalSubtitle?: string;
+
+  minDate?: string;
+  maxDate?: string;
+  initialDate?: string;
+  dateFormat?: string;
+  disabledDates?: string[];
+
+  timeFormat?: '12h' | '24h';
+  slotInterval?: 15 | 30 | 45 | 60;
+  showPeriodGroups?: boolean;
+  showPeriodTimeRange?: boolean;
+
+  value?: PickerPayload | null;
+  defaultValue?: PickerPayload | null;
+  requireConfirmation?: boolean;
+  resetTimeOnDateChange?: boolean;
+
+  triggerLabel?: string;
+  triggerDescription?: string;
+  showTriggerIcon?: boolean;
+  triggerFullWidth?: boolean;
+
+  closeOnEscape?: boolean;
+  closeOnOutsideClick?: boolean;
+
+  required?: boolean;
+  disabled?: boolean;
+  loading?: boolean;
+
+  availability?: DateAvailability[];
+
+  id?: string;
+  name?: string;
+  class?: string;
+}
+
+const {
+  presentation = 'modal',
+  showHeader = true,
+  showFooter = true,
+  label = 'Select Date & Time',
+  modalSubtitle = 'Choose an available slot',
+
+  minDate = 'today',
+  maxDate = '+30days',
+  initialDate,
+  dateFormat = 'ddd, MMM D',
+  disabledDates = [],
+
+  timeFormat = '12h',
+  slotInterval = 30,
+  showPeriodGroups = true,
+  showPeriodTimeRange = true,
+
+  value = null,
+  defaultValue = null,
+  requireConfirmation = true,
+  resetTimeOnDateChange = true,
+
+  triggerLabel = 'Select Date & Time',
+  triggerDescription = 'Choose an available slot',
+  showTriggerIcon = true,
+  triggerFullWidth = true,
+
+  closeOnEscape = true,
+  closeOnOutsideClick = false,
+
+  required = false,
+  disabled = false,
+  loading = false,
+
+  availability = [],
+
+  id = `dtsp-${Math.random().toString(36).slice(2, 9)}`,
+  name,
+  class: extraClass = '',
+} = Astro.props;
+
+const inline = presentation === 'inline';
+const labelId = `${id}-label`;
+const triggerId = `${id}-trigger`;
+const panelId = `${id}-panel`;
+const modalId = `${id}-modal`;
+const modalTitleId = `${id}-modal-title`;
+const dateLabelId = `${id}-date-label`;
+
+const json = (data: unknown) => JSON.stringify(data).replace(/</g, '\\u003c');
+const clientConfig = {
+  presentation,
+  minDate,
+  maxDate,
+  initialDate,
+  dateFormat,
+  disabledDates,
+  timeFormat,
+  slotInterval,
+  showPeriodGroups,
+  showPeriodTimeRange,
+  value,
+  defaultValue,
+  requireConfirmation,
+  resetTimeOnDateChange,
+  triggerLabel,
+  triggerDescription,
+  closeOnEscape,
+  closeOnOutsideClick,
+  required,
+  disabled,
+  loading,
+  availability,
+};
+---
+
+<div
+  class={['dtsp', triggerFullWidth ? 'w-100' : '', extraClass].filter(Boolean).join(' ')}
+  data-dtsp
+  data-name={name}
+  data-config={json(clientConfig)}
+  id={id}
+>
+  <div class="dtsp__field">
+    {label && (
+      <label class="form-label" id={labelId} for={triggerId}>
+        {label}
+        {required && <span class="text-danger" aria-hidden="true"> *</span>}
+      </label>
+    )}
+    <button
+      type="button"
+      id={triggerId}
+      class="dtsp__trigger form-control d-flex align-items-center justify-content-between text-start"
+      aria-haspopup={inline ? undefined : 'dialog'}
+      aria-expanded={inline ? 'false' : undefined}
+      aria-controls={inline ? panelId : modalId}
+      disabled={disabled}
+      data-dtsp-trigger
+    >
+      <span class="dtsp__trigger-text">
+        <span class="dtsp__trigger-primary fw-semibold" data-dtsp-trigger-primary>{triggerLabel}</span>
+        <span class="dtsp__trigger-secondary text-muted small" data-dtsp-trigger-secondary>{triggerDescription}</span>
+      </span>
+      {showTriggerIcon && (
+        <Icon name={inline ? 'expand_more' : 'calendar_month'} class="dtsp__trigger-icon flex-shrink-0" />
+      )}
+    </button>
+    <div class="invalid-feedback" data-dtsp-feedback>Please select a time slot to continue.</div>
+  </div>
+
+  {inline ? (
+    <div class="collapse dtsp__panel" id={panelId} role="group" aria-labelledby={labelId}>
+      <div class="dtsp__panel-body">
+        <div class="form-label small mb-2" id={dateLabelId}>Select Date</div>
+        <div class="dtsp__date-row">
+          <IconButton icon="chevron_left" label="Earlier dates" variant="plain" class="dtsp__date-nav" data-dtsp-prev />
+          <div class="dtsp__date-strip" role="listbox" aria-labelledby={dateLabelId} data-dtsp-date-strip></div>
+          <IconButton icon="chevron_right" label="Later dates" variant="plain" class="dtsp__date-nav" data-dtsp-next />
+        </div>
+        <div class="dtsp__groups" data-dtsp-groups></div>
+        <div class="dtsp__validation text-danger small mt-2" data-dtsp-validation hidden>
+          <Icon name="warning" size={16} class="flex-shrink-0" />
+          <span data-dtsp-validation-text>Please select a time slot.</span>
+        </div>
+      </div>
+    </div>
+  ) : (
+    <div
+      class="modal dtsp__modal"
+      id={modalId}
+      tabindex="-1"
+      aria-labelledby={showHeader ? modalTitleId : labelId}
+      aria-hidden="true"
+      data-bs-backdrop={closeOnOutsideClick ? 'true' : 'static'}
+      data-bs-keyboard={closeOnEscape ? 'true' : 'false'}
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          {showHeader && (
+            <div class="modal-header">
+              <div>
+                <h2 class="modal-title fs-4" id={modalTitleId}>{label}</h2>
+                <p class="text-muted small mb-0">{modalSubtitle}</p>
+              </div>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" data-dtsp-cancel></button>
+            </div>
+          )}
+          <div class="modal-body">
+            <div class="dtsp__eyebrow text-uppercase small text-muted fw-semibold mb-2" id={dateLabelId}>Select Date</div>
+            <div class="dtsp__date-row">
+              <IconButton icon="chevron_left" label="Earlier dates" variant="plain" class="dtsp__date-nav" data-dtsp-prev />
+              <div class="dtsp__date-strip" role="listbox" aria-labelledby={dateLabelId} data-dtsp-date-strip></div>
+              <IconButton icon="chevron_right" label="Later dates" variant="plain" class="dtsp__date-nav" data-dtsp-next />
+            </div>
+            <div class="dtsp__groups" data-dtsp-groups></div>
+          </div>
+          {showFooter && (
+            <div class="modal-footer flex-column align-items-stretch">
+              <div class="dtsp__validation text-danger small mb-2" data-dtsp-validation hidden>
+                <Icon name="warning" size={16} class="flex-shrink-0" />
+                <span data-dtsp-validation-text>Please select a time slot to continue.</span>
+              </div>
+              <div class="d-flex justify-content-between">
+                <Button variant="secondary" data-bs-dismiss="modal" data-dtsp-cancel>Cancel</Button>
+                <Button variant="primary" data-dtsp-apply>Apply Slot</Button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )}
+
+  <div class="visually-hidden" role="status" aria-live="polite" aria-atomic="true" data-dtsp-live></div>
+  <!-- Data-only: type="hidden" is excluded from constraint validation, so
+       `required` is enforced by the script on the trigger button/form
+       submit instead (see date-time-slot-picker.js). -->
+  <input type="hidden" name={name} data-dtsp-hidden-input />
+</div>
+
+<!-- Icons cloned by the script so slot/date items use the same Icon markup
+     as the rest of the system, matching Autocomplete's <template data-ac-tpl>. -->
+<template data-dtsp-tpl>
+  <span data-icon="check"><Icon name="check" size={16} /></span>
+</template>
+
+<script>
+  import { initDateTimeSlotPickers } from '../scripts/date-time-slot-picker.js';
+
+  initDateTimeSlotPickers();
+</script>

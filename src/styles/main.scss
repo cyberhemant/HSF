@@ -1128,6 +1128,274 @@ $ac-option-min-height-touch: 3rem; // 48px on coarse pointers
   }
 }
 
+// §4 Date & Time Slot Picker — single date + single time-slot control with
+// two presentations, an inline Bootstrap Collapse panel or a Bootstrap
+// Modal the component owns (DateTimeSlotPicker.astro/
+// scripts/date-time-slot-picker.js). Responsive behaviour: none — the
+// 3-column slot grid and the date-strip scroller are the same at every
+// width, only the date strip's scroll distance changes.
+// The trigger is a <button> styled as a field (.form-control base), so it
+// takes the project's ochre focus ring like any other interactive control,
+// not the "no ring" carve-out above ($input-focus-box-shadow: none) — that
+// carve-out is for typing fields, and nothing here is typed into. Selected
+// date pills and selected slots deliberately share one modifier
+// (.dtsp__selected) rather than two classes, matching the recorded
+// prototype's single visual treatment for "selected" everywhere.
+$dtsp-item-min-height: 2.75rem; // 44px touch target, matches $ac-option-min-height
+
+.dtsp__trigger {
+  gap: $spacer;
+  min-height: 3rem;
+  cursor: pointer;
+  background-color: $white;
+
+  &:focus-visible {
+    box-shadow: $focus-ring-box-shadow;
+    outline: none;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+  }
+}
+
+.dtsp__trigger-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.dtsp__trigger-primary {
+  color: $ink;
+}
+
+.dtsp__trigger-icon {
+  color: $ochre;
+  transition: $transition-base;
+}
+
+// Bootstrap's Collapse toggles .collapsed on its trigger natively once the
+// script calls show()/hide() on the panel — same mechanism
+// .accordion-button.collapsed already uses above, no extra JS needed for
+// the rotation itself. Modal mode's calendar icon never rotates (no
+// .collapsed class is ever added to it).
+.dtsp__trigger:not(.collapsed) .dtsp__trigger-icon {
+  transform: rotate(180deg);
+}
+
+.dtsp__panel-body {
+  padding-block-start: $spacer;
+}
+
+.dtsp__eyebrow {
+  letter-spacing: .04em;
+}
+
+// Date strip — a scrollable button row, not a month grid (§13a). Paging
+// (the prev/next IconButtons) is a plain scrollBy() in the script; ~5-7
+// pills fit at once purely from pill width vs. container width, nothing is
+// hardcoded to a count.
+.dtsp__date-row {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding-bottom: $spacer * 0.5;
+}
+
+.dtsp__date-strip {
+  display: flex;
+  flex: 1 1 auto;
+  gap: .5rem;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  padding-block: .25rem; // clearance for the focus ring
+  min-width: 0;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.dtsp__date-item {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .125rem;
+  min-width: 4.5rem;
+  min-height: $dtsp-item-min-height;
+  padding: .5rem .75rem;
+  border: 1px solid transparent;
+  // border-radius: $border-radius-lg;
+  background-color: $sand;
+  color: $ink-soft;
+  transition: $transition-base;
+
+  &:hover:not(:disabled) {
+    background-color: $dark;
+    color: $cream;
+  }
+
+  &:focus-visible {
+    box-shadow: $focus-ring-box-shadow;
+    outline: none;
+  }
+
+  &:disabled {
+    background-color: transparent;
+    color: $ink-faint;
+    cursor: not-allowed;
+  }
+}
+
+.dtsp__date-dow {
+  font-size: $small-font-size;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  opacity: .8;
+}
+
+.dtsp__date-num {
+  font-weight: 600;
+}
+
+// Today is its own item state, distinct from Selected (§11) — an outline
+// when it isn't the active selection; once selected it takes the shared
+// .dtsp__selected fill instead, same as any other date.
+.dtsp__date-item--today:not(.dtsp__selected) {
+  border-color: $ochre-deep;
+}
+
+// Never colour-only (§14): fully booked carries real text (added by the
+// script), this just styles it.
+.dtsp__date-full {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  color: $ink-faint;
+}
+
+// Shared "selected" fill — one treatment for a selected date pill and a
+// selected slot button, per the recorded prototype.
+.dtsp__date-item.dtsp__selected,
+.dtsp__slot.dtsp__selected {
+  background-color: $dark;
+  border-color: $dark;
+  color: $white;
+
+  .dtsp__date-full {
+    color: rgba($white, .75);
+  }
+}
+
+// Modal only — cap the slot list so the dialog itself never grows past the
+// viewport and scrolls (inline mode has no cap; its host page scrolls
+// normally). overflow-y:auto computes overflow-x to auto too unless it's
+// set explicitly, and .row's negative gutter margin is just wide enough to
+// trigger that phantom horizontal scrollbar, so overflow-x is pinned to
+// hidden and padding-inline absorbs the negative margin (offset by an equal
+// negative margin-inline so the scroll region still lines up with the
+// date-row above it) with a little room left for the slot buttons' focus
+// ring.
+.dtsp__modal .dtsp__groups {
+  height: 50vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-inline: .25rem;
+  margin-inline: -.25rem;
+}
+
+.dtsp__group + .dtsp__group {
+  margin-block-start: 1.25rem;
+}
+
+.dtsp__group-title {
+  font-family: $font-family-sans;
+  font-size: $h6-font-size;
+  font-weight: 600;
+  color: $ink;
+  margin-block-end: .5rem;
+}
+
+.dtsp__group-range {
+  font-weight: 400;
+  font-size: $small-font-size;
+}
+
+// Available slot: outlined/light, default text — deliberately not
+// Bootstrap's stock .btn-outline-* pairing (§13a), since the
+// disabled/strikethrough treatment below needs to layer on top of it.
+.dtsp__slot {
+  min-height: $dtsp-item-min-height;
+  border: 1px solid $hairline;
+  // border-radius: $border-radius-lg;
+  background-color: $white;
+  color: $ink-soft;
+  font-size: $btn-font-size;
+  transition: $transition-base;
+  width: 100%;
+  padding-left: $spacer * 0.5;
+  padding-right: $spacer * 0.5;
+  &:hover:not(:disabled) {
+    border-color: $ochre-deep;
+    background-color: $dark;
+    color: $cream;
+  }
+
+  &:focus-visible {
+    box-shadow: $focus-ring-box-shadow;
+    outline: none;
+  }
+}
+
+// Booked = muted fill + strikethrough (not opacity alone, §0). Past slots
+// reuse the same muted disabled treatment without the strikethrough, so the
+// two "unavailable" reasons (taken vs. elapsed) stay visually distinct.
+.dtsp__slot:disabled {
+  background-color: $beige;
+  border-color: $beige;
+  color: $ink-faint;
+  cursor: not-allowed;
+}
+
+.dtsp__slot--booked {
+  text-decoration: line-through;
+}
+
+.dtsp__empty {
+  padding-block: .5rem;
+}
+
+.dtsp__validation {
+  display: flex;
+  align-items: center;
+  gap: .375rem;
+}
+
+// Date-change skeleton — the parent (this file) owns the layout, the
+// shared .placeholder primitive (styled above) owns the fill itself.
+.dtsp__slot-skeleton {
+  display: block;
+  height: $dtsp-item-min-height;
+  border-radius: $border-radius-lg;
+}
+
+.dtsp--loading .dtsp__trigger,
+.dtsp--disabled .dtsp__trigger {
+  opacity: .7;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dtsp__trigger-icon,
+  .dtsp__date-item,
+  .dtsp__slot,
+  .dtsp__date-strip {
+    transition: none;
+    scroll-behavior: auto;
+  }
+}
+
 // §4 Palm Spinner — brand loading indicator (PalmSpinner.astro): four evenly
 // spaced dashes circulate continuously around the frame while the palm mark
 // wipes into view bottom-to-top (like growth), holds, and retracts to loop.
