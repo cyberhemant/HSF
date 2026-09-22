@@ -170,7 +170,7 @@ export function showToast(options = {}) {
 
   const toastEl = create(
     'div',
-    `toast shadow-lg bg-body border-0 border-start border-5 border-${color}`,
+    `toast shadow-lg bg-white border-0 border-start border-5 border-${color}`,
     { id: toastId, role: 'status', 'aria-live': 'polite', 'aria-atomic': 'true' },
   );
   const row = create('div', 'd-flex align-items-center');

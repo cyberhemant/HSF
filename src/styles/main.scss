@@ -133,6 +133,9 @@ $input-border-radius-sm: 0;
 $input-border-radius-lg: 0;
 $form-check-input-border-radius: 0;
 $nav-tabs-border-radius: 0;
+// Active tab's text takes the brand primary rather than Bootstrap's default
+// near-black emphasis color, echoing the underline-tabs treatment below.
+$nav-tabs-link-active-color: $primary;
 $nav-pills-border-radius: 0;
 $card-border-radius: 0;
 $alert-border-radius: 0;
