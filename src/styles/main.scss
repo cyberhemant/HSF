@@ -1251,7 +1251,7 @@ $dtsp-item-min-height: 2.75rem; // 44px touch target, matches $ac-option-min-hei
   transition: $transition-base;
 
   &:hover:not(:disabled) {
-    background-color: $dark;
+    background-color: $ochre;
     color: $cream;
   }
 
@@ -1282,7 +1282,7 @@ $dtsp-item-min-height: 2.75rem; // 44px touch target, matches $ac-option-min-hei
 // when it isn't the active selection; once selected it takes the shared
 // .dtsp__selected fill instead, same as any other date.
 .dtsp__date-item--today:not(.dtsp__selected) {
-  border-color: $ochre-deep;
+  border-color: $dark;
 }
 
 // Never colour-only (§14): fully booked carries real text (added by the
@@ -1298,8 +1298,8 @@ $dtsp-item-min-height: 2.75rem; // 44px touch target, matches $ac-option-min-hei
 // selected slot button, per the recorded prototype.
 .dtsp__date-item.dtsp__selected,
 .dtsp__slot.dtsp__selected {
-  background-color: $dark;
-  border-color: $dark;
+  background-color: $ochre;
+  border-color: $ochre;
   color: $white;
 
   .dtsp__date-full {
@@ -1357,7 +1357,7 @@ $dtsp-item-min-height: 2.75rem; // 44px touch target, matches $ac-option-min-hei
   padding-right: $spacer * 0.5;
   &:hover:not(:disabled) {
     border-color: $ochre-deep;
-    background-color: $dark;
+    background-color: $ochre;
     color: $cream;
   }
 
