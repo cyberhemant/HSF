@@ -1174,17 +1174,35 @@ $dtsp-item-min-height: 2.75rem; // 44px touch target, matches $ac-option-min-hei
   transition: $transition-base;
 }
 
-// Bootstrap's Collapse toggles .collapsed on its trigger natively once the
-// script calls show()/hide() on the panel — same mechanism
-// .accordion-button.collapsed already uses above, no extra JS needed for
-// the rotation itself. Modal mode's calendar icon never rotates (no
-// .collapsed class is ever added to it).
-.dtsp__trigger:not(.collapsed) .dtsp__trigger-icon {
+// The trigger has no data-bs-toggle="collapse" (it's driven by the
+// component script, not Bootstrap's native toggle), so Bootstrap never adds
+// its own .collapsed class here — key off aria-expanded (set by the script
+// on show/hide) instead. Modal mode's trigger never gets aria-expanded, so
+// its calendar icon never rotates.
+.dtsp__trigger[aria-expanded='true'] .dtsp__trigger-icon {
   transform: rotate(180deg);
 }
 
+// Inline mode reads as one bordered field, not a header sitting above a
+// loose block of content: when expanded, the trigger's bottom edge opens up
+// (border + radius removed) and the panel below picks up the same border
+// and background, closing with rounded bottom corners — so the border
+// (and the white fill) grows to wrap the whole thing as it opens.
+.dtsp__trigger[aria-expanded='true'] {
+  border-bottom-color: transparent;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.dtsp__panel {
+  background-color: $white;
+  border: var(--#{$prefix}border-width) solid var(--#{$prefix}border-color);
+  border-top: 0;
+  border-radius: 0 0 var(--#{$prefix}border-radius) var(--#{$prefix}border-radius);
+}
+
 .dtsp__panel-body {
-  padding-block-start: $spacer;
+  padding: $spacer $input-padding-x;
 }
 
 .dtsp__eyebrow {

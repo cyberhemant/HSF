@@ -19,7 +19,7 @@
 // lighter secondary line that swaps to a "{Day}, {Mon} {D} · {h:mm AM/PM}" /
 // "Click to modify selection" summary once a slot is applied; inline mode
 // expands in place via Collapse with the trigger's chevron rotating; modal
-// mode opens a centered dialog with Cancel (left) / Apply Slot (right) in
+// mode opens a centered dialog with Cancel (left) / Confirm (right) in
 // the footer. Neither mode has a "Clear" button in the recording, but
 // clear()/onClear stay available programmatically (§15/§17).
 import Icon from './Icon.astro';
@@ -253,7 +253,7 @@ const clientConfig = {
               </div>
               <div class="d-flex justify-content-between">
                 <Button variant="secondary" data-bs-dismiss="modal" data-dtsp-cancel>Cancel</Button>
-                <Button variant="primary" data-dtsp-apply>Apply Slot</Button>
+                <Button variant="primary" data-dtsp-apply>Confirm</Button>
               </div>
             </div>
           )}

@@ -338,6 +338,7 @@ export class DateTimeSlotPicker {
     this.updateDateStripSelection();
     this.renderGroups();
     this.emit('datechange', { date: dateStr, previousDate });
+    this.emitChangeAndMaybeAutoCollapse();
   }
 
   selectSlot(slotId, time, group) {
@@ -346,6 +347,20 @@ export class DateTimeSlotPicker {
     this.hideValidation();
     this.updateSlotSelection();
     this.emit('slotselect', { slotId, time });
+    this.emitChangeAndMaybeAutoCollapse();
+  }
+
+  // Shared by both selectDate() and selectSlot(): whichever one completes
+  // the draft (date + time both set — normally the slot click, since
+  // resetTimeOnDateChange clears the slot on a date change by default) fires
+  // 'change'/'apply' the same way, and auto-collapses inline the same way —
+  // on the first selection *and* on every later edit of an already-committed
+  // value. There's no re-entrancy risk doing this unconditionally: closing
+  // the panel here only calls Collapse.hide(), which doesn't feed back into
+  // selectDate()/selectSlot() (nothing re-opens the panel or re-runs a
+  // selection as a result), so this can't loop even though it now fires on
+  // every completed change rather than only the first one.
+  emitChangeAndMaybeAutoCollapse() {
     const payload = this.buildPayload();
     if (payload) {
       this.emit('change', payload);
@@ -353,6 +368,9 @@ export class DateTimeSlotPicker {
         this.commit(payload);
         this.emit('apply', payload);
       }
+    }
+    if (this.inline && this.isOpen && payload) {
+      this.closeInline({ skipValidation: !this.cfg.requireConfirmation });
     }
   }
 
