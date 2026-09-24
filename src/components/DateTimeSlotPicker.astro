@@ -133,9 +133,12 @@ const inline = presentation === 'inline';
 const labelId = `${id}-label`;
 const triggerId = `${id}-trigger`;
 const panelId = `${id}-panel`;
+const feedbackId = `${id}-feedback`;
 const modalId = `${id}-modal`;
 const modalTitleId = `${id}-modal-title`;
 const dateLabelId = `${id}-date-label`;
+
+const feedbackText = 'Please select a time slot to continue.';
 
 const json = (data: unknown) => JSON.stringify(data).replace(/</g, '\\u003c');
 const clientConfig = {
@@ -196,7 +199,9 @@ const clientConfig = {
         <Icon name={inline ? 'expand_more' : 'calendar_month'} class="dtsp__trigger-icon flex-shrink-0" />
       )}
     </button>
-    <div class="invalid-feedback" data-dtsp-feedback>Please select a time slot to continue.</div>
+    {!inline && (
+      <div class="invalid-feedback dtsp__feedback" id={feedbackId} data-dtsp-feedback>{feedbackText}</div>
+    )}
   </div>
 
   {inline ? (
@@ -215,6 +220,7 @@ const clientConfig = {
         </div>
       </div>
     </div>
+    <div class="invalid-feedback dtsp__feedback" id={feedbackId} data-dtsp-feedback>{feedbackText}</div>
   ) : (
     <div
       class="modal dtsp__modal"

@@ -1205,6 +1205,32 @@ $dtsp-item-min-height: 2.75rem; // 44px touch target, matches $ac-option-min-hei
   padding: $spacer $input-padding-x;
 }
 
+// Required-but-empty state (showInvalid()), scoped to the root so it covers
+// the whole control rather than only the trigger. The feedback element is a
+// sibling of the trigger in modal mode but of the panel in inline mode, so
+// Bootstrap's `.is-invalid ~ .invalid-feedback` can't reach it in both —
+// key off the root class instead.
+.dtsp--invalid .dtsp__feedback {
+  display: block;
+}
+
+.dtsp--invalid .dtsp__panel {
+  border-color: var(--#{$prefix}form-invalid-border-color);
+}
+
+// Open + invalid: keep the trigger's bottom edge open so trigger and panel
+// read as one continuous red control, not a red line through the middle.
+.dtsp--invalid .dtsp__trigger[aria-expanded='true'] {
+  border-bottom-color: transparent;
+}
+
+// The trigger already carries its own icon (chevron / calendar), so drop
+// Bootstrap's validation glyph and the padding it reserves for it.
+.dtsp__trigger.is-invalid {
+  padding-right: $input-padding-x;
+  background-image: none;
+}
+
 .dtsp__eyebrow {
   letter-spacing: .04em;
 }

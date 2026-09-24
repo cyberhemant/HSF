@@ -304,11 +304,30 @@ export class DateTimeSlotPicker {
     if (this.validationEl) this.validationEl.hidden = true;
   }
 
+  // Whole-control "required" error. The class goes on the root (not just the
+  // trigger) so the panel border and the relocated feedback can restyle with
+  // it; `.is-invalid` stays on the trigger for the Bootstrap border colour.
+  // Public so callers that don't submit a native <form> (e.g. a stepper's
+  // Continue button) can raise the same state.
+  showInvalid() {
+    this.root.classList.add('dtsp--invalid');
+    this.triggerEl?.classList.add('is-invalid');
+    this.triggerEl?.setAttribute('aria-invalid', 'true');
+    if (this.feedbackEl?.id) this.triggerEl?.setAttribute('aria-describedby', this.feedbackEl.id);
+    this.announce(this.feedbackEl?.textContent || '');
+  }
+
+  clearInvalid() {
+    this.root.classList.remove('dtsp--invalid');
+    this.triggerEl?.classList.remove('is-invalid');
+    this.triggerEl?.removeAttribute('aria-invalid');
+    this.triggerEl?.removeAttribute('aria-describedby');
+  }
+
   handleFormSubmit(e) {
     if (!this.cfg.required || this.committed || this.cfg.disabled) return;
     e.preventDefault();
-    this.triggerEl?.classList.add('is-invalid');
-    this.announce(this.feedbackEl?.textContent || '');
+    this.showInvalid();
     this.triggerEl?.focus();
   }
 
@@ -388,7 +407,7 @@ export class DateTimeSlotPicker {
       this.hiddenInput.value = payload.value.datetimeLocal;
       this.hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
     }
-    this.triggerEl?.classList.remove('is-invalid');
+    this.clearInvalid();
     this.updateTriggerDisplay();
   }
 
@@ -713,6 +732,7 @@ export class DateTimeSlotPicker {
     this.committed = payload ?? null;
     this.resetDraftToCommitted();
     if (this.hiddenInput) this.hiddenInput.value = payload?.value?.datetimeLocal ?? '';
+    if (this.committed) this.clearInvalid();
     this.updateTriggerDisplay();
   }
 

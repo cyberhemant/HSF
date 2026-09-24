@@ -734,9 +734,21 @@ const experiences = [
           <h3 class="h5 mt-5">States</h3>
           <form class="row g-4 mt-0" id="ds-dtsp-form" novalidate>
             <div class="col-md-6">
-              <DateTimeSlotPicker id="ds-dtsp-required" label="Booking Time" required name="Booking" availability={dtspAvailability} />
-              <button type="submit" class="btn btn-outline-primary btn-sm mt-3">Submit form</button>
+              <DateTimeSlotPicker id="ds-dtsp-required" label="Booking Time (modal + required)" required name="Booking" availability={dtspAvailability} />
+            </div>
+            <div class="col-md-6">
+              <DateTimeSlotPicker id="ds-dtsp-required-inline" presentation="inline" label="Booking Time (inline + required)" required name="BookingInline" availability={dtspAvailability} />
+            </div>
+            <div class="col-12">
+              <button type="submit" class="btn btn-outline-primary btn-sm">Submit form</button>
               <span class="small text-ink-soft ms-2" id="ds-dtsp-form-out"></span>
+              <p class="form-text mb-0">
+                Submit with nothing selected to see the invalid state. Inline, the whole control turns
+                invalid as one: the root gets <code>dtsp--invalid</code>, the panel border goes red, the trigger's
+                bottom edge stays open when expanded so trigger + panel read as a single red field, and the
+                message renders <em>below the panel</em>, linked to the trigger with <code>aria-describedby</code>
+                (plus <code>aria-invalid</code>). It clears itself as soon as a valid slot is committed.
+              </p>
             </div>
             <div class="col-md-6">
               <DateTimeSlotPicker id="ds-dtsp-disabled" availability={dtspAvailability} disabled />
@@ -769,7 +781,7 @@ const experiences = [
                 <tr><td><code>resetTimeOnDateChange</code></td><td><code>true</code></td><td>Changing the date clears the in-progress time selection, never the already-committed value.</td></tr>
                 <tr><td><code>triggerLabel</code> · <code>triggerDescription</code></td><td>“Select Date &amp; Time” · “Choose an available slot”</td><td>Shown until a selection is committed, then replaced by the summary + “Click to modify selection”.</td></tr>
                 <tr><td><code>closeOnEscape</code> · <code>closeOnOutsideClick</code></td><td><code>true</code> · <code>false</code></td><td>Modal only — <code>keyboard</code> / <code>backdrop:'static'</code>. Always free of the selection-required gate.</td></tr>
-                <tr><td><code>required</code> / <code>disabled</code> / <code>loading</code></td><td><code>false</code></td><td>Required enforces on the closest <code>&lt;form&gt;</code>'s submit (the value carrier is a <code>type="hidden"</code> input, which native constraint validation can't target). Loading skeletons the trigger.</td></tr>
+                <tr><td><code>required</code> / <code>disabled</code> / <code>loading</code></td><td><code>false</code></td><td>Required enforces on the closest <code>&lt;form&gt;</code>'s submit (the value carrier is a <code>type="hidden"</code> input, which native constraint validation can't target). Callers that don't use native form submission (e.g. a stepper's Continue button) call <code>getDateTimeSlotPicker(el).showInvalid()</code> instead; <code>clearInvalid()</code> resets it and a committed value clears it automatically. Loading skeletons the trigger.</td></tr>
                 <tr><td><code>availability</code></td><td><code>[]</code></td><td><code>&#123; date, status?, slots: [&#123; id, time, label, status &#125;] &#125;[]</code>. Slot times/labels are never hard-coded by the component.</td></tr>
                 <tr><td><code>name</code></td><td>—</td><td>Hidden input value = <code>value.datetimeLocal</code> (native <code>datetime-local</code> format).</td></tr>
               </tbody>
@@ -1482,11 +1494,11 @@ const experiences = [
   // constraint validation entirely (see the component's own comment on
   // handleFormSubmit) — so this checks the picker's committed value instead.
   const dtspForm = document.getElementById('ds-dtsp-form');
-  const dtspRequiredEl = document.getElementById('ds-dtsp-required');
+  const dtspRequiredEls = ['ds-dtsp-required', 'ds-dtsp-required-inline'].map((id) => document.getElementById(id));
   dtspForm?.addEventListener('submit', (e) => {
     e.preventDefault();
     const out = document.getElementById('ds-dtsp-form-out');
-    const valid = Boolean(dtspRequiredEl && getDateTimeSlotPicker(dtspRequiredEl).getValue());
+    const valid = dtspRequiredEls.every((el) => el && getDateTimeSlotPicker(el).getValue());
     if (out) out.textContent = valid ? `Submitted: ${new URLSearchParams(new FormData(dtspForm)).toString()}` : 'Not submitted — fix the highlighted field.';
   });
 </script>
