@@ -231,8 +231,6 @@ describe('positioning on mobile', () => {
       const before = await headerTop();
       await page.evaluate(() => { document.querySelector('#mt-dp-page-a .dp__panel').scrollTop = 500; });
       assert.ok(Math.abs((await headerTop()) - before) < 1.5);
-      // the legend is reachable by scrolling
-      await page.locator('#mt-dp-page-a .dp__legend').scrollIntoViewIfNeeded();
     });
   });
 

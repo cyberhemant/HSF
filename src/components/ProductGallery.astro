@@ -11,6 +11,12 @@
 // skeleton of the stage and thumbnail row; 'empty' and 'error' replace the
 // stage with a short message (override the copy with `message`). A 'ready'
 // gallery given no images falls back to 'empty' rather than a blank stage.
+//
+// Optional layout props: `aspectRatio` sizes the stage (any CSS ratio, default
+// '4/3'); `imageSize` is how each image fills it ('cover' crops to fill,
+// 'contain' shows the whole image; default 'cover'); `thumbnailFooter` shows
+// the thumbnail row under the stage (default true — the mobile dots are
+// unaffected).
 // Responsive: only the thumbnail-row skeleton changes at `md` (hidden below,
 // like the real thumbnails); the stage and messages do not change.
 import Icon from './Icon.astro';
@@ -19,6 +25,9 @@ export interface Props {
   images?: { src: string; alt?: string }[];
   state?: 'ready' | 'loading' | 'empty' | 'error';
   message?: string;
+  aspectRatio?: `${number}/${number}`;
+  imageSize?: 'cover' | 'contain';
+  thumbnailFooter?: boolean;
   class?: string;
 }
 
@@ -26,6 +35,9 @@ const {
   images = [],
   state = 'ready',
   message,
+  aspectRatio = '4/3',
+  imageSize = 'cover',
+  thumbnailFooter = true,
   class: extraClass = '',
 } = Astro.props;
 
@@ -43,6 +55,7 @@ const statusMessage = message ?? (resolvedState === 'error'
   data-count={isReady ? images.length : 0}
   data-state={resolvedState}
   aria-busy={resolvedState === 'loading' ? 'true' : undefined}
+  style={{ '--product-gallery-aspect': aspectRatio.replace('/', ' / '), '--product-gallery-fit': imageSize }}
   tabindex={hasMultiple ? 0 : undefined}
 >
   <div class="product-gallery__stage" class:list={[{ 'placeholder-glow': resolvedState === 'loading' }]}>
@@ -86,7 +99,7 @@ const statusMessage = message ?? (resolvedState === 'error'
     )}
   </div>
 
-  {resolvedState === 'loading' && (
+  {resolvedState === 'loading' && thumbnailFooter && (
     <div class="product-gallery__thumbs d-none d-md-flex placeholder-glow" aria-hidden="true">
       {[0, 1, 2, 3].map(() => (
         <span class="placeholder product-gallery__thumb-skeleton"></span>
@@ -94,7 +107,7 @@ const statusMessage = message ?? (resolvedState === 'error'
     </div>
   )}
 
-  {hasMultiple && (
+  {hasMultiple && thumbnailFooter && (
     <div class="product-gallery__thumbs d-none d-md-flex" data-role="thumbs">
       {images.map((image, i) => (
         <button
@@ -228,7 +241,7 @@ const statusMessage = message ?? (resolvedState === 'error'
 
   .product-gallery__stage {
     position: relative;
-    aspect-ratio: 1 / 1;
+    aspect-ratio: var(--product-gallery-aspect, 4 / 3);
     background-color: var(--bs-beige);
     overflow: hidden;
   }
@@ -271,7 +284,7 @@ const statusMessage = message ?? (resolvedState === 'error'
     inset: 0;
     width: 100%;
     height: 100%;
-    object-fit: contain;
+    object-fit: var(--product-gallery-fit, cover);
     object-position: center;
     z-index: 1;
     /* Default (unset) position is off-canvas right — .is-prev below moves
@@ -311,7 +324,7 @@ const statusMessage = message ?? (resolvedState === 'error'
     width: 2.75rem;
     height: 2.75rem;
     padding: 0;
-    background-color: #fff;
+    background-color: var(--bs-white);
     color: var(--bs-ink-soft);
     border: none;
     /* border-radius: var(--bs-border-radius); */
@@ -330,6 +343,17 @@ const statusMessage = message ?? (resolvedState === 'error'
     padding-block-end: .25rem;
     overflow-x: auto;
     scrollbar-width: thin;
+  }
+
+  /* Centre the row while it fits. Auto margins on the ends (not
+     justify-content: center) so an overflowing row still scrolls from its
+     first thumbnail instead of clipping the left side. */
+  .product-gallery__thumbs > :first-child {
+    margin-inline-start: auto;
+  }
+
+  .product-gallery__thumbs > :last-child {
+    margin-inline-end: auto;
   }
 
   .product-gallery__thumb {

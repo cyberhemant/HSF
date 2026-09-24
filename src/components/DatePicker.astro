@@ -43,6 +43,9 @@ export interface Props {
   // than one calendar year (a one-year window has nothing to choose). 'off'
   // keeps a plain heading.
   yearSelection?: 'auto' | 'off';
+  // 'hide' omits the Available / Selected / Unavailable key under the month
+  // grid; 'show' renders it.
+  legend?: 'show' | 'hide';
   class?: string;
 }
 
@@ -61,6 +64,7 @@ const {
   maxDate,
   blackoutDates = [],
   yearSelection = 'auto',
+  legend = 'hide',
   class: extraClass = '',
 } = Astro.props;
 
@@ -157,11 +161,13 @@ const clientConfig = { value, defaultValue, minDate, maxDate, blackoutDates, dis
       <div class="dp__message text-danger small" role="alert" data-dp-message></div>
     </div>
 
-    <ul class="dp__legend list-unstyled small" aria-label="Legend" data-dp-legend>
-      <li><span class="dp__key dp__key--available" aria-hidden="true">1</span> Available</li>
-      <li><span class="dp__key dp__key--selected" aria-hidden="true">1</span> Selected</li>
-      <li><span class="dp__key dp__key--booked" aria-hidden="true">1</span> Unavailable</li>
-    </ul>
+    {legend === 'show' && (
+      <ul class="dp__legend list-unstyled small" aria-label="Legend" data-dp-legend>
+        <li><span class="dp__key dp__key--available" aria-hidden="true">1</span> Available</li>
+        <li><span class="dp__key dp__key--selected" aria-hidden="true">1</span> Selected</li>
+        <li><span class="dp__key dp__key--booked" aria-hidden="true">1</span> Unavailable</li>
+      </ul>
+    )}
 
     <!-- Measures env(safe-area-inset-*) as computed padding; see §10 positioner. -->
     <div class="dp__probe" aria-hidden="true" data-dp-probe></div>

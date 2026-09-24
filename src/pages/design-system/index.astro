@@ -869,6 +869,10 @@ const experiences = [
               <h3 class="h6">5 · Year selection (5-year window)</h3>
               <DatePicker id="ds-dp-years" label="Event date" name="event" maxDate={dpFarMax} help="Click the month title to jump between years." />
             </div>
+            <div class="col-md-6">
+              <h3 class="h6">6 · Legend (legend="show")</h3>
+              <DatePicker id="ds-dp-legend" label="Stay date" name="stay" legend="show" help="The key is hidden by default." />
+            </div>
           </div>
 
           <h3 class="h5 mt-5">States</h3>
@@ -932,6 +936,7 @@ const experiences = [
                 <tr><td><code>disabled</code></td><td><code>false</code></td><td></td></tr>
                 <tr><td><code>minDate</code> · <code>maxDate</code></td><td>today · today + 365 days</td><td>Both are themselves selectable. Past dates are never selectable, whatever <code>minDate</code> says.</td></tr>
                 <tr><td><code>yearSelection</code></td><td><code>auto</code></td><td><code>auto | off</code>. <code>auto</code>: the month title opens a year grid whenever the window spans more than one calendar year (a one-year window has nothing to choose, so the title stays a plain heading). <code>off</code> always keeps the plain heading.</td></tr>
+                <tr><td><code>legend</code></td><td><code>hide</code></td><td><code>show | hide</code>. <code>show</code> renders the Available / Selected / Unavailable key under the month grid (not shown in the year view).</td></tr>
                 <tr><td><code>blackoutDates</code></td><td><code>[]</code></td><td>Rendered disabled (faded, not struck through).</td></tr>
               </tbody>
             </table>
@@ -1371,7 +1376,11 @@ const experiences = [
             single image, only the stage is rendered — no arrows, thumbnails or dots.
             The parent sets <code>state</code> (<code>ready</code>, <code>loading</code>,
             <code>empty</code>, <code>error</code>); <code>message</code> overrides the
-            copy on the empty and error states.
+            copy on the empty and error states. Three optional props shape the layout:
+            <code>aspectRatio</code> (<code>'4/3'</code> default; any <code>w/h</code>),
+            <code>imageSize</code> (<code>cover</code> default, or <code>contain</code> to
+            show the whole image) and <code>thumbnailFooter</code> (<code>true</code> default;
+            <code>false</code> hides the thumbnail row on desktop, and the mobile dots stay).
           </p>
           <div class="mt-3" style="max-width: 32rem;">
             <ProductGallery
@@ -1382,6 +1391,19 @@ const experiences = [
                 { src: `${base}/images/gallery-wellness-experience.webp`, alt: 'Wellness experience' },
                 { src: `${base}/images/gallery-ramadan-bazar.webp`, alt: 'Ramadan Bazar' },
                 { src: `${base}/images/gallery-open-mic.webp`, alt: 'Open Mic Night' },
+              ]}
+            />
+          </div>
+          <p class="text-ink-soft mt-4 mb-0">16/9, contain, no thumbnails</p>
+          <div class="mt-2" style="max-width: 32rem;">
+            <ProductGallery
+              aspectRatio="16/9"
+              imageSize="contain"
+              thumbnailFooter={false}
+              images={[
+                { src: `${base}/images/lodge-one.webp`, alt: 'Lodge exterior at golden hour' },
+                { src: `${base}/images/lodge-two.webp`, alt: 'Lodge interior' },
+                { src: `${base}/images/lodge-three.webp`, alt: 'Lodge terrace' },
               ]}
             />
           </div>

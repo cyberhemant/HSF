@@ -342,7 +342,7 @@ export class DatePicker {
     // belong to the dates.
     this.monthEl.hidden = years;
     this.yearsEl.hidden = !years;
-    this.legendEl.hidden = years;
+    if (this.legendEl) this.legendEl.hidden = years; // only rendered with legend="show"
     if (years) this.errorEl.hidden = true;
     if (hadFocus) {
       if (years) this.focusYear(this.yearFocus, { scroll: false });
