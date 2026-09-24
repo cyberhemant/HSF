@@ -17,6 +17,7 @@ import Base from '../../layouts/Base.astro';
 import Button from '../../components/Button.astro';
 import Autocomplete from '../../components/Autocomplete.astro';
 import DateTimeSlotPicker from '../../components/DateTimeSlotPicker.astro';
+import DatePicker from '../../components/DatePicker.astro';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
@@ -347,6 +348,103 @@ const dtspTestAvailability = [0, 1, 2].map((i) => ({ date: dtspIsoOffset(i), sta
       </div>
       <div class="offcanvas-body">
         <DateTimeSlotPicker id="mt-dtsp-2" name="slot-2" presentation="inline" availability={dtspTestAvailability} />
+      </div>
+    </div>
+
+    <h2 id="date-picker" class="h4 mt-6">Date Picker — anchored panel</h2>
+    <p class="text-ink-soft small mb-4">
+      Per the "Container context" rule: the panel is <code>position: fixed</code>, placed against the
+      visual viewport and left <em>inside</em> the modal's DOM (portalling to <code>&lt;body&gt;</code> would
+      fall outside Bootstrap's focus trap). Checks here: the panel isn't clipped by
+      <code>.modal-body</code>/<code>.modal-content</code>/<code>.offcanvas-body</code>, sits above their
+      content, flips above when the field is near the bottom, repositions when the body scrolls, Esc
+      closes only the picker (a second Esc closes the container), and a tap on the backdrop closes only
+      the picker. Automated coverage: <code>npm run test:e2e</code> (see <code>docs/date-picker-test-plan.md</code>).
+    </p>
+
+    <div class="row g-4">
+      <div class="col-12 col-lg-4">
+        <div class="p-3 border rounded-3 bg-white h-100 d-flex flex-column">
+          <h3 class="h6">C1 · Plain modal</h3>
+          <p class="small text-ink-soft">Field near the top, a text input beside it. Focusing the input while the panel is open closes the panel and must not steal focus back.</p>
+          <Button type="button" variant="secondary" class="btn-sm mt-auto" data-bs-toggle="modal" data-bs-target="#mt-dp-plain">Open modal</Button>
+        </div>
+      </div>
+      <div class="col-12 col-lg-4">
+        <div class="p-3 border rounded-3 bg-white h-100 d-flex flex-column">
+          <h3 class="h6">C2 · Scrollable modal</h3>
+          <p class="small text-ink-soft"><code>.modal-dialog-scrollable</code> — <code>.modal-content</code> is <code>overflow: hidden</code>, <code>.modal-body</code> scrolls. Field is below the fold; the panel must follow it as the body scrolls.</p>
+          <Button type="button" variant="secondary" class="btn-sm mt-auto" data-bs-toggle="modal" data-bs-target="#mt-dp-scrollable">Open modal</Button>
+        </div>
+      </div>
+      <div class="col-12 col-lg-4">
+        <div class="p-3 border rounded-3 bg-white h-100 d-flex flex-column">
+          <h3 class="h6">C3 · Offcanvas</h3>
+          <p class="small text-ink-soft">End offcanvas, <code>.offcanvas-body</code> scrolls. Same checks; <code>hide.bs.offcanvas</code> closes the picker.</p>
+          <Button type="button" variant="secondary" class="btn-sm mt-auto" data-bs-toggle="offcanvas" data-bs-target="#mt-dp-offcanvas" aria-controls="mt-dp-offcanvas">Open offcanvas</Button>
+        </div>
+      </div>
+    </div>
+
+    <div class="p-3 border rounded-3 bg-white mt-4" id="mt-dp-page">
+      <h3 class="h6">C4 · Two pickers on the page</h3>
+      <p class="small text-ink-soft">Opening one closes the other. Scroll so a field sits at the bottom of the screen to check the flip above, and under the fixed site header to check it stays clear.</p>
+      <div class="row g-3">
+        <div class="col-md-6"><DatePicker id="mt-dp-page-a" label="Picker A" name="page-a" /></div>
+        <div class="col-md-6"><DatePicker id="mt-dp-page-b" label="Picker B" name="page-b" /></div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="mt-dp-plain" tabindex="-1" aria-labelledby="mt-dp-plain-label" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 class="modal-title h5" id="mt-dp-plain-label">C1 · Date — plain modal</h3>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <label class="form-label" for="mt-dp-text">Notes (text input)</label>
+            <input type="text" class="form-control mb-3" id="mt-dp-text" />
+            <DatePicker id="mt-dp-1" label="Arrival date" name="dp-1" />
+          </div>
+          <div class="modal-footer">
+            <Button variant="secondary" class="btn-sm" data-bs-dismiss="modal">Close</Button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="mt-dp-scrollable" tabindex="-1" aria-labelledby="mt-dp-scrollable-label" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 class="modal-title h5" id="mt-dp-scrollable-label">C2 · Date — scrollable modal</h3>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p class="text-ink-soft">Scroll down inside this modal to reach the field, then open it.</p>
+            {filler.map((i) => (
+              <p class="text-ink-soft">Filler paragraph {i + 1} of {filler.length} — pushes the field below the fold.</p>
+            ))}
+            <DatePicker id="mt-dp-2" label="Arrival date" name="dp-2" />
+            {filler.slice(0, 6).map((i) => (
+              <p class="text-ink-soft">Trailing paragraph {i + 1} — lets the body keep scrolling with the panel open.</p>
+            ))}
+          </div>
+          <div class="modal-footer">
+            <Button variant="secondary" class="btn-sm" data-bs-dismiss="modal">Close</Button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="mt-dp-offcanvas" aria-labelledby="mt-dp-offcanvas-label">
+      <div class="offcanvas-header">
+        <h3 class="offcanvas-title h5" id="mt-dp-offcanvas-label">C3 · Choose a date</h3>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+      </div>
+      <div class="offcanvas-body">
+        <DatePicker id="mt-dp-3" label="Arrival date" name="dp-3" />
       </div>
     </div>
   </div>

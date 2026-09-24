@@ -1,0 +1,162 @@
+---
+// §4 Date Picker — one calendar date, availability-aware. The visible field is
+// a <button> (not an input) that opens an anchored, non-modal dropdown panel
+// with a single month grid; a hidden input carries the value as a plain
+// 'YYYY-MM-DD' string ('' when empty). One presentation on every screen size:
+// no full-screen sheet, no inert background, no scroll lock (the panel is
+// position:fixed and placed by scripts/date-picker.js against the visual
+// viewport — see the design-system page's DatePicker entry and the Component
+// Testing page for the modal/offcanvas scenarios).
+//
+// This file renders the static shell only — the month grid, skeleton and
+// error area are filled by scripts/date-picker.js, same division of labour as
+// Autocomplete.astro/autocomplete.js and DateTimeSlotPicker.astro. Callbacks
+// can't be props on a build-time component, so every onX is a bubbling
+// `dp:x` DOM event (change / open / close / invalid) and the function-shaped
+// inputs are methods: getDatePicker(el).setSource(fn) / .setRules({...}).
+//
+// Responsive behaviour: does not change at `md`. The panel is
+// min(22rem, 100vw - 2rem) wide everywhere; only its placement (above/below,
+// shrink-with-scroll) reacts to the viewport.
+//
+// Status: experimental (one use, the design-system page).
+import Icon from './Icon.astro';
+import IconButton from './IconButton.astro';
+import Button from './Button.astro';
+import { WEEKDAY_NAMES } from '../scripts/date-only.js';
+
+export interface Props {
+  label?: string;
+  ariaLabel?: string;
+  id?: string;
+  name?: string;
+  placeholder?: string;
+  help?: string;
+  error?: string;
+  value?: string | null;
+  defaultValue?: string | null;
+  disabled?: boolean;
+  minDate?: string;
+  maxDate?: string;
+  blackoutDates?: string[];
+  class?: string;
+}
+
+const {
+  label,
+  ariaLabel,
+  id = `drp-${Math.random().toString(36).slice(2, 9)}`,
+  name,
+  placeholder = 'Select a date',
+  help,
+  error,
+  value = null,
+  defaultValue = null,
+  disabled = false,
+  minDate,
+  maxDate,
+  blackoutDates = [],
+  class: extraClass = '',
+} = Astro.props;
+
+const fieldId = `${id}-field`;
+const labelId = `${id}-label`;
+const valueId = `${id}-value`;
+const helpId = help ? `${id}-help` : undefined;
+const feedbackId = `${id}-feedback`;
+const panelId = `${id}-panel`;
+const monthId = `${id}-month`;
+
+// Initial description = help, plus the feedback when the picker mounts
+// invalid. The script keeps this in sync afterwards (§9).
+const describedBy = [helpId, error ? feedbackId : undefined].filter(Boolean).join(' ') || undefined;
+
+const json = (data: unknown) => JSON.stringify(data).replace(/</g, '\\u003c');
+const clientConfig = { value, defaultValue, minDate, maxDate, blackoutDates, disabled, error, placeholder, ariaLabel, hasLabel: Boolean(label) };
+---
+
+<div
+  class={['dp', disabled ? 'is-disabled' : '', error ? 'is-invalid' : '', extraClass].filter(Boolean).join(' ')}
+  id={id}
+  data-dp
+  data-config={json(clientConfig)}
+>
+  {label && <label class="form-label" id={labelId} for={fieldId}>{label}</label>}
+
+  <button
+    type="button"
+    id={fieldId}
+    class={['dp__field form-control d-flex align-items-center justify-content-between text-start', error ? 'is-invalid' : ''].filter(Boolean).join(' ')}
+    aria-haspopup="dialog"
+    aria-controls={panelId}
+    aria-labelledby={label ? `${labelId} ${valueId}` : undefined}
+    aria-label={label ? undefined : (ariaLabel ?? placeholder)}
+    aria-describedby={describedBy}
+    aria-invalid={error ? 'true' : undefined}
+    disabled={disabled}
+    data-dp-field
+  >
+    <span class="dp__value text-truncate" id={valueId} data-dp-value>{placeholder}</span>
+    <Icon name="calendar_month" class="dp__icon flex-shrink-0" />
+  </button>
+  <div class="invalid-feedback" id={feedbackId} data-dp-feedback>{error}</div>
+  {help && <div class="form-text" id={helpId}>{help}</div>}
+
+  <div class="dp__panel" id={panelId} role="dialog" aria-label={label ?? 'Choose date'} data-dp-panel hidden>
+    <div class="dp__header">
+      <div class="dp__nav">
+        <IconButton icon="chevron_left" label="Previous month" variant="plain" class="dp__nav-btn" data-dp-prev />
+        <h2 class="dp__month-title" id={monthId} data-dp-title></h2>
+        <IconButton icon="chevron_right" label="Next month" variant="plain" class="dp__nav-btn" data-dp-next />
+      </div>
+      <!-- §5 Load error: inline, never a toast. Lives in the sticky header so it
+           stays reachable when the panel itself scrolls (§10). -->
+      <div class="dp__error" role="alert" data-dp-error hidden>
+        <Icon name="error" size={20} class="flex-shrink-0" />
+        <span class="dp__error-text">Couldn't load availability</span>
+        <Button variant="secondary" class="btn-sm ms-auto" data-dp-retry>Retry</Button>
+      </div>
+    </div>
+
+    <div class="dp__body">
+      <div class="dp__month" aria-busy="false" data-dp-month>
+        <div class="dp__grid" role="grid" aria-labelledby={monthId} data-dp-grid>
+          <div class="dp__row" role="row">
+            {WEEKDAY_NAMES.map((day) => (
+              <div class="dp__weekday" role="columnheader">
+                <span class="visually-hidden">{day}</span>
+                <span aria-hidden="true">{day.slice(0, 2).toUpperCase()}</span>
+              </div>
+            ))}
+          </div>
+          <div class="dp__weeks" data-dp-weeks></div>
+        </div>
+        <div class="dp__skeleton placeholder-glow" aria-hidden="true" data-dp-skeleton hidden></div>
+      </div>
+
+      <!-- §4 A rejected (booked) tap: inline, role=alert, no event. -->
+      <div class="dp__message text-danger small" role="alert" data-dp-message></div>
+    </div>
+
+    <ul class="dp__legend list-unstyled small" aria-label="Legend">
+      <li><span class="dp__key dp__key--available" aria-hidden="true">1</span> Available</li>
+      <li><span class="dp__key dp__key--selected" aria-hidden="true">1</span> Selected</li>
+      <li><span class="dp__key dp__key--booked" aria-hidden="true">1</span> Unavailable</li>
+    </ul>
+
+    <!-- Measures env(safe-area-inset-*) as computed padding; see §10 positioner. -->
+    <div class="dp__probe" aria-hidden="true" data-dp-probe></div>
+  </div>
+
+  <!-- §12 Three separate announcers: polite (selection / month changes), status
+       (availability loading). Rejection + load-error areas above are role=alert. -->
+  <div class="visually-hidden" aria-live="polite" aria-atomic="true" data-dp-live></div>
+  <div class="visually-hidden" role="status" aria-atomic="true" data-dp-status></div>
+  <input type="hidden" name={name} value="" data-dp-hidden />
+</div>
+
+<script>
+  import { initDatePickers } from '../scripts/date-picker.js';
+
+  initDatePickers();
+</script>

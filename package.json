@@ -11,7 +11,8 @@
     "test": "node --test",
     "lint:astro": "eslint .",
     "lint:css": "stylelint \"src/**/*.{css,scss}\"",
-    "lint": "npm run lint:astro && npm run lint:css"
+    "lint": "npm run lint:astro && npm run lint:css",
+    "test:e2e": "node --test --test-concurrency=1 e2e/date-picker.e2e.mjs"
   },
   "dependencies": {
     "@popperjs/core": "^2.11.8",
@@ -26,6 +27,7 @@
     "eslint": "^10.10.0",
     "eslint-plugin-astro": "^3.1.0",
     "globals": "^17.12.0",
+    "playwright-core": "^1.63.0",
     "sass": "^1.86.0",
     "stylelint": "^17.15.0",
     "stylelint-config-standard-scss": "^17.0.0"
