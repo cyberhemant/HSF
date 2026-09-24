@@ -39,6 +39,10 @@ export interface Props {
   minDate?: string;
   maxDate?: string;
   blackoutDates?: string[];
+  // 'auto': the month title opens a year grid whenever the window spans more
+  // than one calendar year (a one-year window has nothing to choose). 'off'
+  // keeps a plain heading.
+  yearSelection?: 'auto' | 'off';
   class?: string;
 }
 
@@ -56,6 +60,7 @@ const {
   minDate,
   maxDate,
   blackoutDates = [],
+  yearSelection = 'auto',
   class: extraClass = '',
 } = Astro.props;
 
@@ -66,13 +71,14 @@ const helpId = help ? `${id}-help` : undefined;
 const feedbackId = `${id}-feedback`;
 const panelId = `${id}-panel`;
 const monthId = `${id}-month`;
+const yearsId = `${id}-years`;
 
 // Initial description = help, plus the feedback when the picker mounts
 // invalid. The script keeps this in sync afterwards (§9).
 const describedBy = [helpId, error ? feedbackId : undefined].filter(Boolean).join(' ') || undefined;
 
 const json = (data: unknown) => JSON.stringify(data).replace(/</g, '\\u003c');
-const clientConfig = { value, defaultValue, minDate, maxDate, blackoutDates, disabled, error, placeholder, ariaLabel, hasLabel: Boolean(label) };
+const clientConfig = { value, defaultValue, minDate, maxDate, blackoutDates, disabled, error, placeholder, ariaLabel, yearSelection, hasLabel: Boolean(label) };
 ---
 
 <div
@@ -106,7 +112,16 @@ const clientConfig = { value, defaultValue, minDate, maxDate, blackoutDates, dis
     <div class="dp__header">
       <div class="dp__nav">
         <IconButton icon="chevron_left" label="Previous month" variant="plain" class="dp__nav-btn" data-dp-prev />
-        <h2 class="dp__month-title" id={monthId} data-dp-title></h2>
+        <!-- §6a The title doubles as the year-view toggle. When the window spans one
+             year (or yearSelection="off") the script disables it and strips its
+             button semantics, leaving a plain heading. -->
+        <h2 class="dp__month-title">
+          <button type="button" class="dp__title-btn" aria-expanded="false" aria-controls={yearsId} data-dp-year-toggle>
+            <span id={monthId} data-dp-title></span>
+            <span class="visually-hidden" data-dp-title-hint>, choose year</span>
+            <Icon name="expand_more" size={20} class="dp__title-icon" />
+          </button>
+        </h2>
         <IconButton icon="chevron_right" label="Next month" variant="plain" class="dp__nav-btn" data-dp-next />
       </div>
       <!-- §5 Load error: inline, never a toast. Lives in the sticky header so it
@@ -134,11 +149,15 @@ const clientConfig = { value, defaultValue, minDate, maxDate, blackoutDates, dis
         <div class="dp__skeleton placeholder-glow" aria-hidden="true" data-dp-skeleton hidden></div>
       </div>
 
+      <!-- §6a Year view: a 4-column list of the window's years. Same height as
+           the month body so swapping views doesn't move the panel. -->
+      <div class="dp__years" id={yearsId} role="listbox" aria-label="Year" data-dp-years hidden></div>
+
       <!-- §4 A rejected (booked) tap: inline, role=alert, no event. -->
       <div class="dp__message text-danger small" role="alert" data-dp-message></div>
     </div>
 
-    <ul class="dp__legend list-unstyled small" aria-label="Legend">
+    <ul class="dp__legend list-unstyled small" aria-label="Legend" data-dp-legend>
       <li><span class="dp__key dp__key--available" aria-hidden="true">1</span> Available</li>
       <li><span class="dp__key dp__key--selected" aria-hidden="true">1</span> Selected</li>
       <li><span class="dp__key dp__key--booked" aria-hidden="true">1</span> Unavailable</li>

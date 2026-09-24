@@ -5,7 +5,7 @@ the source as `§n`) and where it runs.
 
 | Layer | Command | Covers |
 | --- | --- | --- |
-| Unit | `npm test` | `date-only.test.js`: leap years (2028-02-29 valid, 2026-02-29 invalid, 2100 not leap), month/year rollover, last-day clamping (31 Jan + 1 month → 28/29 Feb), weekday, day-number round-trips, `todayISO()`. `date-picker-logic.test.js`: availability states, `getSingleDateState`/`validateDate`, wording (never "booked"), grid building, keyboard targets, window clamping, placement geometry (below / flip above / shrink / hysteresis / safe-area / header inset), tap-vs-drag detection. |
+| Unit | `npm test` | `date-only.test.js`: leap years (2028-02-29 valid, 2026-02-29 invalid, 2100 not leap), month/year rollover, last-day clamping (31 Jan + 1 month → 28/29 Feb), weekday, day-number round-trips, `todayISO()`. `date-picker-logic.test.js`: year list / month+day clamping / year-grid keys / Shift+Page, availability states, `getSingleDateState`/`validateDate`, wording (never "booked"), grid building, keyboard targets, window clamping, placement geometry (below / flip above / shrink / hysteresis / safe-area / header inset), tap-vs-drag detection. |
 | Browser (emulated) | `npm run test:e2e` | `e2e/date-picker.e2e.mjs` — starts its own `astro dev` on port 4599 (`E2E_PORT` to change) and drives Chromium via `playwright-core`. Uses the design-system page and the Component Testing page's DatePicker scenarios (C1–C4). |
 | Manual, real devices | below | Anything emulation cannot reproduce. |
 
@@ -32,6 +32,7 @@ landscape 568×320 / 667×375, all `isMobile` + `hasTouch`.
 | Tab-out | Pixel | closes, focus not restored to the field |
 | Multiple instances | desktop | opening B closes A; no duplicate ids on the page |
 | Disable while open | desktop | closes, focus not restored |
+| Year selection | desktop, 320 | title opens the window's years (selected = viewed year, one tab stop, nav/legend step aside); choosing keeps month/day, clamps into the window, returns to dates with focus on a day; Enter/arrows/End choose; **Esc steps back before closing**; Shift+PageDown moves a year; a one-year window leaves a plain heading; the 4-column grid fits 320 px |
 | Plain modal | 375 | not clipped, nothing paints above it, Esc closes only the picker, second Esc closes the modal |
 | Text input focused while open | desktop | picker closes, focus stays on the input |
 | Backdrop tap | desktop | closes only the picker; modal survives that tap, second tap dismisses it |

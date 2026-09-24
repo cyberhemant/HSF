@@ -1545,6 +1545,51 @@ $dp-pad: $spacer * .75;
   text-align: center;
 }
 
+// The title is the year-view toggle (§6a): a button that looks like the
+// heading it replaces, with a chevron that flips while the year grid is open.
+// With nothing to choose it is disabled and drops back to a plain heading.
+.dp__title-btn {
+  display: inline-flex;
+  gap: .125rem;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--dp-cell);
+  padding: 0 $spacer * .5;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  background-color: transparent;
+  border: 0;
+  border-radius: $border-radius;
+  transition: $transition-base;
+
+  &:hover:not(:disabled) {
+    background-color: $sand;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: $focus-ring-box-shadow;
+  }
+}
+
+.dp__title-icon {
+  color: $ochre;
+  transition: $transition-base;
+}
+
+.dp__title-btn[aria-expanded='true'] .dp__title-icon {
+  transform: rotate(180deg);
+}
+
+.dp__title-btn--static {
+  pointer-events: none;
+
+  .dp__title-icon {
+    display: none;
+  }
+}
+
 .dp__error {
   display: flex;
   gap: $spacer * .5;
@@ -1675,6 +1720,52 @@ $dp-pad: $spacer * .75;
   opacity: .6;
 }
 
+// Year view — same height as the month body so switching views never moves
+// the panel; a long window scrolls inside it. Padding keeps the focus ring
+// from being clipped by the scroll container.
+.dp__years {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: $spacer * .25;
+  align-content: start;
+  height: calc(6 * var(--dp-cell) + var(--dp-weekday));
+  padding: $spacer * .25;
+  overflow-y: auto;
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+.dp__year {
+  min-height: var(--dp-cell);
+  padding: 0;
+  font: inherit;
+  color: $ink-soft;
+  cursor: pointer;
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-radius: $border-radius;
+  transition: $transition-base;
+
+  &:hover:not(.dp__year--selected) {
+    background-color: $sand;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: $focus-ring-box-shadow;
+  }
+}
+
+.dp__year--selected {
+  font-weight: $font-weight-bold;
+  color: $white;
+  background-color: $primary;
+  border-color: $primary;
+}
+
 .dp__message {
   margin-top: $spacer * .5;
 
@@ -1750,7 +1841,10 @@ $dp-pad: $spacer * .75;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .dp__day {
+  .dp__day,
+  .dp__year,
+  .dp__title-btn,
+  .dp__title-icon {
     transition: none;
   }
 

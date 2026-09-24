@@ -10,8 +10,9 @@
 
 import { addMonths, formatField, formatLong, formatMonthTitle, monthOf, shiftMonths } from './date-only.js';
 import {
-  buildMonthWeeks, canPageMonth, clampDate, computePlacement, dayLabel, getSingleDateState, isOutsideViewport,
-  isTap, monthInWindow, moveFocusDate, normalizeAvailability, normalizeValue, resolveRules, validateDate,
+  buildMonthWeeks, canPageMonth, canSelectYear, clampDate, computePlacement, dayLabel, getSingleDateState,
+  isOutsideViewport, isTap, monthInWindow, moveFocusDate, moveYear, normalizeAvailability, normalizeValue,
+  resolveRules, validateDate, windowYears, yearTargetDate,
 } from './date-picker-logic.js';
 
 const LABELS = {
@@ -64,6 +65,10 @@ export class DatePicker {
     this.statusEl = $('[data-dp-status]');
     this.hiddenInput = $('[data-dp-hidden]');
     this.headerEl = $('.dp__header');
+    this.yearToggle = $('[data-dp-year-toggle]');
+    this.titleHint = $('[data-dp-title-hint]');
+    this.yearsEl = $('[data-dp-years]');
+    this.legendEl = $('[data-dp-legend]');
     this.host = root.closest('.modal, .offcanvas'); // §10-D
 
     const cfg = JSON.parse(root.dataset.config || '{}');
@@ -76,6 +81,8 @@ export class DatePicker {
     this.focusDate = null;
     this.viewMonth = null;
     this.isOpen = false;
+    this.view = 'days'; // §6a 'days' | 'years'
+    this.yearFocus = null;
     this.disabled = Boolean(cfg.disabled);
     this.side = null; // §10 hysteresis: last chosen side of the field
 
@@ -122,12 +129,26 @@ export class DatePicker {
     });
     this.gridEl.addEventListener('keydown', (e) => this.onGridKeydown(e));
 
+    // §6a Year view
+    this.yearToggle.addEventListener('click', () => this.toggleYears());
+    this.yearsEl.addEventListener('click', (e) => {
+      const btn = e.target.closest('.dp__year');
+      if (btn) this.onYear(Number(btn.dataset.year));
+    });
+    this.yearsEl.addEventListener('keydown', (e) => this.onYearsKeydown(e));
+
     // §8 Esc closes only the picker and returns focus to the field.
     // stopPropagation keeps a host modal from also dismissing (§10-D).
     this.root.addEventListener('keydown', (e) => {
       if (e.key !== 'Escape' || !this.isOpen) return;
       e.preventDefault();
       e.stopPropagation();
+      // §6a In the year view Esc steps back to the dates first; a second Esc closes.
+      if (this.view === 'years') {
+        this.setView('days');
+        this.yearToggle.focus({ preventScroll: true });
+        return;
+      }
       this.close({ restoreFocus: true });
     });
   }
@@ -144,6 +165,7 @@ export class DatePicker {
     this.token += 1;
     this.isOpen = true;
     this.side = null;
+    this.view = 'days';
     this.draft = this.value;
     this.clearMessage();
 
@@ -178,6 +200,7 @@ export class DatePicker {
     for (const [month, entry] of this.cache) if (entry.status === 'loading') this.cache.delete(month);
 
     this.detachOpenListeners();
+    this.view = 'days';
     this.draft = this.value; // discard any uncommitted draft
     this.clearMessage();
     this.setStatus('');
@@ -307,16 +330,29 @@ export class DatePicker {
 
   render() {
     if (!this.isOpen) return;
-    const hadFocus = this.gridEl.contains(document.activeElement);
+    if (this.view === 'years' && !this.canPickYear()) this.view = 'days'; // rules changed under us
+    const years = this.view === 'years';
+    const hadFocus = (years ? this.yearsEl : this.gridEl).contains(document.activeElement);
     this.titleEl.textContent = formatMonthTitle(this.viewMonth);
     this.renderNav();
-    this.renderMonth();
-    if (hadFocus) this.focusDay(this.focusDate, { scroll: false });
+    this.renderTitle();
+    if (years) this.renderYears();
+    else this.renderMonth();
+    // §6a Only one view is visible; the legend and the month load-error area
+    // belong to the dates.
+    this.monthEl.hidden = years;
+    this.yearsEl.hidden = !years;
+    this.legendEl.hidden = years;
+    if (years) this.errorEl.hidden = true;
+    if (hadFocus) {
+      if (years) this.focusYear(this.yearFocus, { scroll: false });
+      else this.focusDay(this.focusDate, { scroll: false });
+    }
   }
 
   renderNav() {
     const set = (btn, delta) => {
-      const blocked = !canPageMonth(this.viewMonth, delta, this.rules);
+      const blocked = this.view === 'years' || !canPageMonth(this.viewMonth, delta, this.rules);
       btn.setAttribute('aria-disabled', String(blocked));
       btn.classList.toggle('disabled', blocked);
     };
@@ -432,13 +468,104 @@ export class DatePicker {
     this.announce(formatMonthTitle(this.viewMonth));
   }
 
+  // -- year selection (§6a) ---------------------------------------------------
+
+  canPickYear() {
+    return this.cfg.yearSelection !== 'off' && canSelectYear(this.rules);
+  }
+
+  // The title is the toggle. When there is nothing to choose it stays a plain
+  // heading: disabled and stripped of button semantics.
+  renderTitle() {
+    const selectable = this.canPickYear();
+    this.yearToggle.disabled = !selectable;
+    if (selectable) this.yearToggle.removeAttribute('role');
+    else this.yearToggle.setAttribute('role', 'presentation');
+    this.yearToggle.classList.toggle('dp__title-btn--static', !selectable);
+    this.yearToggle.setAttribute('aria-expanded', String(this.view === 'years'));
+    this.titleHint.hidden = !selectable;
+  }
+
+  toggleYears() {
+    if (!this.canPickYear()) return;
+    this.setView(this.view === 'years' ? 'days' : 'years');
+    if (this.view === 'years') this.focusYear(this.yearFocus);
+  }
+
+  setView(view) {
+    this.view = view;
+    this.clearMessage();
+    if (view === 'years') this.yearFocus = Number(this.viewMonth.slice(0, 4));
+    this.render();
+    this.schedulePosition(); // the two views differ in height (no legend in years)
+  }
+
+  renderYears() {
+    const years = windowYears(this.rules);
+    const shown = Number(this.viewMonth.slice(0, 4));
+    if (!years.includes(this.yearFocus)) this.yearFocus = years.includes(shown) ? shown : years[0];
+    const frag = document.createDocumentFragment();
+    for (const year of years) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = `dp__year${year === shown ? ' dp__year--selected' : ''}`;
+      btn.dataset.year = String(year);
+      btn.textContent = String(year);
+      btn.tabIndex = year === this.yearFocus ? 0 : -1; // roving tabindex, like the day grid
+      btn.setAttribute('role', 'option');
+      btn.setAttribute('aria-selected', String(year === shown));
+      frag.append(btn);
+    }
+    this.yearsEl.replaceChildren(frag);
+    // Centre the year being viewed when the list is longer than its box.
+    const current = this.yearsEl.querySelector('.dp__year--selected');
+    if (current) this.yearsEl.scrollTop = current.offsetTop - (this.yearsEl.clientHeight - current.offsetHeight) / 2;
+  }
+
+  focusYear(year, { scroll = true } = {}) {
+    const btn = this.yearsEl.querySelector(`[data-year="${year}"]`);
+    if (!btn) return;
+    btn.focus({ preventScroll: true });
+    if (!scroll) return;
+    const box = this.yearsEl.getBoundingClientRect();
+    const rect = btn.getBoundingClientRect();
+    if (rect.top < box.top) this.yearsEl.scrollTop -= box.top - rect.top;
+    else if (rect.bottom > box.bottom) this.yearsEl.scrollTop += rect.bottom - box.bottom;
+    this.scrollDayIntoPanel(btn); // and the panel itself, if it is the one scrolling
+  }
+
+  // Choosing a year keeps the month (and day, clamped) where the window
+  // allows, returns to the dates and announces the new month.
+  onYear(year) {
+    const base = `${this.viewMonth}-${(this.focusDate ?? `${this.viewMonth}-01`).slice(8)}`;
+    this.focusDate = yearTargetDate(base, year, this.rules);
+    this.viewMonth = monthOf(this.focusDate);
+    this.view = 'days';
+    this.clearMessage();
+    this.ensureMonth(this.viewMonth);
+    this.render();
+    this.announce(formatMonthTitle(this.viewMonth));
+    this.focusDay(this.focusDate);
+    this.schedulePosition();
+  }
+
+  onYearsKeydown(e) {
+    if (e.altKey || e.ctrlKey || e.metaKey) return;
+    const target = moveYear(this.yearFocus, e.key, windowYears(this.rules));
+    if (target === null) return;
+    e.preventDefault();
+    this.yearFocus = target;
+    this.yearsEl.querySelectorAll('.dp__year').forEach((btn) => { btn.tabIndex = Number(btn.dataset.year) === target ? 0 : -1; });
+    this.focusYear(target);
+  }
+
   // -- keyboard (§7) -----------------------------------------------------------
 
   onGridKeydown(e) {
     if (e.altKey || e.ctrlKey || e.metaKey) return;
     // Enter/Space select via the button's native click → onDay().
     const from = e.target.closest?.('.dp__day')?.dataset.date ?? this.focusDate;
-    const target = moveFocusDate(from, e.key, this.rules);
+    const target = moveFocusDate(from, e.key, this.rules, { shift: e.shiftKey });
     if (target === null) return;
     e.preventDefault();
     this.clearMessage();

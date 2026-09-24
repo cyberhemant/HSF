@@ -62,6 +62,7 @@ const dpPreset = dpAddDays(dpToday, 10);
 const dpBlackouts = [1, 2, 3].map((n) => dpAddDays(dpToday, n));
 const dpMin = dpToday;
 const dpMax = dpAddDays(dpToday, 14);
+const dpFarMax = dpAddDays(dpToday, 365 * 4);
 
 // ---- Date & Time Slot Picker demo data -------------------------------
 // A fake availability source covering the default 30-day window — one
@@ -864,6 +865,10 @@ const experiences = [
               <h3 class="h6">4 · min / max window</h3>
               <DatePicker id="ds-dp-window" label="Workshop date" minDate={dpMin} maxDate={dpMax} placeholder="Pick a date this fortnight" help="minDate and maxDate are themselves selectable." />
             </div>
+            <div class="col-md-6">
+              <h3 class="h6">5 · Year selection (5-year window)</h3>
+              <DatePicker id="ds-dp-years" label="Event date" name="event" maxDate={dpFarMax} help="Click the month title to jump between years." />
+            </div>
           </div>
 
           <h3 class="h5 mt-5">States</h3>
@@ -926,6 +931,7 @@ const experiences = [
                 <tr><td><code>value</code> · <code>defaultValue</code></td><td><code>null</code></td><td><code>YYYY-MM-DD</code>; anything that isn't a real calendar date (e.g. <code>2026-02-30</code>) silently becomes empty.</td></tr>
                 <tr><td><code>disabled</code></td><td><code>false</code></td><td></td></tr>
                 <tr><td><code>minDate</code> · <code>maxDate</code></td><td>today · today + 365 days</td><td>Both are themselves selectable. Past dates are never selectable, whatever <code>minDate</code> says.</td></tr>
+                <tr><td><code>yearSelection</code></td><td><code>auto</code></td><td><code>auto | off</code>. <code>auto</code>: the month title opens a year grid whenever the window spans more than one calendar year (a one-year window has nothing to choose, so the title stays a plain heading). <code>off</code> always keeps the plain heading.</td></tr>
                 <tr><td><code>blackoutDates</code></td><td><code>[]</code></td><td>Rendered disabled (faded, not struck through).</td></tr>
               </tbody>
             </table>
@@ -957,6 +963,7 @@ const experiences = [
           <ul class="text-ink-soft small">
             <li><strong>Wording.</strong> An unavailable date is “unavailable” everywhere — messages, day labels (“Sunday, 18 October 2026, today, unavailable”), codes' reasons. The word “booked” is internal only.</li>
             <li><strong>Tapping a day.</strong> Disabled/unknown: nothing happens (focus stays, day stays <code>aria-disabled</code>). Booked: inline “That date is unavailable.” (<code>role="alert"</code>), still no event. Available: announce, commit, emit <code>change</code>, close.</li>
+            <li><strong>Year selection.</strong> The month title is a button (<code>aria-expanded</code>, chevron flips) that swaps the grid for a 4-column list of the years the window touches — same height as the month, so the panel doesn't jump; the nav arrows and legend step aside. Choosing a year keeps the month and day where the window allows (29 Feb → 28 Feb; a month before the window's first month lands on that first month), returns to the dates, announces the new month and focuses the day. Keys in the list: ←/→ ±1 · ↑/↓ ±4 · Home/End first/last · PageUp/PageDown ±12 · Enter/Space choose · <strong>Esc steps back to the dates</strong> (a second Esc closes the picker). In the day grid, Shift+PageUp/PageDown also move a year.</li>
             <li><strong>Keys.</strong> ←/→ ±1 day · ↑/↓ ±7 · Home/End Monday/Sunday of the week · PageUp/PageDown ±1 month (day clamped) · Enter/Space select · Esc closes and returns focus to the field. Movement clamps to the window and switches month as needed.</li>
             <li><strong>Dismissal.</strong> Outside <em>tap</em> (pointerdown + pointerup on the same target, &lt;10px travel) closes without stealing focus; a scroll or drag never closes it. Tab-out and focus landing in another control close without restoring focus; Esc and selecting restore it.</li>
             <li><strong>Placement.</strong> Prefers below; flips above when below doesn't fit and above is larger (only when the current side stops fitting — no jitter); if neither fits it takes the larger side and scrolls internally under a sticky month header. Re-measured on resize, rotation, <code>visualViewport</code> resize/scroll and ancestor scroll without touching draft, focus or month. Clamped by max(1rem, safe-area inset); a fixed page header is treated as unavailable space.</li>

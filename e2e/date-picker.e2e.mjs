@@ -386,6 +386,123 @@ describe('dismissal', () => {
   });
 });
 
+describe('year selection', () => {
+  const setup = async (page, rules) => {
+    await page.locator('#ds-dp-years').scrollIntoViewIfNeeded();
+    await page.evaluate(async (r) => {
+      const { getDatePicker } = await import('/src/scripts/date-picker.js');
+      getDatePicker(document.getElementById('ds-dp-years')).setRules(r);
+    }, rules);
+  };
+  const wide = { today: '2026-03-10', minDate: '2026-03-10', maxDate: '2030-12-31' };
+  const month = (page) => page.textContent('#ds-dp-years [data-dp-title]');
+
+  it('title opens a year grid of the window; choosing a year keeps the month and returns to the dates', async () => {
+    const page = await pageOf(DEVICES.desktop, PAGES.designSystem);
+    await cleanly(page, async () => {
+      await setup(page, wide);
+      await openPicker(page, 'ds-dp-years');
+      const toggle = page.locator('#ds-dp-years [data-dp-year-toggle]');
+      assert.equal(await toggle.isEnabled(), true);
+      assert.equal(await toggle.getAttribute('aria-expanded'), 'false');
+      assert.equal(await month(page), 'March 2026');
+      await toggle.click();
+      assert.equal(await toggle.getAttribute('aria-expanded'), 'true');
+      const years = await page.locator('#ds-dp-years .dp__year').allTextContents();
+      assert.deepEqual(years, ['2026', '2027', '2028', '2029', '2030']);
+      assert.equal(await page.locator('#ds-dp-years .dp__year--selected').textContent(), '2026');
+      assert.equal(await page.locator('#ds-dp-years [data-dp-month]').isVisible(), false);
+      assert.equal(await page.locator('#ds-dp-years [data-dp-legend]').isVisible(), false);
+      assert.equal(await page.getAttribute('#ds-dp-years [data-dp-prev]', 'aria-disabled'), 'true');
+      assert.equal(await page.locator('#ds-dp-years .dp__year[tabindex="0"]').count(), 1);
+      await page.locator('#ds-dp-years .dp__year', { hasText: '2028' }).click();
+      assert.equal(await month(page), 'March 2028');
+      assert.equal(await toggle.getAttribute('aria-expanded'), 'false');
+      assert.equal(await isOpen(page, 'ds-dp-years'), true);
+      assert.equal(await page.locator('#ds-dp-years [data-dp-month]').isVisible(), true);
+      assert.match(await page.evaluate(() => document.activeElement.className), /dp__day/);
+      // and it still selects a date normally
+      await page.locator('#ds-dp-years .dp__day--available').first().click();
+      assert.match(await page.inputValue('#ds-dp-years [data-dp-hidden]'), /^2028-03-\d\d$/);
+    });
+  });
+
+  it('keyboard: Enter opens, arrows move, Enter chooses; Esc steps back before closing', async () => {
+    const page = await pageOf(DEVICES.desktop, PAGES.designSystem);
+    await cleanly(page, async () => {
+      await setup(page, wide);
+      await openPicker(page, 'ds-dp-years');
+      await page.locator('#ds-dp-years [data-dp-year-toggle]').focus();
+      await page.keyboard.press('Enter');
+      const focusedYear = () => page.evaluate(() => document.activeElement.dataset.year);
+      assert.equal(await focusedYear(), '2026');
+      await page.keyboard.press('ArrowRight');
+      await page.keyboard.press('ArrowRight');
+      assert.equal(await focusedYear(), '2028');
+      await page.keyboard.press('End');
+      assert.equal(await focusedYear(), '2030');
+      await page.keyboard.press('Enter');
+      assert.equal(await month(page), 'March 2030');
+      // Esc from the year view returns to the dates, picker stays open
+      await page.locator('#ds-dp-years [data-dp-year-toggle]').focus();
+      await page.keyboard.press('Enter');
+      await page.keyboard.press('Escape');
+      assert.equal(await isOpen(page, 'ds-dp-years'), true);
+      assert.equal(await page.locator('#ds-dp-years [data-dp-month]').isVisible(), true);
+      assert.equal(await page.evaluate(() => document.activeElement.hasAttribute('data-dp-year-toggle')), true);
+      await page.keyboard.press('Escape');
+      assert.equal(await isOpen(page, 'ds-dp-years'), false);
+    });
+  });
+
+  it('choosing a year clamps the month into the window and the day into the month', async () => {
+    const page = await pageOf(DEVICES.desktop, PAGES.designSystem);
+    await cleanly(page, async () => {
+      await setup(page, { today: '2026-09-10', minDate: '2026-09-10', maxDate: '2029-03-20' });
+      await openPicker(page, 'ds-dp-years');
+      // jump to Jan 2029 via Shift+PageDown ×2 (clamped), then choose 2026: January < window start
+      await page.keyboard.press('Shift+PageDown');
+      await page.keyboard.press('Shift+PageDown');
+      assert.equal(await month(page), 'September 2028');
+      await page.keyboard.press('Shift+PageDown');
+      assert.equal(await month(page), 'March 2029'); // clamped at the window's last day
+      await page.locator('#ds-dp-years [data-dp-year-toggle]').click();
+      await page.locator('#ds-dp-years .dp__year', { hasText: '2026' }).click();
+      assert.equal(await month(page), 'September 2026'); // March is before the first month → first month
+    });
+  });
+
+  it('a window inside one year leaves the title as a plain heading; yearSelection is respected', async () => {
+    const page = await pageOf(DEVICES.desktop, PAGES.designSystem);
+    await cleanly(page, async () => {
+      await setup(page, { today: '2026-03-10', minDate: '2026-03-10', maxDate: '2026-11-30' });
+      await openPicker(page, 'ds-dp-years');
+      const toggle = page.locator('#ds-dp-years [data-dp-year-toggle]');
+      assert.equal(await toggle.isDisabled(), true);
+      assert.equal(await toggle.getAttribute('role'), 'presentation');
+      assert.equal(await page.locator('#ds-dp-years .dp__title-icon').isVisible(), false);
+      assert.equal(await page.locator('#ds-dp-years [data-dp-title-hint]').isVisible(), false);
+      // the grid is still labelled by the month title
+      assert.equal(await page.getAttribute('#ds-dp-years [data-dp-grid]', 'aria-labelledby'), 'ds-dp-years-month');
+    });
+  });
+
+  it('mobile 320: the year grid fits the panel and the viewport', async () => {
+    const page = await pageOf(DEVICES.iphoneSE320, PAGES.designSystem);
+    await cleanly(page, async () => {
+      await setup(page, wide);
+      await openPicker(page, 'ds-dp-years');
+      await page.locator('#ds-dp-years [data-dp-year-toggle]').click();
+      await page.waitForTimeout(150);
+      const box = await panelBox(page, 'ds-dp-years');
+      assert.ok(insideViewport(box, 1), JSON.stringify(box));
+      const cell = await page.locator('#ds-dp-years .dp__year').first().boundingBox();
+      assert.ok(cell.width >= 44 && cell.height >= 36, JSON.stringify(cell));
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth), false);
+    });
+  });
+});
+
 describe('inside a Bootstrap modal / offcanvas', () => {
   const openModal = async (page, id) => {
     await page.click(`[data-bs-target="#${id}"]`);

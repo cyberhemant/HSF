@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   normalizeValue, resolveRules, normalizeAvailability, getSingleDateState, validateDate, dayLabel,
   buildMonthWeeks, moveFocusDate, canPageMonth, computePlacement, isOutsideViewport, isTap, monthInWindow,
+  windowYears, canSelectYear, yearTargetMonth, yearTargetDate, moveYear,
 } from './date-picker-logic.js';
 
 const rules = resolveRules({ today: '2026-10-12', minDate: '2026-10-12', maxDate: '2026-12-31', blackoutDates: ['2026-10-20'] });
@@ -92,6 +93,52 @@ test('moveFocusDate: arrows, week edges, month paging, clamping', () => {
   assert.equal(moveFocusDate('2026-12-31', 'ArrowRight', rules), '2026-12-31'); // clamps at max
   assert.equal(moveFocusDate('2026-12-31', 'PageDown', rules), '2026-12-31');
   assert.equal(moveFocusDate('2026-10-14', 'a', rules), null);
+});
+
+test('Shift+PageUp/PageDown move a year, clamped and day-clamped', () => {
+  const wide = resolveRules({ today: '2026-10-12', minDate: '2026-10-12', maxDate: '2030-12-31' });
+  assert.equal(moveFocusDate('2027-03-15', 'PageDown', wide, { shift: true }), '2028-03-15');
+  assert.equal(moveFocusDate('2027-03-15', 'PageUp', wide, { shift: true }), '2026-10-12'); // clamped to min
+  assert.equal(moveFocusDate('2028-02-29', 'PageDown', wide, { shift: true }), '2029-02-28');
+  assert.equal(moveFocusDate('2030-06-01', 'PageDown', wide, { shift: true }), '2030-12-31'); // clamped to max
+});
+
+test('windowYears / canSelectYear follow the window', () => {
+  assert.deepEqual(windowYears(rules), [2026]);
+  assert.equal(canSelectYear(rules), false);
+  const wide = resolveRules({ today: '2026-10-12', maxDate: '2029-01-01' });
+  assert.deepEqual(windowYears(wide), [2026, 2027, 2028, 2029]);
+  assert.equal(canSelectYear(wide), true);
+  assert.equal(canSelectYear(resolveRules({ today: '2026-10-12' })), true); // default window spans two years
+});
+
+test('yearTargetMonth keeps the month, pulled inside the window', () => {
+  const wide = resolveRules({ today: '2026-10-12', maxDate: '2029-03-20' });
+  assert.equal(yearTargetMonth('2027-05', 2028, wide), '2028-05');
+  assert.equal(yearTargetMonth('2027-05', 2026, wide), '2026-10'); // before the window's first month
+  assert.equal(yearTargetMonth('2027-11', 2029, wide), '2029-03'); // after its last month
+  assert.equal(yearTargetMonth('2026-10', 2026, wide), '2026-10');
+});
+
+test('yearTargetDate clamps the day (leap day, window edges)', () => {
+  const wide = resolveRules({ today: '2026-10-12', maxDate: '2030-12-31' });
+  assert.equal(yearTargetDate('2028-02-29', 2029, wide), '2029-02-28');
+  assert.equal(yearTargetDate('2028-02-29', 2032, resolveRules({ today: '2026-10-12', maxDate: '2033-01-01' })), '2032-02-29');
+  assert.equal(yearTargetDate('2027-10-05', 2026, wide), '2026-10-12'); // clamped to min date
+});
+
+test('moveYear: 4-column grid, clamped to the list', () => {
+  const years = [2026, 2027, 2028, 2029, 2030, 2031];
+  assert.equal(moveYear(2027, 'ArrowRight', years), 2028);
+  assert.equal(moveYear(2027, 'ArrowLeft', years), 2026);
+  assert.equal(moveYear(2026, 'ArrowLeft', years), 2026);
+  assert.equal(moveYear(2027, 'ArrowDown', years), 2031);
+  assert.equal(moveYear(2030, 'ArrowDown', years), 2031);
+  assert.equal(moveYear(2030, 'ArrowUp', years), 2026);
+  assert.equal(moveYear(2028, 'Home', years), 2026);
+  assert.equal(moveYear(2028, 'End', years), 2031);
+  assert.equal(moveYear(2028, 'PageDown', years), 2031);
+  assert.equal(moveYear(2028, 'x', years), null);
 });
 
 test('month paging limits follow the window', () => {

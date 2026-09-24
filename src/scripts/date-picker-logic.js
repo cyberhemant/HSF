@@ -8,6 +8,8 @@ import {
   shiftMonths, todayISO, weekdayIndex,
 } from './date-only.js';
 
+const pad2 = (n) => String(n).padStart(2, '0');
+
 // §3 Availability states as the source reports them; anything else is `unknown`.
 export const SOURCE_STATES = ['available', 'booked', 'disabled', 'unknown'];
 
@@ -99,7 +101,8 @@ export const clampDate = (iso, { min, max }) => (iso < min ? min : iso > max ? m
 
 // §7 Where focus goes for a key, clamped to the window. Returns null for
 // keys that don't move focus. Home/End are Monday/Sunday of the week.
-export const moveFocusDate = (from, key, rules) => {
+// Shift+PageUp/PageDown move a year (the APG date-grid convention).
+export const moveFocusDate = (from, key, rules, { shift = false } = {}) => {
   let target;
   switch (key) {
     case 'ArrowLeft': target = addDays(from, -1); break;
@@ -108,8 +111,8 @@ export const moveFocusDate = (from, key, rules) => {
     case 'ArrowDown': target = addDays(from, 7); break;
     case 'Home': target = addDays(from, -weekdayIndex(from)); break;
     case 'End': target = addDays(from, 6 - weekdayIndex(from)); break;
-    case 'PageUp': target = shiftMonths(from, -1); break;
-    case 'PageDown': target = shiftMonths(from, 1); break;
+    case 'PageUp': target = shiftMonths(from, shift ? -12 : -1); break;
+    case 'PageDown': target = shiftMonths(from, shift ? 12 : 1); break;
     default: return null;
   }
   return clampDate(target, rules);
@@ -117,6 +120,48 @@ export const moveFocusDate = (from, key, rules) => {
 
 // §6 Nav limits: the visible month can't leave the window's months.
 export const canPageMonth = (month, delta, rules) => monthInWindow(addMonths(month, delta), rules);
+
+// §6a Year selection. The years on offer are exactly those the window touches.
+export const windowYears = ({ min, max }) => {
+  const years = [];
+  for (let y = Number(min.slice(0, 4)); y <= Number(max.slice(0, 4)); y += 1) years.push(y);
+  return years;
+};
+
+// A window inside one calendar year has nothing to choose between.
+export const canSelectYear = (rules) => windowYears(rules).length > 1;
+
+// The month shown after choosing `year` while viewing `month`: the same month
+// of that year, pulled back inside the window's months when it falls outside
+// (e.g. window starts in September — picking its first year from January
+// lands on September).
+export const yearTargetMonth = (month, year, rules) => {
+  const candidate = `${String(year).padStart(4, '0')}-${month.slice(5, 7)}`;
+  const first = monthOf(rules.min);
+  const last = monthOf(rules.max);
+  return candidate < first ? first : candidate > last ? last : candidate;
+};
+
+// The focus date that goes with yearTargetMonth: the same day-of-month,
+// clamped to the month's length (29 Feb → 28 Feb) and to the window.
+export const yearTargetDate = (from, year, rules) => {
+  const month = yearTargetMonth(monthOf(from), year, rules);
+  const day = Math.min(Number(from.slice(8)), daysInMonth(month));
+  return clampDate(`${month}-${pad2(day)}`, rules);
+};
+
+// Year-grid keys (4 columns): arrows ±1/±4, Home/End first/last, PageUp/Down
+// ±12; always a year from the list, null for other keys.
+export const YEAR_COLUMNS = 4;
+export const moveYear = (from, key, years) => {
+  const step = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -YEAR_COLUMNS, ArrowDown: YEAR_COLUMNS, PageUp: -12, PageDown: 12 }[key];
+  let target;
+  if (key === 'Home') target = years[0];
+  else if (key === 'End') target = years[years.length - 1];
+  else if (step !== undefined) target = from + step;
+  else return null;
+  return Math.min(Math.max(target, years[0]), years[years.length - 1]);
+};
 
 // §10 Positioning geometry. All rects/viewports are in layout-viewport
 // coordinates ({left, top, right, bottom}); the controller measures, this
