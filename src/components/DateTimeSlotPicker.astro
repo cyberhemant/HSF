@@ -17,7 +17,7 @@
 // Recorded prototype behaviour (both presentations) this markup and its
 // script implement exactly: trigger card with a bold primary line + a
 // lighter secondary line that swaps to a "{Day}, {Mon} {D} · {h:mm AM/PM}" /
-// "Click to modify selection" summary once a slot is applied; inline mode
+// "Click to edit" summary once a slot is applied; inline mode
 // expands in place via Collapse with the trigger's chevron rotating; modal
 // mode opens a centered dialog with Cancel (left) / Confirm (right) in
 // the footer. Neither mode has a "Clear" button in the recording, but
@@ -234,7 +234,7 @@ const clientConfig = {
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           {showHeader && (
-            <div class="modal-header">
+            <div class="modal-header border-bottom-0">
               <div>
                 <h2 class="modal-title fs-4" id={modalTitleId}>{label}</h2>
                 <p class="text-muted small mb-0">{modalSubtitle}</p>
@@ -243,7 +243,7 @@ const clientConfig = {
             </div>
           )}
           <div class="modal-body">
-            <div class="dtsp__eyebrow text-uppercase small text-muted fw-semibold mb-2" id={dateLabelId}>Select Date</div>
+            {/* <div class="dtsp__eyebrow text-uppercase small text-muted fw-semibold mb-2" id={dateLabelId}>Select Date</div> */}
             <div class="dtsp__date-row">
               <IconButton icon="chevron_left" label="Earlier dates" variant="plain" class="dtsp__date-nav" data-dtsp-prev />
               <div class="dtsp__date-strip" role="listbox" aria-labelledby={dateLabelId} data-dtsp-date-strip></div>

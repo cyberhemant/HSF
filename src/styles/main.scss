@@ -132,6 +132,13 @@ $input-border-radius: 0;
 $input-border-radius-sm: 0;
 $input-border-radius-lg: 0;
 $form-check-input-border-radius: 0;
+
+// Text inputs sit on the white surface token rather than Bootstrap's
+// default (the body background), so they read as fields on cream/sand
+// sections.
+$input-bg: $white;
+$form-select-bg: $white;
+$form-label-margin-bottom: 0;
 $nav-tabs-border-radius: 0;
 // Active tab's text takes the brand primary rather than Bootstrap's default
 // near-black emphasis color, echoing the underline-tabs treatment below.
@@ -1271,7 +1278,7 @@ $dtsp-item-min-height: 2.75rem; // 44px touch target, matches $ac-option-min-hei
   min-height: $dtsp-item-min-height;
   padding: .5rem .75rem;
   border: 1px solid transparent;
-  // border-radius: $border-radius-lg;
+  border-radius: $border-radius-lg;
   background-color: $sand;
   color: $ink-soft;
   transition: $transition-base;
@@ -1373,7 +1380,7 @@ $dtsp-item-min-height: 2.75rem; // 44px touch target, matches $ac-option-min-hei
 .dtsp__slot {
   min-height: $dtsp-item-min-height;
   border: 1px solid $hairline;
-  // border-radius: $border-radius-lg;
+  border-radius: $border-radius-lg;
   background-color: $white;
   color: $ink-soft;
   font-size: $btn-font-size;

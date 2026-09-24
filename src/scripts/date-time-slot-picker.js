@@ -74,7 +74,7 @@ const LABELS = {
   requiredModal: 'Please select a time slot to continue.',
   empty: 'No available times for this date. Please choose another date.',
   error: 'Unable to load available times.',
-  clickToModify: 'Click to modify selection',
+  clickToModify: 'Click to edit',
 };
 
 // ---------------------------------------------------------------------------
