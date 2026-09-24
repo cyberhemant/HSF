@@ -12,6 +12,8 @@ import ProductGallery from '../../components/ProductGallery.astro';
 import ArchCarousel from '../../components/ArchCarousel.astro';
 import Autocomplete from '../../components/Autocomplete.astro';
 import DateTimeSlotPicker from '../../components/DateTimeSlotPicker.astro';
+import DatePicker from '../../components/DatePicker.astro';
+import { addDays as dpAddDays, todayISO as dpTodayISO } from '../../scripts/date-only.js';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
@@ -28,6 +30,7 @@ const toc = [
   ['forms', 'Forms'],
   ['autocomplete', 'Autocomplete'],
   ['date-time-slot-picker', 'Date & Time Slot Picker'],
+  ['date-picker', 'Date Picker'],
   ['navs-tabs', 'Navs & Tabs'],
   ['navbar-offcanvas', 'Navbar & Offcanvas'],
   ['cards', 'Cards'],
@@ -50,6 +53,16 @@ const toc = [
   ['tables', 'Tables'],
   ['scrollspy', 'Scrollspy'],
 ];
+
+// ---- Date Picker demo data ---------------------------------------------
+// Dates are computed from the same Muscat-anchored todayISO() the component
+// uses, via date-only.js's integer day arithmetic (no Date objects).
+const dpToday = dpTodayISO();
+const dpPreset = dpAddDays(dpToday, 10);
+const dpBlackouts = [1, 2, 3].map((n) => dpAddDays(dpToday, n));
+const dpMin = dpToday;
+const dpMax = dpAddDays(dpToday, 14);
+const dpFarMax = dpAddDays(dpToday, 365 * 4);
 
 // ---- Date & Time Slot Picker demo data -------------------------------
 // A fake availability source covering the default 30-day window — one
@@ -815,6 +828,155 @@ const experiences = [
           </ul>
         </section>
 
+        <!-- ================= DATE PICKER ================= -->
+        <section id="date-picker" class="pb-6 mb-6 border-bottom">
+          <h2>Date Picker</h2>
+          <p class="text-ink-soft">
+            <code>DatePicker.astro</code> — one calendar date, availability-aware. The field is a
+            <code>&lt;button&gt;</code> that opens an anchored, <em>non-modal</em> dropdown panel with a single
+            Monday-first month grid; a hidden input carries the value as a plain <code>YYYY-MM-DD</code> string
+            (or <code>''</code>). One presentation on every screen size — no full-screen sheet, no inert
+            background, no scroll lock. Selecting a date commits immediately and closes the panel (no Apply).
+            Status: experimental (this page is its only use).
+          </p>
+          <p class="text-ink-soft small">
+            Dates are strings and all arithmetic is integer day numbers (<code>scripts/date-only.js</code>);
+            only <code>todayISO()</code> reads the clock, in <code>Asia/Muscat</code>, so a timezone can never
+            shift a selected date. The panel is <code>position: fixed</code> and placed against the
+            <em>visual</em> viewport, so it is never clipped by an overflow ancestor. The modal and offcanvas
+            scenarios are on the
+            <a href={`${base}/design-system/component-testing/`}>Component Testing</a> QA page.
+          </p>
+
+          <div class="row g-4 mt-1">
+            <div class="col-md-6">
+              <h3 class="h6">1 · Default</h3>
+              <DatePicker id="ds-dp-basic" label="Arrival date" name="arrival" help="Any date from today for the next 365 days." />
+            </div>
+            <div class="col-md-6">
+              <h3 class="h6">2 · Preset value + blackout dates</h3>
+              <DatePicker id="ds-dp-preset" label="Visit date" name="visit" value={dpPreset} blackoutDates={dpBlackouts} help="The next three days are blacked out (faded, not struck through)." />
+            </div>
+            <div class="col-md-6">
+              <h3 class="h6">3 · Availability source (async)</h3>
+              <DatePicker id="ds-dp-source" label="Lodge date" name="lodge" help="Loaded per month with a ~1s delay. Every 5th day is unavailable; some days are missing from the response (unknown). Month +2 fails once — use Retry." />
+            </div>
+            <div class="col-md-6">
+              <h3 class="h6">4 · min / max window</h3>
+              <DatePicker id="ds-dp-window" label="Workshop date" minDate={dpMin} maxDate={dpMax} placeholder="Pick a date this fortnight" help="minDate and maxDate are themselves selectable." />
+            </div>
+            <div class="col-md-6">
+              <h3 class="h6">5 · Year selection (5-year window)</h3>
+              <DatePicker id="ds-dp-years" label="Event date" name="event" maxDate={dpFarMax} help="Click the month title to jump between years." />
+            </div>
+            <div class="col-md-6">
+              <h3 class="h6">6 · Legend (legend="show")</h3>
+              <DatePicker id="ds-dp-legend" label="Stay date" name="stay" legend="show" help="The key is hidden by default." />
+            </div>
+          </div>
+
+          <h3 class="h5 mt-5">States</h3>
+          <div class="row g-4 mt-0">
+            <div class="col-md-6">
+              <h4 class="h6 text-ink-soft">Invalid (initial error)</h4>
+              <DatePicker id="ds-dp-error" label="Booking date" error="Please choose a booking date." help="Help text stays in the description." />
+            </div>
+            <div class="col-md-6">
+              <h4 class="h6 text-ink-soft">Disabled</h4>
+              <DatePicker id="ds-dp-disabled" label="Booking date" disabled />
+            </div>
+            <div class="col-md-6">
+              <h4 class="h6 text-ink-soft">No visible label (aria-label)</h4>
+              <DatePicker id="ds-dp-aria" ariaLabel="Departure date" />
+            </div>
+            <div class="col-md-6">
+              <h4 class="h6 text-ink-soft">Programmatic</h4>
+              <div class="d-flex flex-wrap gap-2">
+                <Button variant="secondary" class="btn-sm" id="ds-dp-set">setValue(+7 days)</Button>
+                <Button variant="secondary" class="btn-sm" id="ds-dp-clear">clear()</Button>
+                <Button variant="secondary" class="btn-sm" id="ds-dp-disable">Toggle disabled</Button>
+              </div>
+              <p class="form-text mb-0">Drives the “Default” picker above. <code>setValue()</code> is silent; <code>clear()</code> emits <code>change</code> only if there was a value.</p>
+            </div>
+          </div>
+          <p class="small text-ink-soft mt-4 mb-0">
+            Event log: <span id="ds-dp-log">nothing yet</span>
+          </p>
+
+          <h3 class="h5 mt-5">State audit</h3>
+          <div class="table-responsive">
+            <table class="table table-sm small align-middle">
+              <thead><tr><th>State</th><th>Field</th><th>Day</th><th>Note</th></tr></thead>
+              <tbody>
+                <tr><td>default</td><td>yes</td><td>yes (available)</td><td></td></tr>
+                <tr><td>hover</td><td>—</td><td>yes</td><td>Field uses Bootstrap's own; unavailable days never highlight.</td></tr>
+                <tr><td>focus</td><td>yes</td><td>yes</td><td>Project focus ring; roving tab stop (one <code>tabindex="0"</code>).</td></tr>
+                <tr><td>active / selected</td><td>—</td><td>yes</td><td>Fill + bold, plus <code>aria-selected</code> on the cell.</td></tr>
+                <tr><td>disabled</td><td>yes</td><td>yes</td><td><em>Day:</em> <code>aria-disabled</code> (still navigable), faded, not-allowed. Blackout, past and out-of-window days.</td></tr>
+                <tr><td>loading</td><td>no</td><td>month</td><td>Field is never busy — only the visible month (skeleton, <code>aria-busy</code>).</td></tr>
+                <tr><td>skeleton</td><td>no</td><td>yes</td><td>Correct week count, six weeks of height reserved, no spinner (known layout).</td></tr>
+                <tr><td>empty</td><td>n.a.</td><td>n.a.</td><td>A month always has days; a missing availability entry is <code>unknown</code>, not empty.</td></tr>
+                <tr><td>error</td><td>yes (invalid)</td><td>month</td><td>Field: Bootstrap invalid state. Month: inline “Couldn't load availability” + Retry (no toast).</td></tr>
+                <tr><td>success</td><td>no</td><td>no</td><td>Selecting closes the panel; no separate success treatment.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3 class="h5 mt-4">Props</h3>
+          <div class="table-responsive">
+            <table class="table table-sm small align-middle">
+              <thead><tr><th>Prop</th><th>Default</th><th>Notes</th></tr></thead>
+              <tbody>
+                <tr><td><code>label</code> · <code>ariaLabel</code></td><td>—</td><td>With a label the field is named <code>aria-labelledby="label value"</code>; without, <code>ariaLabel</code>, then <code>placeholder</code>.</td></tr>
+                <tr><td><code>id</code> · <code>name</code></td><td>random <code>drp-…</code> · —</td><td><code>name</code> goes on the hidden input. Every generated id is derived from <code>id</code>, so instances never collide.</td></tr>
+                <tr><td><code>placeholder</code></td><td>“Select a date”</td><td></td></tr>
+                <tr><td><code>help</code></td><td>—</td><td>Renders <code>.form-text</code>, included in the field's description. Omitted entirely when absent.</td></tr>
+                <tr><td><code>error</code></td><td>—</td><td>Mounts invalid (<code>.is-invalid</code>, <code>aria-invalid</code>, Bootstrap's <code>.invalid-feedback</code>) and fires <code>dp:invalid</code> once. Bootstrap's validation icon is suppressed — the calendar icon sits there.</td></tr>
+                <tr><td><code>value</code> · <code>defaultValue</code></td><td><code>null</code></td><td><code>YYYY-MM-DD</code>; anything that isn't a real calendar date (e.g. <code>2026-02-30</code>) silently becomes empty.</td></tr>
+                <tr><td><code>disabled</code></td><td><code>false</code></td><td></td></tr>
+                <tr><td><code>minDate</code> · <code>maxDate</code></td><td>today · today + 365 days</td><td>Both are themselves selectable. Past dates are never selectable, whatever <code>minDate</code> says.</td></tr>
+                <tr><td><code>yearSelection</code></td><td><code>auto</code></td><td><code>auto | off</code>. <code>auto</code>: the month title opens a year grid whenever the window spans more than one calendar year (a one-year window has nothing to choose, so the title stays a plain heading). <code>off</code> always keeps the plain heading.</td></tr>
+                <tr><td><code>legend</code></td><td><code>hide</code></td><td><code>show | hide</code>. <code>show</code> renders the Available / Selected / Unavailable key under the month grid (not shown in the year view).</td></tr>
+                <tr><td><code>blackoutDates</code></td><td><code>[]</code></td><td>Rendered disabled (faded, not struck through).</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3 class="h5 mt-4">Methods</h3>
+          <p class="text-ink-soft small">
+            <code>getDatePicker(el)</code> returns the controller (<code>el</code> is the root or any child):
+            <code>open()</code>, <code>close()</code>, <code>clear()</code>, <code>setValue(v)</code>,
+            <code>setRules(&#123;today, minDate, maxDate, blackoutDates&#125;)</code>, <code>setSource(fn)</code>,
+            <code>setDisabled(bool)</code>, <code>focus()</code>, <code>getValue()</code>.
+            <code>setSource(fn)</code>: <code>fn('YYYY-MM')</code> returns a Promise of
+            <code>&#123; 'YYYY-MM-DD': 'available' | 'booked' | 'disabled' &#125;</code> or
+            <code>[&#123; date, status &#125;]</code>. Only months intersecting the window are fetched, each once
+            (cached); no source at all means every in-window date is available, while a date missing from a
+            loaded month is <code>unknown</code> — never assumed available. <code>setRules()</code> that rules out
+            the committed value clears it and emits <code>change</code> with <code>reason: "rules"</code>.
+          </p>
+
+          <h3 class="h5 mt-4">Events</h3>
+          <p class="text-ink-soft small">
+            Bubbling <code>CustomEvent</code>s on the root, <code>dp:&lt;name&gt;</code>:
+            <code>change</code> (<code>&#123;value, reason&#125;</code>, reason <code>select</code> · <code>clear</code> · <code>rules</code>),
+            <code>open</code>, <code>close</code>, and <code>invalid</code> — reserved for the initial <code>error</code> prop.
+            Tapping a booked/unknown/disabled day never fires <code>invalid</code>.
+          </p>
+
+          <h3 class="h5 mt-4">Behaviour</h3>
+          <ul class="text-ink-soft small">
+            <li><strong>Wording.</strong> An unavailable date is “unavailable” everywhere — messages, day labels (“Sunday, 18 October 2026, today, unavailable”), codes' reasons. The word “booked” is internal only.</li>
+            <li><strong>Tapping a day.</strong> Disabled/unknown: nothing happens (focus stays, day stays <code>aria-disabled</code>). Booked: inline “That date is unavailable.” (<code>role="alert"</code>), still no event. Available: announce, commit, emit <code>change</code>, close.</li>
+            <li><strong>Year selection.</strong> The month title is a button (<code>aria-expanded</code>, chevron flips) that swaps the grid for a 4-column list of the years the window touches — same height as the month, so the panel doesn't jump; the nav arrows and legend step aside. Choosing a year keeps the month and day where the window allows (29 Feb → 28 Feb; a month before the window's first month lands on that first month), returns to the dates, announces the new month and focuses the day. Keys in the list: ←/→ ±1 · ↑/↓ ±4 · Home/End first/last · PageUp/PageDown ±12 · Enter/Space choose · <strong>Esc steps back to the dates</strong> (a second Esc closes the picker). In the day grid, Shift+PageUp/PageDown also move a year.</li>
+            <li><strong>Keys.</strong> ←/→ ±1 day · ↑/↓ ±7 · Home/End Monday/Sunday of the week · PageUp/PageDown ±1 month (day clamped) · Enter/Space select · Esc closes and returns focus to the field. Movement clamps to the window and switches month as needed.</li>
+            <li><strong>Dismissal.</strong> Outside <em>tap</em> (pointerdown + pointerup on the same target, &lt;10px travel) closes without stealing focus; a scroll or drag never closes it. Tab-out and focus landing in another control close without restoring focus; Esc and selecting restore it.</li>
+            <li><strong>Placement.</strong> Prefers below; flips above when below doesn't fit and above is larger (only when the current side stops fitting — no jitter); if neither fits it takes the larger side and scrolls internally under a sticky month header. Re-measured on resize, rotation, <code>visualViewport</code> resize/scroll and ancestor scroll without touching draft, focus or month. Clamped by max(1rem, safe-area inset); a fixed page header is treated as unavailable space.</li>
+            <li><strong>Inside a Bootstrap modal/offcanvas.</strong> The panel stays in the modal's DOM (portalling would fall outside Bootstrap's focus trap); <code>position: fixed</code> escapes <code>.modal-body</code> clipping. Esc closes only the picker. A tap on the modal <em>backdrop</em> while the picker is open closes only the picker — that tap's click is swallowed, so dismissing the modal takes a second tap. <code>hide.bs.modal</code> / <code>hide.bs.offcanvas</code> or removing the component closes it without restoring focus.</li>
+            <li><strong>Reduced motion.</strong> Only the skeleton glow animates; it stops under <code>prefers-reduced-motion</code>.</li>
+          </ul>
+        </section>
+
         <!-- ================= NAVS & TABS ================= -->
         <section id="navs-tabs" class="pb-6 mb-6 border-bottom">
           <h2>Navs &amp; Tabs</h2>
@@ -1214,7 +1376,11 @@ const experiences = [
             single image, only the stage is rendered — no arrows, thumbnails or dots.
             The parent sets <code>state</code> (<code>ready</code>, <code>loading</code>,
             <code>empty</code>, <code>error</code>); <code>message</code> overrides the
-            copy on the empty and error states.
+            copy on the empty and error states. Three optional props shape the layout:
+            <code>aspectRatio</code> (<code>'4/3'</code> default; any <code>w/h</code>),
+            <code>imageSize</code> (<code>cover</code> default, or <code>contain</code> to
+            show the whole image) and <code>thumbnailFooter</code> (<code>true</code> default;
+            <code>false</code> hides the thumbnail row on desktop, and the mobile dots stay).
           </p>
           <div class="mt-3" style="max-width: 32rem;">
             <ProductGallery
@@ -1225,6 +1391,19 @@ const experiences = [
                 { src: `${base}/images/gallery-wellness-experience.webp`, alt: 'Wellness experience' },
                 { src: `${base}/images/gallery-ramadan-bazar.webp`, alt: 'Ramadan Bazar' },
                 { src: `${base}/images/gallery-open-mic.webp`, alt: 'Open Mic Night' },
+              ]}
+            />
+          </div>
+          <p class="text-ink-soft mt-4 mb-0">16/9, contain, no thumbnails</p>
+          <div class="mt-2" style="max-width: 32rem;">
+            <ProductGallery
+              aspectRatio="16/9"
+              imageSize="contain"
+              thumbnailFooter={false}
+              images={[
+                { src: `${base}/images/lodge-one.webp`, alt: 'Lodge exterior at golden hour' },
+                { src: `${base}/images/lodge-two.webp`, alt: 'Lodge interior' },
+                { src: `${base}/images/lodge-three.webp`, alt: 'Lodge terrace' },
               ]}
             />
           </div>
@@ -1376,6 +1555,8 @@ const experiences = [
   import { showToast } from '../../scripts/toast.js';
   import { getAutocomplete } from '../../scripts/autocomplete.js';
   import { getDateTimeSlotPicker } from '../../scripts/date-time-slot-picker.js';
+  import { getDatePicker } from '../../scripts/date-picker.js';
+  import { addDays, addMonths, daysInMonth, monthOf, todayISO } from '../../scripts/date-only.js';
 
   // Every demo toast reports its close to the log line, which shows onClose
   // firing per toast for both timeout and manual dismissal.
@@ -1500,5 +1681,46 @@ const experiences = [
     const out = document.getElementById('ds-dtsp-form-out');
     const valid = dtspRequiredEls.every((el) => el && getDateTimeSlotPicker(el).getValue());
     if (out) out.textContent = valid ? `Submitted: ${new URLSearchParams(new FormData(dtspForm)).toString()}` : 'Not submitted — fix the highlighted field.';
+  });
+  // ---- Date Picker demos ----------------------------------------------------
+  // Example 3's fake availability source: ~1s latency, every 5th day
+  // unavailable, some days missing from the response (→ unknown), and the
+  // month two ahead of today fails on its first request so Retry is reachable.
+  const dpSourceEl = document.getElementById('ds-dp-source');
+  if (dpSourceEl) {
+    const failedOnce = new Set();
+    const failingMonth = addMonths(monthOf(todayISO()), 2);
+    getDatePicker(dpSourceEl).setSource((month) => new Promise((resolve, reject) => {
+      setTimeout(() => {
+        if (month === failingMonth && !failedOnce.has(month)) {
+          failedOnce.add(month);
+          reject(new Error('demo failure'));
+          return;
+        }
+        const rows = {};
+        for (let d = 1; d <= daysInMonth(month); d += 1) {
+          const iso = `${month}-${String(d).padStart(2, '0')}`;
+          if (d % 11 === 0) continue; // missing → unknown
+          rows[iso] = d % 5 === 0 ? 'booked' : 'available';
+        }
+        resolve(rows);
+      }, 1000);
+    }));
+  }
+
+  const dpLog = document.getElementById('ds-dp-log');
+  ['change', 'open', 'close', 'invalid'].forEach((name) => {
+    document.addEventListener(`dp:${name}`, (e) => {
+      const detail = e.detail ? ` — ${JSON.stringify(e.detail)}` : '';
+      if (dpLog) dpLog.textContent = `${e.target.id}: ${name}${detail}`;
+    });
+  });
+
+  const dpBasic = document.getElementById('ds-dp-basic');
+  document.getElementById('ds-dp-set')?.addEventListener('click', () => getDatePicker(dpBasic).setValue(addDays(todayISO(), 7)));
+  document.getElementById('ds-dp-clear')?.addEventListener('click', () => getDatePicker(dpBasic).clear());
+  document.getElementById('ds-dp-disable')?.addEventListener('click', () => {
+    const picker = getDatePicker(dpBasic);
+    picker.setDisabled(!picker.disabled);
   });
 </script>

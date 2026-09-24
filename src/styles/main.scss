@@ -611,7 +611,7 @@ h4, .h4 { font-weight: 600; font-family: $font-family-sans; }
   &--on-dark {
     --tag-rule-accent: #{$cream};
     --tag-rule-color: #{$cream};
-    --tag-rule-bg: #{rgba(#000, .45)};
+    --tag-rule-bg: rgb(var(--#{$prefix}scrim-rgb), .45);
   }
 }
 
@@ -1437,6 +1437,419 @@ $dtsp-item-min-height: 2.75rem; // 44px touch target, matches $ac-option-min-hei
   .dtsp__date-strip {
     transition: none;
     scroll-behavior: auto;
+  }
+}
+
+// §4 Date Picker — one calendar date, availability-aware (DatePicker.astro/
+// scripts/date-picker.js). The field is a <button> styled as a field, like
+// the Date & Time Slot Picker's trigger, opening an anchored non-modal panel:
+// position:fixed and placed by the script against the visual viewport, so it
+// is never clipped by an overflow ancestor and never grows the page.
+// Responsive behaviour: does not change at `md` — the panel is
+// min(22rem, 100vw - 2rem) wide everywhere; only its placement (flip above,
+// shrink with internal scroll) and, under 30rem of viewport height, its
+// density change. Every day state carries a non-colour cue: selected = fill +
+// bold, today = dot, unavailable = strikethrough, disabled/unknown = faded.
+// Selected uses the primary role (maroon on white) for contrast; this
+// deliberately differs from the Slot Picker's ochre fill.
+$dp-cell: 2.75rem; // 44px touch target, matches $dtsp-item-min-height
+$dp-cell-compact: 2.25rem; // 36px floor for short (landscape) viewports
+$dp-pad: $spacer * .75;
+
+.dp__field {
+  gap: $spacer;
+  min-height: 3rem;
+  cursor: pointer;
+  background-color: $white;
+
+  &:focus-visible {
+    box-shadow: $focus-ring-box-shadow;
+    outline: none;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+  }
+}
+
+.dp__value {
+  color: $ink;
+}
+
+.dp__value--placeholder {
+  color: $input-placeholder-color;
+}
+
+.dp__icon {
+  color: $ochre;
+}
+
+// Invalid: the calendar icon already occupies the spot Bootstrap's validation
+// glyph would take, so drop the glyph and the padding reserved for it.
+.dp__field.is-invalid {
+  padding-right: $input-padding-x;
+  background-image: none;
+}
+
+.dp.is-disabled .dp__field {
+  opacity: .7;
+}
+
+.dp__panel {
+  --dp-cell: #{$dp-cell};
+  --dp-weekday: 2rem;
+
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: $zindex-dropdown;
+  width: min(22rem, calc(100vw - 2rem));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background-color: $white;
+  border: var(--#{$prefix}border-width) solid var(--#{$prefix}border-color);
+  border-radius: $border-radius-lg;
+  box-shadow: var(--#{$prefix}box-shadow);
+}
+
+// Sticky so month navigation (and the load-error area) stay reachable while
+// a short viewport makes the panel scroll.
+.dp__header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: $dp-pad $dp-pad 0;
+  background-color: $white;
+}
+
+.dp__nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacer * .5;
+}
+
+.dp__nav-btn {
+  min-width: var(--dp-cell);
+  min-height: var(--dp-cell);
+}
+
+.dp__nav-btn.disabled {
+  opacity: .35;
+}
+
+.dp__month-title {
+  flex: 1;
+  margin: 0;
+  font-size: $h6-font-size;
+  text-align: center;
+}
+
+// The title is the year-view toggle (§6a): a button that looks like the
+// heading it replaces, with a chevron that flips while the year grid is open.
+// With nothing to choose it is disabled and drops back to a plain heading.
+.dp__title-btn {
+  display: inline-flex;
+  gap: .125rem;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--dp-cell);
+  padding: 0 $spacer * .5;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  background-color: transparent;
+  border: 0;
+  border-radius: $border-radius;
+  transition: $transition-base;
+
+  &:hover:not(:disabled) {
+    background-color: $sand;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: $focus-ring-box-shadow;
+  }
+}
+
+.dp__title-icon {
+  color: $ochre;
+  transition: $transition-base;
+}
+
+.dp__title-btn[aria-expanded='true'] .dp__title-icon {
+  transform: rotate(180deg);
+}
+
+.dp__title-btn--static {
+  pointer-events: none;
+
+  .dp__title-icon {
+    display: none;
+  }
+}
+
+.dp__error {
+  display: flex;
+  gap: $spacer * .5;
+  align-items: center;
+  padding: $spacer * .5 $spacer * .75;
+  margin-top: $spacer * .5;
+  color: var(--#{$prefix}form-invalid-color);
+  background-color: rgba($danger, .08);
+  border: var(--#{$prefix}border-width) solid rgba($danger, .3);
+  border-radius: $border-radius;
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+.dp__body {
+  padding: 0 $dp-pad;
+}
+
+.dp__month {
+  position: relative;
+}
+
+.dp__row {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.dp__weekday {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--dp-weekday);
+  font-size: $small-font-size;
+  letter-spacing: .04em;
+  color: $ink-soft;
+}
+
+// Six weeks of height are always reserved, so paging between 4-, 5- and
+// 6-week months (or into the skeleton) never shifts the layout.
+.dp__weeks {
+  min-height: calc(6 * var(--dp-cell));
+}
+
+.dp__month--loading .dp__weeks {
+  opacity: 0;
+}
+
+.dp__skeleton {
+  position: absolute;
+  inset: var(--dp-weekday) 0 0;
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+.dp__skeleton-row {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  align-items: center;
+  height: var(--dp-cell);
+}
+
+.dp__skeleton-cell {
+  display: block;
+  width: 70%;
+  height: 65%;
+  margin-inline: auto;
+  border-radius: $border-radius;
+}
+
+.dp__day {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-height: var(--dp-cell);
+  padding: 0;
+  font: inherit;
+  color: $ink-soft;
+  cursor: pointer;
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-radius: $border-radius;
+  transition: $transition-base;
+
+  &:hover:not([aria-disabled='true'], .dp__day--selected) {
+    background-color: $sand;
+  }
+
+  &:focus-visible {
+    z-index: 1;
+    outline: none;
+    box-shadow: $focus-ring-box-shadow;
+  }
+}
+
+.dp__day--today::after {
+  position: absolute;
+  bottom: .25rem;
+  left: 50%;
+  width: .25rem;
+  height: .25rem;
+  margin-left: -.125rem;
+  content: '';
+  background-color: currentcolor;
+  border-radius: 50%;
+}
+
+.dp__day--selected {
+  font-weight: $font-weight-bold;
+  color: $white;
+  background-color: $primary;
+  border-color: $primary;
+}
+
+.dp__day--booked {
+  color: $ink-faint;
+  text-decoration: line-through;
+  cursor: not-allowed;
+}
+
+.dp__day--disabled,
+.dp__day--unknown {
+  color: $ink-faint;
+  cursor: not-allowed;
+  opacity: .6;
+}
+
+// Year view — same height as the month body so switching views never moves
+// the panel; a long window scrolls inside it. Padding keeps the focus ring
+// from being clipped by the scroll container.
+.dp__years {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: $spacer * .25;
+  align-content: start;
+  height: calc(6 * var(--dp-cell) + var(--dp-weekday));
+  padding: $spacer * .25;
+  overflow-y: auto;
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+.dp__year {
+  min-height: var(--dp-cell);
+  padding: 0;
+  font: inherit;
+  color: $ink-soft;
+  cursor: pointer;
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-radius: $border-radius;
+  transition: $transition-base;
+
+  &:hover:not(.dp__year--selected) {
+    background-color: $sand;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: $focus-ring-box-shadow;
+  }
+}
+
+.dp__year--selected {
+  font-weight: $font-weight-bold;
+  color: $white;
+  background-color: $primary;
+  border-color: $primary;
+}
+
+.dp__message {
+  margin-top: $spacer * .5;
+
+  &:empty {
+    display: none;
+  }
+}
+
+.dp__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacer * .5 $spacer;
+  padding: $spacer * .5 $dp-pad $dp-pad;
+  margin: 0;
+  color: $ink-soft;
+}
+
+.dp__key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-right: .25rem;
+  font-size: $small-font-size;
+  border: 1px solid $hairline;
+  border-radius: $border-radius-sm;
+}
+
+.dp__key--selected {
+  font-weight: $font-weight-bold;
+  color: $white;
+  background-color: $primary;
+  border-color: $primary;
+}
+
+.dp__key--booked {
+  color: $ink-faint;
+  text-decoration: line-through;
+}
+
+// Reads env(safe-area-inset-*) back as computed padding so the positioner can
+// keep the panel clear of a notch (CSS can't hand env() values to script).
+.dp__probe {
+  position: absolute;
+  width: 0;
+  height: 0;
+  padding: 0 env(safe-area-inset-right, 0) 0 env(safe-area-inset-left, 0);
+  pointer-events: none;
+  visibility: hidden;
+}
+
+// Short viewports (landscape phones, keyboard up): the month can't fit, so
+// the panel scrolls internally under its sticky header — tighten the cells
+// and paddings first so as much of it as possible stays visible.
+@media (height <= 30rem) {
+  .dp__panel {
+    --dp-cell: #{$dp-cell-compact};
+    --dp-weekday: 1.75rem;
+  }
+
+  .dp__header {
+    padding: $spacer * .5 $spacer * .5 0;
+  }
+
+  .dp__body {
+    padding: 0 $spacer * .5;
+  }
+
+  .dp__legend {
+    padding: $spacer * .25 $spacer * .5 $spacer * .5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dp__day,
+  .dp__year,
+  .dp__title-btn,
+  .dp__title-icon {
+    transition: none;
+  }
+
+  .dp__skeleton .placeholder {
+    animation: none;
   }
 }
 

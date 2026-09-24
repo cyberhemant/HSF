@@ -35,6 +35,7 @@ const {
   disabled = false,
   type = 'button',
   class: extraClass = '',
+  ...rest
 } = Astro.props;
 
 const classes = [
@@ -58,6 +59,7 @@ const Tag = href && !disabled ? 'a' : 'button';
   tabindex={Tag === 'a' && disabled ? -1 : undefined}
   aria-label={label}
   title={label}
+  {...rest}
 >
   <Icon name={icon} size={size} />
 </Tag>
