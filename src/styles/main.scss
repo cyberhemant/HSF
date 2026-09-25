@@ -207,6 +207,7 @@ $focus-ring-box-shadow: 0 0 0 2px $cream, 0 0 0 4px $ochre;
 // changes on :focus) — form-check (checkbox/radio) is the one exception
 // and keeps the ochre ring above via $form-check-input-focus-box-shadow.
 $input-focus-box-shadow: none;
+$input-placeholder-color: $ink-faint;
 $form-select-focus-box-shadow: none;
 // Overridden directly (rather than left to compose $input-focus-box-shadow)
 // so the range thumb doesn't end up with an invalid "<shadow>, none" value.
@@ -842,7 +843,7 @@ $ac-option-min-height-touch: 3rem; // 48px on coarse pointers
   font: inherit;
 
   &::placeholder {
-    color: var(--#{$prefix}secondary-color);
+    color: $input-placeholder-color;
   }
 }
 
@@ -1239,7 +1240,7 @@ $ac-option-min-height-touch: 3rem; // 48px on coarse pointers
   font: inherit;
 
   &::placeholder {
-    color: var(--#{$prefix}secondary-color);
+    color: $input-placeholder-color;
   }
 
   &:disabled {
