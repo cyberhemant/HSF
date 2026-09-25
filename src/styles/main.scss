@@ -821,6 +821,16 @@ $ac-option-min-height-touch: 3rem; // 48px on coarse pointers
   }
 }
 
+// Selected option's image/icon (selectedVisual="leading"). Sits before the
+// input inside the control; the clear/toggle clearance is unchanged.
+.ac__lead {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+
+  &[hidden] { display: none; }
+}
+
 .ac__input {
   flex: 1 1 6rem;
   min-width: 0;
