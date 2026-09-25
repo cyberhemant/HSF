@@ -25,7 +25,8 @@ To sync them with Figma using Tokens Studio:
 
 1. Install and open the Tokens Studio plugin in Figma.
 2. Add a GitHub storage provider for `cyberhemant/HSF`.
-3. Select the `main` branch for the initial import.
+3. Select the `design-token` branch for the initial import. Use `main` after
+  this branch is merged.
 4. Set the token file path to `tokens/hsf.tokens.json`.
 5. Import the token set into Figma Variables.
 
