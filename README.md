@@ -15,6 +15,22 @@ npm run preview   # serve dist/ exactly as GitHub Pages will
 Always `npm run preview` before pushing — it is the only local check that catches
 `base` path mistakes.
 
+## Figma tokens
+
+The Figma handoff tokens live in `tokens/hsf.tokens.json`. They mirror the
+foundational values in `src/styles/main.scss` using the W3C Design Tokens
+format.
+
+To sync them with Figma using Tokens Studio:
+
+1. Install and open the Tokens Studio plugin in Figma.
+2. Add a GitHub storage provider for `cyberhemant/HSF`.
+3. Select the `main` branch for the initial import.
+4. Set the token file path to `tokens/hsf.tokens.json`.
+5. Import the token set into Figma Variables.
+
+The SVG assets remain available for manual import from `public/images/`.
+
 
 ## Note on `npm install`
 
@@ -41,7 +57,8 @@ npm install
 
 ## Rules
 
-- **No hex values outside `src/styles/foundation/_tokens.scss`.**
+- **No hex values outside the design-token source.** Figma values are exported
+  to `tokens/hsf.tokens.json`; runtime styling remains in `src/styles/main.scss`.
 - Body copy is `--ink-soft`; headings are `--ink`. Never full maroon for body.
 - Ochre is never text below 18px — it fails AA at 3.1:1 on cream. Use `--ochre-deep`.
 - Mobile-first, `min-width` only.

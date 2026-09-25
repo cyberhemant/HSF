@@ -1,0 +1,102 @@
+{
+  "$schema": "https://design-tokens.github.io/community-group/format/",
+  "$description": "Heenat Salma Farm design tokens mirrored from src/styles/main.scss.",
+  "color": {
+    "$type": "color",
+    "maroon": { "$value": "#491010", "$description": "Brand primary, headings, and logotype." },
+    "maroon-hover": { "$value": "#5E1B1B" },
+    "maroon-active": { "$value": "#340B0B" },
+    "ochre": { "$value": "#A6885D", "$description": "Icons, hairlines, and dividers." },
+    "ochre-deep": { "$value": "#8B6F45", "$description": "Accessible ochre for text." },
+    "cream": { "$value": "#F9F7F5", "$description": "Page canvas and light text on dark surfaces." },
+    "white": { "$value": "#FFFFFF", "$description": "Card and panel surface." },
+    "beige": { "$value": "#E0D8CF", "$description": "Secondary neutral and section wash." },
+    "sand": { "$value": "#EAE5D1", "$description": "Warm neutral wash." },
+    "hairline": { "$value": "#DCD0C0", "$description": "Borders, dividers, and input outlines." },
+    "ink": { "$value": "#491010", "$description": "Heading text." },
+    "ink-soft": { "$value": "#6B3226", "$description": "Default body text." },
+    "ink-faint": { "$value": "#9C8574", "$description": "Metadata, captions, and disabled text." },
+    "error": { "$value": "#A63B2A" },
+    "success": { "$value": "#5B6E3A" },
+    "warning": { "$value": "#B9975B" },
+    "info": { "$value": "#7C8B74" },
+    "primary": { "$value": "{color.maroon}" },
+    "secondary": { "$value": "{color.ochre-deep}" },
+    "danger": { "$value": "{color.error}" },
+    "background": { "$value": "{color.cream}" },
+    "surface": { "$value": "{color.white}" },
+    "text": { "$value": "{color.ink-soft}" },
+    "text-heading": { "$value": "{color.ink}" },
+    "border": { "$value": "{color.hairline}" }
+  },
+  "font": {
+    "$type": "fontFamily",
+    "serif": { "$value": "Alegreya, Georgia, Times New Roman, serif" },
+    "sans": { "$value": "Alegreya Sans, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif" },
+    "body": { "$value": "{font.sans}" },
+    "heading": { "$value": "{font.serif}" }
+  },
+  "typography": {
+    "base-size": { "$type": "dimension", "$value": "1.06rem" },
+    "small-size": { "$type": "dimension", "$value": "0.72rem" },
+    "line-height": { "$type": "number", "$value": 1.7 },
+    "heading": {
+      "$type": "typography",
+      "h1": { "$value": { "fontFamily": "{font.heading}", "fontSize": "2.1rem", "fontWeight": 800, "lineHeight": 1.1 } },
+      "h2": { "$value": { "fontFamily": "{font.heading}", "fontSize": "1.55rem", "fontWeight": 700, "lineHeight": 1.2 } },
+      "h3": { "$value": { "fontFamily": "{font.heading}", "fontSize": "1.25rem", "fontWeight": 700, "lineHeight": 1.3 } },
+      "h4": { "$value": { "fontFamily": "{font.sans}", "fontSize": "1.06rem", "fontWeight": 600, "lineHeight": 1.4 } },
+      "h5": { "$value": { "fontFamily": "{font.heading}", "fontSize": "1rem", "fontWeight": 600, "lineHeight": 1.4 } },
+      "h6": { "$value": { "fontFamily": "{font.heading}", "fontSize": "0.85rem", "fontWeight": 600, "lineHeight": 1.4 } }
+    }
+  },
+  "spacing": {
+    "$type": "dimension",
+    "0": { "$value": "0" },
+    "1": { "$value": "0.25rem", "$description": "4px" },
+    "2": { "$value": "0.5rem", "$description": "8px" },
+    "3": { "$value": "1rem", "$description": "16px" },
+    "4": { "$value": "1.5rem", "$description": "24px" },
+    "5": { "$value": "2rem", "$description": "32px" },
+    "6": { "$value": "3rem", "$description": "48px" },
+    "7": { "$value": "4rem", "$description": "64px" },
+    "gutter": { "$value": "1.5rem", "$description": "24px" }
+  },
+  "radius": {
+    "$type": "dimension",
+    "default": { "$value": "3px" },
+    "small": { "$value": "2px" },
+    "large": { "$value": "6px" },
+    "pill": { "$value": "999px" },
+    "square": { "$value": "0" }
+  },
+  "layout": {
+    "$type": "dimension",
+    "breakpoint-sm": { "$value": "576px" },
+    "breakpoint-md": { "$value": "768px" },
+    "breakpoint-lg": { "$value": "992px" },
+    "breakpoint-xl": { "$value": "1280px" },
+    "breakpoint-xxl": { "$value": "1400px" },
+    "container-sm": { "$value": "540px" },
+    "container-md": { "$value": "720px" },
+    "container-lg": { "$value": "960px" },
+    "container-xl": { "$value": "1180px" }
+  },
+  "component": {
+    "button-font-size": { "$type": "dimension", "$value": "0.875rem" },
+    "button-padding-x": { "$type": "dimension", "$value": "1.5rem" },
+    "button-padding-x-sm": { "$type": "dimension", "$value": "1rem" },
+    "button-padding-x-lg": { "$type": "dimension", "$value": "2rem" },
+    "badge-font-size": { "$type": "dimension", "$value": "0.72rem" },
+    "badge-font-weight": { "$type": "number", "$value": 600 },
+    "badge-padding-y": { "$type": "dimension", "$value": "0.5rem" },
+    "badge-padding-x": { "$type": "dimension", "$value": "1rem" },
+    "nav-underline-gap": { "$type": "dimension", "$value": "2rem" },
+    "icon-button-size": { "$type": "dimension", "$value": "44px" }
+  },
+  "effect": {
+    "shadow": { "$type": "shadow", "$value": { "color": "#4910100F", "offsetX": "0px", "offsetY": "1px", "blur": "2px", "spread": "0px" } },
+    "focus-ring": { "$type": "strokeStyle", "$value": "solid" },
+    "transition": { "$type": "duration", "$value": "200ms" }
+  }
+}
