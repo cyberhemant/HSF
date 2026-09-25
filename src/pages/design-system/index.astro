@@ -137,6 +137,15 @@ const countries = [
   { value: 'ae', label: 'United Arab Emirates', secondaryLabel: '+971', image: flag('ae') },
 ];
 const plainCountries = countries.map(({ value, label, disabled }) => ({ value, label, disabled }));
+// Nationality wording ("Indian", not "India") with the country name kept as a
+// search keyword, so both "ind" and "india" find it.
+const demonyms: Record<string, string> = {
+  in: 'Indian', us: 'American', gb: 'British', ca: 'Canadian', id: 'Indonesian', ie: 'Irish',
+  it: 'Italian', fr: 'French', de: 'German', nl: 'Dutch', jp: 'Japanese', ae: 'Emirati',
+};
+const nationalities = countries.map(({ value, label, image, disabled }) => ({
+  value, label: demonyms[value], keywords: label, image, disabled,
+}));
 const acExperiences = [
   { value: 'walk', label: 'Sunrise Farm Walk', icon: 'hiking', secondaryLabel: '2 h' },
   { value: 'kitchen', label: 'Artisanal Kitchen Workshop', icon: 'skillet', secondaryLabel: '3 h' },
@@ -579,6 +588,14 @@ const experiences = [
               <Autocomplete id="ds-ac-flags" label="Country" placeholder="Search countries…" options={countries} name="country" defaultValue="in" />
             </div>
             <div class="col-md-6">
+              <h3 class="h6">2b · Selected flag + dial code</h3>
+              <Autocomplete id="ds-ac-dial" label="Country code" placeholder="Search countries…" options={countries} name="dial-country" defaultValue="us" selectedVisual="leading" selectedDisplay="secondaryLabel" help="The control shows the flag and “+1”; the list still shows full names, and the full name is exposed to screen readers." />
+            </div>
+            <div class="col-md-6">
+              <h3 class="h6">2c · Nationality with flag</h3>
+              <Autocomplete id="ds-ac-nationality" label="Nationality" placeholder="Search nationalities…" options={nationalities} name="nationality" defaultValue="in" selectedVisual="leading" help="selectedVisual=&quot;leading&quot; alone: flag + label. Options carry the nationality as the label and the country name as a keyword." />
+            </div>
+            <div class="col-md-6">
               <h3 class="h6">3 · Multiple select</h3>
               <Autocomplete id="ds-ac-multi" label="Countries visited" placeholder="Search countries…" selectionMode="multiple" options={countries} defaultValue={['in', 'us', 'gb']} maxVisibleChips={2} help="maxVisibleChips=2 — the rest collapse into “+N”." />
             </div>
@@ -645,6 +662,8 @@ const experiences = [
                 <tr><td><code>options</code></td><td>required</td><td><code>&#123; value, label, secondaryLabel?, image?, imageAlt?, icon?, disabled?, …meta &#125;</code>. Any extra keys are kept and returned in events.</td></tr>
                 <tr><td><code>label</code> / <code>ariaLabel</code></td><td>—</td><td>One is required for an accessible name.</td></tr>
                 <tr><td><code>selectionMode</code></td><td><code>single</code></td><td><code>single | multiple</code></td></tr>
+                <tr><td><code>selectedVisual</code></td><td><code>none</code></td><td><code>none | leading</code>. Single select only: <code>leading</code> shows the selected option's <code>image</code> / <code>icon</code> before the input, using the same visual as its list row.</td></tr>
+                <tr><td><code>selectedDisplay</code></td><td><code>label</code></td><td><code>label | secondaryLabel</code>. Text shown in the closed control; <code>secondaryLabel</code> (e.g. a dial code) falls back to the label when an option has none. The list always shows labels, and the full label is exposed via <code>aria-describedby</code>.</td></tr>
                 <tr><td><code>value</code> / <code>defaultValue</code></td><td>—</td><td>String, or string[] for multiple. Values are looked up in <code>options</code>; for remote data use <code>setValue(values, optionObjects)</code>.</td></tr>
                 <tr><td><code>name</code></td><td>—</td><td>Submitted via hidden inputs (one per value; repeated name for multiple).</td></tr>
                 <tr><td><code>maxSelections</code></td><td>none</td><td>Multiple only. Disabled options never count.</td></tr>

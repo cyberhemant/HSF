@@ -39,6 +39,8 @@ export interface Props {
   help?: string;
   invalidFeedback?: string;
   selectionMode?: 'single' | 'multiple';
+  selectedVisual?: 'none' | 'leading';
+  selectedDisplay?: 'label' | 'secondaryLabel';
   value?: string | string[];
   defaultValue?: string | string[];
   disabled?: boolean;
@@ -104,9 +106,19 @@ const feedbackId = `${id}-feedback`;
 
 // Values are resolved in the browser; the server only needs the label to
 // pre-fill a single select so the field doesn't flash empty before hydration.
-const selectedLabel = !multiple && typeof value === 'string'
-  ? options.find((o) => o.value === value)?.label
+const selectedOption = !multiple && typeof value === 'string'
+  ? options.find((o) => o.value === value)
   : undefined;
+const selectedLabel = config.selectedDisplay === 'secondaryLabel'
+  ? (selectedOption?.secondaryLabel ?? selectedOption?.label)
+  : selectedOption?.label;
+// Single select only: the chosen option's image/icon leads the control.
+const showLead = !multiple && config.selectedVisual === 'leading';
+// When the input shows the secondary text (e.g. a dial code), the full label
+// is exposed to assistive tech through a described-by span, as the input's own
+// value no longer names the selection.
+const selectedNameId = config.selectedDisplay === 'secondaryLabel' ? `${id}-selected` : undefined;
+const describedBy = [helpId, selectedNameId].filter(Boolean).join(' ') || undefined;
 
 const json = (data: unknown) => JSON.stringify(data).replace(/</g, '\\u003c');
 const clientConfig = { ...config, value, placeholder };
@@ -127,6 +139,14 @@ const clientConfig = { ...config, value, placeholder };
       </div>
 
       <div class="ac__control form-control">
+        {showLead && (
+          <span class="ac__lead" aria-hidden="true" hidden={!(selectedOption?.image || selectedOption?.icon)}>
+            {selectedOption?.image && <img class="ac__thumb" src={selectedOption.image} alt="" decoding="async" />}
+            {!selectedOption?.image && selectedOption?.icon && (
+              <span class="ac__thumb ac__thumb--icon"><Icon name={selectedOption.icon} size={16} /></span>
+            )}
+          </span>
+        )}
         <ul class="ac__chips" aria-label={labels.selectedItems ?? 'Selected items'} hidden></ul>
         <input
           type="text"
@@ -138,14 +158,15 @@ const clientConfig = { ...config, value, placeholder };
           aria-expanded="false"
           aria-controls={listId}
           aria-label={label ? undefined : (ariaLabel ?? placeholder ?? undefined)}
-          aria-describedby={helpId}
-          data-describedby={helpId}
+          aria-describedby={describedBy}
+          data-describedby={describedBy}
           autocomplete="off"
           autocapitalize="off"
           spellcheck="false"
           placeholder={placeholder}
           value={selectedLabel}
         />
+        {selectedNameId && <span class="visually-hidden" id={selectedNameId} data-ac-selected-name>{selectedOption?.label}</span>}
         <button type="button" class="btn-close ac__clear" aria-label={labels.clear} hidden></button>
         <span class="ac__toggle" aria-hidden="true"><Icon name="expand_more" size={24} /></span>
       </div>

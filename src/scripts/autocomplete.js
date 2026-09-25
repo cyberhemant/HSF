@@ -62,6 +62,8 @@ const DEFAULTS = {
   showPopular: false,
   searchUrl: undefined,
   invalidFeedback: '',
+  selectedVisual: 'none',
+  selectedDisplay: 'label',
 };
 
 const LABELS = {
@@ -126,6 +128,8 @@ export class Autocomplete {
     this.control = $('.ac__control');
     this.input = $('.ac__input');
     this.chipsEl = $('.ac__chips');
+    this.leadEl = $('.ac__lead');
+    this.selectedNameEl = $('[data-ac-selected-name]');
     this.clearBtn = $('.ac__clear');
     this.toggleEl = $('.ac__toggle');
     this.panel = $('.ac__panel');
@@ -623,8 +627,27 @@ export class Autocomplete {
 
   syncInput() {
     const single = !this.multiple && this.selected[0];
-    if (!this.editing) this.input.value = single ? single.label : '';
+    if (!this.editing) this.input.value = single ? this.displayText(single) : '';
     this.input.placeholder = this.multiple && this.selected.length ? '' : (this.cfg.placeholder ?? '');
+    this.syncLead(single);
+  }
+
+  // What the closed control shows for the selected option. `secondaryLabel`
+  // falls back to the label so an option without one never renders blank.
+  displayText(opt) {
+    return this.cfg.selectedDisplay === 'secondaryLabel' ? (opt.secondaryLabel ?? opt.label) : opt.label;
+  }
+
+  // Leading image/icon of the selected option (single select, opt-in). Reuses
+  // the option-row visual so the flag in the list and in the control match.
+  syncLead(single) {
+    if (this.selectedNameEl) this.selectedNameEl.textContent = single ? single.label : '';
+    if (!this.leadEl) return;
+    if (this.leadEl.dataset.value === (single?.value ?? '') && single) return;
+    const visual = single ? this.buildVisual(single) : null;
+    this.leadEl.replaceChildren(...(visual ? [visual] : []));
+    this.leadEl.dataset.value = single?.value ?? '';
+    this.leadEl.hidden = !visual;
   }
 
   syncHidden() {
