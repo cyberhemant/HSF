@@ -1185,9 +1185,9 @@ $ac-option-min-height-touch: 3rem; // 48px on coarse pointers
   }
 
   .ac__input {
-    // Sized to the selected code ("+91"); grows while searching.
+    // Sized to the widest dial code ("+880" ≈ 3.7ch); grows while searching.
     flex: 0 0 auto;
-    width: 5ch;
+    width: 4ch;
     min-width: 3ch;
     field-sizing: content;
     cursor: pointer;
