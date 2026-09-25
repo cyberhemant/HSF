@@ -39,6 +39,7 @@ export interface Props {
   help?: string;
   invalidFeedback?: string;
   selectionMode?: 'single' | 'multiple';
+  variant?: 'default' | 'embedded';
   selectedVisual?: 'none' | 'leading';
   selectedDisplay?: 'label' | 'secondaryLabel';
   value?: string | string[];
@@ -85,17 +86,24 @@ export interface Props {
 
 const {
   options,
-  label,
+  label: labelProp,
   ariaLabel,
+  help: helpProp,
   id = `ac-${Math.random().toString(36).slice(2, 9)}`,
   name,
   placeholder = '',
-  help,
   defaultValue,
   class: extraClass = '',
   ...config
 } = Astro.props;
 
+// "embedded": a chrome-less country-code-style segment that lives inside
+// another control's field (see PhoneNumber). No label, help or feedback of its
+// own (name it with ariaLabel); the outer control owns the border, focus ring
+// and validation, and the list anchors to the element marked data-ac-anchor.
+const embedded = config.variant === 'embedded';
+const label = embedded ? undefined : labelProp;
+const help = embedded ? undefined : helpProp;
 const value = config.value ?? defaultValue;
 const multiple = config.selectionMode === 'multiple';
 const labels = { back: 'Close search', clear: 'Clear selection', ...config.labels };
@@ -125,7 +133,7 @@ const clientConfig = { ...config, value, placeholder };
 ---
 
 <div
-  class={['ac', extraClass].filter(Boolean).join(' ')}
+  class={['ac', embedded && 'ac--embedded', extraClass].filter(Boolean).join(' ')}
   data-autocomplete
   data-name={name}
   data-config={json(clientConfig)}
@@ -192,7 +200,7 @@ const clientConfig = { ...config, value, placeholder };
       <div class="visually-hidden" role="status" aria-live="polite" aria-atomic="true" data-ac-live></div>
     </div>
   </div>
-  <div class="invalid-feedback" id={feedbackId}>{config.invalidFeedback}</div>
+  {!embedded && <div class="invalid-feedback" id={feedbackId}>{config.invalidFeedback}</div>}
   {help && <div class="form-text" id={helpId}>{help}</div>}
   <div data-ac-hidden></div>
 

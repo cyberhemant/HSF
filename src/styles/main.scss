@@ -1158,6 +1158,104 @@ $ac-option-min-height-touch: 3rem; // 48px on coarse pointers
   }
 }
 
+// Autocomplete "embedded" variant — the country / calling-code segment of
+// PhoneNumber. Chrome-less and shrink-to-content: the outer field owns the
+// border, focus ring and validation, and the list is positioned against the
+// outer field ([data-ac-anchor]) by taking this wrapper out of the positioning
+// chain. Fullscreen (mobile) is left to the normal Autocomplete styles.
+.ac--embedded:not(.is-fullscreen) {
+  flex: 0 0 auto;
+
+  &,
+  .ac__field,
+  .ac__shell {
+    position: static;
+  }
+
+  .ac__control {
+    flex-wrap: nowrap;
+    gap: .5rem;
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    background-color: transparent;
+    box-shadow: none;
+    cursor: pointer;
+  }
+
+  .ac__input {
+    // Sized to the selected code ("+91"); grows while searching.
+    flex: 0 0 auto;
+    width: 5ch;
+    min-width: 3ch;
+    field-sizing: content;
+    cursor: pointer;
+  }
+
+  .ac__toggle {
+    position: static;
+    display: inline-flex;
+  }
+
+  &.is-disabled .ac__control {
+    background-color: transparent;
+  }
+}
+
+// §4 Phone Number — one field, two segments. `.form-control` supplies the
+// border, surface and validation colours; this only lays the segments out and
+// moves the focus treatment to the whole field, the way the other typing
+// fields do (border colour, no ring). Responsive behaviour: none.
+.phone__field {
+  position: relative; // the country list anchors here
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+
+  &:focus-within:not(.is-invalid) {
+    border-color: $input-focus-border-color;
+  }
+
+  // Bootstrap's validation icon would sit under the status mark.
+  &.is-invalid {
+    padding-right: $input-padding-x;
+    background-image: none;
+  }
+
+  &.is-disabled {
+    background-color: var(--#{$prefix}secondary-bg);
+    cursor: not-allowed;
+  }
+}
+
+.phone__input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+
+  &::placeholder {
+    color: var(--#{$prefix}secondary-color);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+  }
+}
+
+.phone__status {
+  display: inline-flex;
+  flex: 0 0 auto;
+
+  &[hidden] {
+    display: none;
+  }
+}
+
 // §4 Date & Time Slot Picker — single date + single time-slot control with
 // two presentations, an inline Bootstrap Collapse panel or a Bootstrap
 // Modal the component owns (DateTimeSlotPicker.astro/

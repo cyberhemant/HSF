@@ -860,9 +860,15 @@ export class Autocomplete {
 
   // Usable room above and below the control, measured against the visual
   // viewport so an open keyboard and browser chrome are already excluded.
+  // The list lines up with the control, or with the outer field an embedded
+  // Autocomplete sits in (marked data-ac-anchor).
+  anchorRect() {
+    return (this.root.closest('[data-ac-anchor]') ?? this.control).getBoundingClientRect();
+  }
+
   space({ guessKeyboard = false } = {}) {
     const c = this.cfg;
-    const rect = this.control.getBoundingClientRect();
+    const rect = this.anchorRect();
     const vv = c.keyboardAware ? window.visualViewport : null;
     let top = vv ? vv.offsetTop : 0;
     let bottom = vv ? vv.offsetTop + vv.height : window.innerHeight;
@@ -921,7 +927,7 @@ export class Autocomplete {
     panel.classList.toggle('is-top', top);
     panel.classList.toggle('is-fixed', this.strategy === 'fixed');
     if (this.strategy === 'fixed') {
-      const r = this.control.getBoundingClientRect();
+      const r = this.anchorRect();
       Object.assign(panel.style, {
         left: `${r.left}px`,
         width: `${r.width}px`,

@@ -11,6 +11,7 @@ import PalmSpinner from '../../components/PalmSpinner.astro';
 import ProductGallery from '../../components/ProductGallery.astro';
 import ArchCarousel from '../../components/ArchCarousel.astro';
 import Autocomplete from '../../components/Autocomplete.astro';
+import PhoneNumber from '../../components/PhoneNumber.astro';
 import DateTimeSlotPicker from '../../components/DateTimeSlotPicker.astro';
 import DatePicker from '../../components/DatePicker.astro';
 import { addDays as dpAddDays, todayISO as dpTodayISO } from '../../scripts/date-only.js';
@@ -29,6 +30,7 @@ const toc = [
   ['dividers', 'Dividers'],
   ['forms', 'Forms'],
   ['autocomplete', 'Autocomplete'],
+  ['phone-number', 'Phone Number'],
   ['date-time-slot-picker', 'Date & Time Slot Picker'],
   ['date-picker', 'Date Picker'],
   ['navs-tabs', 'Navs & Tabs'],
@@ -714,6 +716,95 @@ const experiences = [
             <li><strong>Mobile.</strong> Adaptive: below 768px (or a short touch screen) the list is a dropdown while at least 200px fits above or below the field, measured on <code>visualViewport</code> (which excludes the keyboard and browser chrome); otherwise the field becomes a fullscreen search in place. The input is not recreated, so focus and the keyboard survive the switch. Fullscreen locks page scroll, makes the page inert, respects safe areas, closes on Back (history entry), Esc, the back arrow or Done, and returns focus to the field without reopening the list.</li>
             <li><strong>Accessibility.</strong> <code>role=combobox</code> with <code>aria-expanded/controls/activedescendant/autocomplete</code>; <code>role=listbox</code> (<code>aria-multiselectable</code>); options with <code>aria-selected</code>/<code>aria-disabled</code>; a polite live region announces result counts, loading, errors, limit and selection changes; chips have “Remove &#123;label&#125;” buttons; the “+N” button lists what it hides.</li>
           </ul>
+        </section>
+
+        <!-- ================= PHONE NUMBER ================= -->
+        <section id="phone-number" class="pb-6 mb-6 border-bottom">
+          <h2>Phone Number</h2>
+          <p class="text-ink-soft">
+            <code>PhoneNumber.astro</code> — a country / calling-code picker beside a phone-number input, behaving as
+            <strong>one</strong> form control with <strong>one</strong> value: the E.164 string (<code>+13024148567</code>).
+            The picker is Autocomplete's <code>embedded</code> variant, so search, keyboard, positioning and mobile
+            fullscreen are shared, not copied. Status: experimental (this page is its only use).
+          </p>
+          <p class="text-ink-soft small">
+            Modal and offcanvas behaviour is exercised on the
+            <a href={`${base}/design-system/component-testing/`}>Component Testing</a> QA page.
+          </p>
+
+          <div class="row g-4 mt-1">
+            <div class="col-md-6">
+              <h3 class="h6">1 · Default</h3>
+              <PhoneNumber id="ds-ph-default" label="Phone number" help="Pick a country, or type a full number starting with +." />
+            </div>
+            <div class="col-md-6">
+              <h3 class="h6">2 · With a value and popular countries</h3>
+              <PhoneNumber id="ds-ph-value" label="Phone number" value="+13024148567" popularCountries={['IN', 'US', 'GB']} name="phone-value" />
+            </div>
+            <div class="col-md-6">
+              <h3 class="h6">3 · Required, inside a form</h3>
+              <form id="ds-ph-form" novalidate>
+                <PhoneNumber id="ds-ph-required" label="Phone number" name="phone" required help="This field is required to verify your account." />
+                <div class="mt-3"><Button variant="primary" type="submit">Send code</Button></div>
+              </form>
+              <p class="small text-ink-soft mt-2 mb-0">Form data: <code id="ds-ph-form-out">not submitted</code></p>
+            </div>
+            <div class="col-md-6">
+              <h3 class="h6">4 · Live value</h3>
+              <PhoneNumber id="ds-ph-live" label="Phone number" defaultCountry="US" />
+              <p class="small text-ink-soft mt-2 mb-0">
+                <code>getDetails()</code>: <code id="ds-ph-live-out">{'{}'}</code>
+              </p>
+              <div class="d-flex flex-wrap gap-2 mt-2">
+                <Button variant="secondary" id="ds-ph-live-set">setValue(+919876543210)</Button>
+                <Button variant="secondary" id="ds-ph-live-invalid">showInvalid()</Button>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <h3 class="h6">5 · Disabled</h3>
+              <PhoneNumber id="ds-ph-disabled" label="Phone number" value="+13024148567" disabled />
+            </div>
+          </div>
+
+          <h3 class="h5 mt-5">Props</h3>
+          <div class="table-responsive">
+            <table class="table table-sm small align-middle">
+              <thead><tr><th>Prop</th><th>Default</th><th>Notes</th></tr></thead>
+              <tbody>
+                <tr><td><code>label</code> / <code>ariaLabel</code></td><td>— / <code>Phone number</code></td><td>The group is named by <code>label</code>, or <code>ariaLabel</code> when there is none.</td></tr>
+                <tr><td><code>name</code></td><td>—</td><td>Names the single hidden input that carries the E.164 value. The country picker and the number input are never named.</td></tr>
+                <tr><td><code>value</code> / <code>defaultValue</code></td><td>—</td><td>One E.164 string. The country and the national number are both derived from it; an invalid string is ignored.</td></tr>
+                <tr><td><code>defaultCountry</code></td><td><code>IN</code></td><td>ISO 3166-1 alpha-2 region used when there is no value.</td></tr>
+                <tr><td><code>popularCountries</code></td><td><code>[]</code></td><td>ISO codes pinned in a “Popular” group above the full list.</td></tr>
+                <tr><td><code>placeholder</code></td><td>example number</td><td>Defaults to an example mobile number for the selected country, e.g. <code>(201) 555-0123</code>.</td></tr>
+                <tr><td><code>help</code></td><td>—</td><td>Help text under the field.</td></tr>
+                <tr><td><code>required</code> / <code>disabled</code></td><td><code>false</code></td><td>Required is enforced on the closest form's submit (a hidden input is skipped by native validation). Callers without a form call <code>showInvalid()</code>.</td></tr>
+                <tr><td><code>labels</code></td><td>English</td><td><code>country</code>, <code>required</code>, <code>invalid</code>, <code>tooShort</code>, <code>tooLong</code>.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3 class="h5 mt-4">Value contract</h3>
+          <ul class="text-ink-soft small">
+            <li><strong>One value.</strong> Read it with <code>getPhoneNumber(el).getValue()</code> or from the hidden input: <code>+13024148567</code>. It is <code>""</code> while the number is empty, incomplete or invalid, so a half-typed number can never be submitted.</li>
+            <li><strong>Structured.</strong> <code>getDetails()</code> returns <code>&#123; value, country, dialCode, national, isValid, isEmpty &#125;</code>. <code>setValue(e164)</code> restores both inputs; <code>setCountry(iso)</code> changes the country and re-formats the digits already typed.</li>
+            <li><strong>Events.</strong> <code>phone-number:change</code> (bubbling <code>CustomEvent</code>, <code>detail</code> = <code>getDetails()</code> + <code>instance</code>) fires when the country or the E.164 value changes; the hidden input also fires a native <code>change</code>.</li>
+            <li><strong>International entry.</strong> Typing or pasting <code>+44 …</code> switches the country. A code that is still ambiguous (<code>+1</code>) leaves the current country alone.</li>
+            <li><strong>Reset.</strong> <code>form.reset()</code> restores the initial value.</li>
+          </ul>
+
+          <h3 class="h5 mt-4">Behaviour</h3>
+          <ul class="text-ink-soft small">
+            <li><strong>Country list.</strong> Search matches the name, the ISO code and the calling code (“united”, “us”, “44”, “+44”). Choosing a country moves focus to the number.</li>
+            <li><strong>Formatting.</strong> The number formats as you type (never while deleting, and only with the caret at the end) and settles on the national format when the field loses focus with a valid number.</li>
+            <li><strong>Validation.</strong> Shown on blur for a non-empty invalid number, and on submit for an empty required one. The message says whether the number is too short or too long; the valid state adds a check icon, so meaning never rests on colour alone.</li>
+            <li><strong>Accessibility.</strong> The field is a <code>role="group"</code> named by the label. The picker is a combobox named “Country code” (the selected country's full name is announced too); the number is <code>type="tel"</code> with <code>autocomplete="tel-national"</code>; the message is <code>role="alert"</code> and referenced by <code>aria-describedby</code> with <code>aria-invalid</code>.</li>
+            <li><strong>States.</strong> Default, focus, error, success and disabled are built. Loading, skeleton and empty are not: the country data is bundled at build time and the field has no remote content. Hover: none beyond Autocomplete's list rows.</li>
+          </ul>
+          <p class="text-ink-soft small">
+            Flags are 4:3 SVGs from <code>flag-icons</code> in <code>public/flags</code>, loaded lazily. Validation uses
+            <code>libphonenumber-js</code> (minimal metadata).
+          </p>
         </section>
 
         <!-- ================= DATE & TIME SLOT PICKER ================= -->
@@ -1573,6 +1664,7 @@ const experiences = [
 <script>
   import { showToast } from '../../scripts/toast.js';
   import { getAutocomplete } from '../../scripts/autocomplete.js';
+  import { getPhoneNumber } from '../../scripts/phone-number.js';
   import { getDateTimeSlotPicker } from '../../scripts/date-time-slot-picker.js';
   import { getDatePicker } from '../../scripts/date-picker.js';
   import { addDays, addMonths, daysInMonth, monthOf, todayISO } from '../../scripts/date-only.js';
@@ -1616,6 +1708,27 @@ const experiences = [
   document.addEventListener('autocomplete:change', (e) => {
     const { id } = e.target.querySelector('input');
     if (acLog) acLog.textContent = `${id}: ${JSON.stringify(e.detail.values)}`;
+  });
+
+  // ---- Phone Number demos ------------------------------------------------
+  const phoneEl = (id) => document.getElementById(id)?.closest('[data-phone-number]');
+  const phoneOut = document.getElementById('ds-ph-live-out');
+  const showPhone = () => {
+    const el = phoneEl('ds-ph-live');
+    if (el && phoneOut) phoneOut.textContent = JSON.stringify(getPhoneNumber(el).getDetails());
+  };
+  phoneEl('ds-ph-live')?.addEventListener('phone-number:change', showPhone);
+  document.getElementById('ds-ph-live-set')?.addEventListener('click', () => getPhoneNumber(phoneEl('ds-ph-live')).setValue('+919876543210'));
+  document.getElementById('ds-ph-live-invalid')?.addEventListener('click', () => getPhoneNumber(phoneEl('ds-ph-live')).showInvalid());
+  showPhone();
+
+  // The required demo submits nowhere: it reports the form data instead.
+  document.getElementById('ds-ph-form')?.addEventListener('submit', (e) => {
+    const blocked = e.defaultPrevented; // the field rejected an empty or invalid number
+    e.preventDefault();
+    if (blocked) return;
+    const out = document.getElementById('ds-ph-form-out');
+    if (out) out.textContent = JSON.stringify(Object.fromEntries(new FormData(e.currentTarget)));
   });
 
   // Example 4 — a consumer-rendered message from the exposed limit state.

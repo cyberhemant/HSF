@@ -18,7 +18,8 @@
     "@popperjs/core": "^2.11.8",
     "aos": "^2.3.4",
     "astro": "^5.6.1",
-    "bootstrap": "^5.3.8"
+    "bootstrap": "^5.3.8",
+    "libphonenumber-js": "^1.13.14"
   },
   "devDependencies": {
     "@types/aos": "^3.0.8",

@@ -1,0 +1,132 @@
+---
+// §4 Phone Number — one form control, one value. A country / calling-code
+// picker (the embedded Autocomplete, which owns the searchable list, keyboard,
+// positioning and mobile fullscreen) sits beside a <input type="tel">. Only one
+// value exists: the E.164 string, carried by a single hidden input named `name`.
+// Neither visible input is named, so nothing else is submitted.
+//
+// Callbacks can't be props on a build-time component, so the change callback is
+// a bubbling DOM event, `phone-number:change` (detail = getDetails()).
+// Programmatic control goes through getPhoneNumber(el) from
+// scripts/phone-number.js: getValue, getDetails, setValue, setCountry,
+// setDisabled, showInvalid, clearInvalid, focus.
+//
+// `required` is enforced on the closest form's submit by the script (a hidden
+// input is skipped by native constraint validation), so the tel input carries
+// aria-required, not the native attribute, to avoid the browser's own bubble.
+//
+// Responsive: does not change. The country list follows Autocomplete's own
+// mobile behaviour (dropdown, or fullscreen search when there is no room).
+import Autocomplete from './Autocomplete.astro';
+import Icon from './Icon.astro';
+import { phoneCountries } from '../data/phone-countries.js';
+import { fromE164 } from '../scripts/phone-number-logic.js';
+
+export interface Props {
+  label?: string;
+  ariaLabel?: string;
+  id?: string;
+  name?: string;
+  /** Initial value as one E.164 string, e.g. "+13024148567". Sets country and number. */
+  value?: string;
+  defaultValue?: string;
+  /** ISO 3166-1 alpha-2 region used when no value is given. */
+  defaultCountry?: string;
+  /** ISO codes pinned in a "Popular" group above the full list. */
+  popularCountries?: string[];
+  placeholder?: string;
+  help?: string;
+  required?: boolean;
+  disabled?: boolean;
+  labels?: Record<string, string>;
+  class?: string;
+}
+
+const {
+  label,
+  ariaLabel,
+  id = `phone-${Math.random().toString(36).slice(2, 9)}`,
+  name,
+  value,
+  defaultValue,
+  defaultCountry = 'IN',
+  popularCountries = [],
+  placeholder,
+  help,
+  required = false,
+  disabled = false,
+  labels,
+  class: extraClass = '',
+} = Astro.props;
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const initial = fromE164(value ?? defaultValue);
+const country = initial?.country ?? defaultCountry;
+const popular = new Set(popularCountries);
+
+const options = phoneCountries.map(({ iso, name: countryName, dialCode }) => ({
+  value: iso,
+  label: countryName,
+  secondaryLabel: dialCode,
+  image: `${base}/flags/${iso.toLowerCase()}.svg`,
+  // "US", "1" and "+1" all find the United States.
+  keywords: `${iso} ${dialCode.slice(1)}`,
+  popular: popular.has(iso),
+}));
+
+const countryLabel = labels?.country ?? 'Country code';
+const labelId = `${id}-label`;
+const helpId = help ? `${id}-help` : undefined;
+const feedbackId = `${id}-feedback`;
+const clientConfig = { country, required, disabled, placeholder, labels };
+const json = (data: unknown) => JSON.stringify(data).replace(/</g, '\\u003c');
+---
+
+<div
+  class={['phone', extraClass].filter(Boolean).join(' ')}
+  data-phone-number
+  data-config={json(clientConfig)}
+  role="group"
+  aria-labelledby={label ? labelId : undefined}
+  aria-label={label ? undefined : (ariaLabel ?? 'Phone number')}
+>
+  {label && <label class="form-label" id={labelId} for={id}>{label}</label>}
+  <div class:list={['phone__field', 'form-control', { 'is-disabled': disabled }]} data-ac-anchor>
+    <Autocomplete
+      id={`${id}-country`}
+      class="phone__country"
+      variant="embedded"
+      ariaLabel={countryLabel}
+      options={options}
+      defaultValue={country}
+      selectedVisual="leading"
+      selectedDisplay="secondaryLabel"
+      clearable={false}
+      openOnFocus={false}
+      showPopular={popular.size > 0}
+      disabled={disabled}
+    />
+    <input
+      type="tel"
+      class="phone__input"
+      id={id}
+      inputmode="tel"
+      autocomplete="tel-national"
+      value={initial?.national ?? ''}
+      aria-required={required ? 'true' : undefined}
+      aria-describedby={helpId}
+      data-describedby={helpId}
+      disabled={disabled}
+    />
+    <span class="phone__status text-success" aria-hidden="true" hidden={!initial}><Icon name="check" size={24} /></span>
+  </div>
+  <div class="invalid-feedback" id={feedbackId} role="alert"></div>
+  {help && <div class="form-text" id={helpId}>{help}</div>}
+  <input type="hidden" name={name} value={initial?.e164 ?? ''} data-phone-value disabled={disabled} />
+</div>
+
+<script>
+  import { initPhoneNumbers } from '../scripts/phone-number.js';
+
+  initPhoneNumbers();
+</script>

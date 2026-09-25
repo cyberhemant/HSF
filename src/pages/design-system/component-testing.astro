@@ -18,6 +18,7 @@ import Button from '../../components/Button.astro';
 import Autocomplete from '../../components/Autocomplete.astro';
 import DateTimeSlotPicker from '../../components/DateTimeSlotPicker.astro';
 import DatePicker from '../../components/DatePicker.astro';
+import PhoneNumber from '../../components/PhoneNumber.astro';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
@@ -445,6 +446,90 @@ const dtspTestAvailability = [0, 1, 2].map((i) => ({ date: dtspIsoOffset(i), sta
       </div>
       <div class="offcanvas-body">
         <DatePicker id="mt-dp-3" label="Arrival date" name="dp-3" />
+      </div>
+    </div>
+
+    <h2 id="phone-number" class="h4 mt-6">Phone Number — embedded country list</h2>
+    <p class="text-ink-soft small mb-4">
+      The country list is Autocomplete's <code>embedded</code> variant, anchored to the <em>outer</em> field
+      (<code>data-ac-anchor</code>), not to the small code segment. Checks here: the list matches the full
+      field width (not the segment's), isn't clipped by <code>.modal-body</code> / <code>.modal-content</code> /
+      <code>.offcanvas-body</code> (the adaptive strategy switches to <code>position: fixed</code> against the anchor),
+      flips above near the bottom, and Esc closes only the list.
+    </p>
+
+    <div class="row g-4">
+      <div class="col-12 col-lg-4">
+        <div class="p-3 border rounded-3 bg-white h-100 d-flex flex-column">
+          <h3 class="h6">D1 · Plain modal</h3>
+          <p class="small text-ink-soft">Field near the top of a plain modal.</p>
+          <Button type="button" variant="secondary" class="btn-sm mt-auto" data-bs-toggle="modal" data-bs-target="#mt-ph-plain">Open modal</Button>
+        </div>
+      </div>
+      <div class="col-12 col-lg-4">
+        <div class="p-3 border rounded-3 bg-white h-100 d-flex flex-column">
+          <h3 class="h6">D2 · Scrollable modal</h3>
+          <p class="small text-ink-soft"><code>.modal-dialog-scrollable</code> — field below the fold; the list must follow it as the body scrolls.</p>
+          <Button type="button" variant="secondary" class="btn-sm mt-auto" data-bs-toggle="modal" data-bs-target="#mt-ph-scrollable">Open modal</Button>
+        </div>
+      </div>
+      <div class="col-12 col-lg-4">
+        <div class="p-3 border rounded-3 bg-white h-100 d-flex flex-column">
+          <h3 class="h6">D3 · Offcanvas</h3>
+          <p class="small text-ink-soft">End offcanvas, <code>.offcanvas-body</code> scrolls.</p>
+          <Button type="button" variant="secondary" class="btn-sm mt-auto" data-bs-toggle="offcanvas" data-bs-target="#mt-ph-offcanvas" aria-controls="mt-ph-offcanvas">Open offcanvas</Button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="mt-ph-plain" tabindex="-1" aria-labelledby="mt-ph-plain-label" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 class="modal-title h5" id="mt-ph-plain-label">D1 · Phone — plain modal</h3>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <PhoneNumber id="mt-ph-1" label="Phone number" name="ph-1" />
+          </div>
+          <div class="modal-footer">
+            <Button variant="secondary" class="btn-sm" data-bs-dismiss="modal">Close</Button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="mt-ph-scrollable" tabindex="-1" aria-labelledby="mt-ph-scrollable-label" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 class="modal-title h5" id="mt-ph-scrollable-label">D2 · Phone — scrollable modal</h3>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p class="text-ink-soft">Scroll down inside this modal to reach the field, then open the country list.</p>
+            {filler.map((i) => (
+              <p class="text-ink-soft">Filler paragraph {i + 1} of {filler.length} — pushes the field below the fold.</p>
+            ))}
+            <PhoneNumber id="mt-ph-2" label="Phone number" name="ph-2" />
+            {filler.slice(0, 6).map((i) => (
+              <p class="text-ink-soft">Trailing paragraph {i + 1} — lets the body keep scrolling with the list open.</p>
+            ))}
+          </div>
+          <div class="modal-footer">
+            <Button variant="secondary" class="btn-sm" data-bs-dismiss="modal">Close</Button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="mt-ph-offcanvas" aria-labelledby="mt-ph-offcanvas-label">
+      <div class="offcanvas-header">
+        <h3 class="offcanvas-title h5" id="mt-ph-offcanvas-label">D3 · Contact number</h3>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+      </div>
+      <div class="offcanvas-body">
+        <PhoneNumber id="mt-ph-3" label="Phone number" name="ph-3" />
       </div>
     </div>
   </div>
