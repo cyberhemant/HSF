@@ -554,19 +554,32 @@ h4, .h4 { font-weight: 600; font-family: $font-family-sans; }
   }
 }
 
-// Numeric Stepper — Block variant: solid secondary end-caps flush against
-// the input, read as one continuous bordered bar rather than three gapped
+// Numeric Stepper — Block variant: solid sand end-caps flush against the
+// input, read as one continuous bordered bar rather than three gapped
 // controls. overflow: hidden clips the inner squared buttons to the
-// wrapper's own rounded-1 corners.
+// wrapper's own rounded corners.
 .stepper--block {
   display: inline-flex;
   align-items: stretch;
   overflow: hidden;
+  border-radius: $border-radius-lg;
 
+  // The end-caps are IconButton's filled-secondary (.btn-secondary, ochre-deep
+  // with light text); re-point its button vars at the sand wash with ink-soft
+  // icons. Hover/active step down to beige, the next neutral.
   .stepper__btn.icon-btn {
-    // width: 3.5rem;
-    // height: auto;
-    // border-radius: 0;
+    --#{$prefix}btn-color: #{$ink-soft};
+    --#{$prefix}btn-bg: #{$sand};
+    --#{$prefix}btn-border-color: #{$sand};
+    --#{$prefix}btn-hover-color: #{$ink-soft};
+    --#{$prefix}btn-hover-bg: #{$beige};
+    --#{$prefix}btn-hover-border-color: #{$beige};
+    --#{$prefix}btn-active-color: #{$ink-soft};
+    --#{$prefix}btn-active-bg: #{$beige};
+    --#{$prefix}btn-active-border-color: #{$beige};
+    --#{$prefix}btn-disabled-color: #{$ink-faint};
+    --#{$prefix}btn-disabled-bg: #{$sand};
+    --#{$prefix}btn-disabled-border-color: #{$sand};
   }
 
   .stepper__input {
