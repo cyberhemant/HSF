@@ -404,10 +404,14 @@ const experiences = [
         <!-- ================= BUTTON GROUP ================= -->
         <section id="button-group" class="pb-6 mb-6 border-bottom">
           <h2>Button Group</h2>
+          <p class="text-ink-soft">A single choice from a short set, so the options are native radios drawn as buttons (<code>.btn-check</code> + label): the selected state is programmatic and arrow keys move it, with no script.</p>
           <div class="btn-group mt-3" role="group" aria-label="Guest count">
-            <button type="button" class="btn btn-outline-secondary">1 Guest</button>
-            <button type="button" class="btn btn-outline-secondary active">2 Guests</button>
-            <button type="button" class="btn btn-outline-secondary">4 Guests</button>
+            <input type="radio" class="btn-check" name="ds-guest-count" id="ds-guests-1" autocomplete="off" />
+            <label class="btn btn-outline-secondary" for="ds-guests-1">1 Guest</label>
+            <input type="radio" class="btn-check" name="ds-guest-count" id="ds-guests-2" autocomplete="off" checked />
+            <label class="btn btn-outline-secondary" for="ds-guests-2">2 Guests</label>
+            <input type="radio" class="btn-check" name="ds-guest-count" id="ds-guests-4" autocomplete="off" />
+            <label class="btn btn-outline-secondary" for="ds-guests-4">4 Guests</label>
           </div>
         </section>
 
@@ -419,7 +423,7 @@ const experiences = [
           <h3 class="h5 mt-4">Circular</h3>
           <p class="text-ink-soft">Outline circular Icon Buttons, gapped apart from a chrome-stripped input.</p>
           <div class="d-flex flex-wrap gap-4 align-items-center mt-3">
-            <NumericStepper class="rounded-circle" label="Guests" value={2} min={1} max={10} />
+            <NumericStepper label="Guests" value={2} min={1} max={10} />
             <NumericStepper label="Nights" value={3} min={1} max={30} />
             <NumericStepper label="Disabled" value={1} disabled />
           </div>
@@ -447,7 +451,7 @@ const experiences = [
           <h3 class="h6 mt-5">Inverted (on dark)</h3>
           <p class="text-ink-soft">
             <code>tone="on-dark"</code> — cream text for dark surfaces. Works on <code>outline</code>,
-            <code>filled</code> (translucent black fill) and <code>plain</code>, as well as
+            <code>filled</code> (translucent scrim fill) and <code>plain</code>, as well as
             <code>rule</code>.
           </p>
           <div class="p-3 bg-dark d-flex flex-wrap gap-2 align-items-center mt-3">

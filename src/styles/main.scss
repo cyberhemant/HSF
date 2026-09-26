@@ -45,6 +45,10 @@ $light: $cream;
 $dark: $ink;
 $body-bg: $cream;
 $body-color: $ink-soft;
+// Bootstrap's "emphasis" text colour is pure black — it colours table text and
+// feeds the table stripe/hover washes. The brand's strong-text colour is the
+// heading ink.
+$body-emphasis-color: $ink;
 $min-contrast-ratio: 4.5;
 $color-contrast-dark: $ink; // text on light fills (btn-light hover etc.) — brand ink, not pure black
 
@@ -152,7 +156,18 @@ $accordion-border-radius: 0;
 $pagination-border-radius: 0;
 $dropdown-border-radius: 0;
 $modal-content-border-radius: 0;
+// No outline on the dialog: the large shadow (applied below) defines its edge.
+$modal-content-border-width: 0;
+// Bootstrap derives the header/footer divider widths from the value above, so
+// pin them to keep the hairline dividers between header, body and footer.
+$modal-header-border-width: 1px;
+$modal-footer-border-width: 1px;
 $toast-border-radius: 0;
+// Overlay backdrop and close button: Bootstrap uses pure black for both. The
+// backdrop takes the warm scrim (its own opacity variable still applies, and
+// the offcanvas backdrop inherits it); the close "X" takes the body ink.
+$modal-backdrop-bg: rgb(var(--bs-scrim-rgb));
+$btn-close-color: $ink-soft;
 
 // §4 Nav — Underline Tabs (proposed extension, not in DESIGN.md's original
 // component list). Bootstrap's built-in .nav-underline variant themed to the
@@ -194,6 +209,9 @@ $box-shadow-lg: 0 4px 12px rgba($maroon, .10), 0 16px 40px rgba($maroon, .12); /
 // Dropdown — sand wash on item hover/focus (also drives Autocomplete's
 // highlighted option), and the large shadow (shadow-lg) on the menu.
 $dropdown-link-hover-bg: $sand;
+// Bootstrap defaults the panel outline and dividers to black at 17.5%.
+$dropdown-border-color: $hairline;
+$dropdown-divider-bg: $hairline;
 $dropdown-box-shadow: $box-shadow-lg;
 
 // =============================================================================
@@ -208,6 +226,72 @@ $focus-ring-box-shadow: 0 0 0 2px $cream, 0 0 0 4px $ochre;
 // and keeps the ochre ring above via $form-check-input-focus-box-shadow.
 $input-focus-box-shadow: none;
 $input-placeholder-color: $ink-faint;
+// Bootstrap derives these from the maroon (a mauve tint), a grey, and black —
+// none are palette colours, so point them at tokens.
+$input-focus-border-color: $maroon;
+// Disabled fields: a faint ink-soft wash over the cream canvas, with the
+// same mix (stronger) for the outline and the faint ink for the text. Mixed
+// from the tokens so the tint follows the palette rather than a fixed hex.
+$input-disabled-bg: color-mix(in srgb, var(--bs-ink-soft) 7%, var(--bs-cream));
+$input-disabled-border-color: color-mix(in srgb, var(--bs-ink-soft) 18%, var(--bs-cream));
+$input-disabled-color: $ink-faint;
+$form-select-disabled-color: $ink-faint;
+
+// Navigation states — Bootstrap fills these from its grey scale
+// (--bs-secondary-bg / --bs-tertiary-bg), which the palette doesn't have.
+// Hover and focus wash with sand (the same step the dropdown rows use); a
+// disabled page link takes the shared disabled-field tint.
+$nav-tabs-link-hover-border-color: $sand $sand $hairline;
+$pagination-hover-bg: $sand;
+$pagination-focus-bg: $sand;
+$pagination-disabled-color: $ink-faint;
+$pagination-disabled-bg: $input-disabled-bg;
+$pagination-disabled-border-color: $input-disabled-border-color;
+
+// Progress track and list-group action rows — greys again (secondary-bg /
+// tertiary-bg); use sand for the track and the hover wash, beige when pressed.
+$progress-bg: $sand;
+$list-group-hover-bg: $sand;
+$list-group-action-active-bg: $beige;
+
+// Popover — no outline (the card shadow, applied below, defines the edge) and a
+// sand header instead of Bootstrap's grey. The border colour goes transparent so
+// the arrow's outline layer vanishes with it. Tooltip — the near-black warm
+// scrim replaces Bootstrap's pure-black --bs-emphasis-color.
+$popover-border-width: 0;
+$popover-border-color: transparent;
+$popover-header-bg: $sand;
+$tooltip-bg: rgb(var(--bs-scrim-rgb));
+
+// Card — no outline. The surface is the palette's card/panel white (not the
+// body cream, or a borderless card would vanish into the page); the header and
+// footer keep Bootstrap's own 3% wash of the body ink.
+$card-border-width: 0;
+$card-bg: $white;
+
+// Alerts — Bootstrap tints/shades each status colour into fill, border and
+// text values that exist nowhere in the palette. Use the status colour itself
+// at low alpha for the fill (15%) and border (40%), and the body ink for text.
+$primary-bg-subtle: rgba($maroon, .15);
+$secondary-bg-subtle: rgba($ochre-deep, .15);
+$success-bg-subtle: rgba($success, .15);
+$info-bg-subtle: rgba($info-brand, .15);
+$warning-bg-subtle: rgba($warning-brand, .15);
+$danger-bg-subtle: rgba($error, .15);
+$primary-border-subtle: rgba($maroon, .4);
+$secondary-border-subtle: rgba($ochre-deep, .4);
+$success-border-subtle: rgba($success, .4);
+$info-border-subtle: rgba($info-brand, .4);
+$warning-border-subtle: rgba($warning-brand, .4);
+$danger-border-subtle: rgba($error, .4);
+$primary-text-emphasis: $ink-soft;
+$secondary-text-emphasis: $ink-soft;
+$success-text-emphasis: $ink-soft;
+$info-text-emphasis: $ink-soft;
+$warning-text-emphasis: $ink-soft;
+$danger-text-emphasis: $ink-soft;
+$form-select-indicator-color: $ink-soft;
+$form-switch-color: $ink-faint; // unchecked knob
 $form-select-focus-box-shadow: none;
 // Overridden directly (rather than left to compose $input-focus-box-shadow)
 // so the range thumb doesn't end up with an invalid "<shadow>, none" value.
@@ -283,6 +367,46 @@ $theme-colors: map-merge($theme-colors, (
 // Custom layer — the handful of things Sass variables can't reach.
 // =============================================================================
 
+// §6 Button focus — Bootstrap hard-codes --bs-btn-focus-box-shadow as a 4px
+// ring at 50% of each variant's colour and never reads $btn-focus-box-shadow,
+// so buttons (and .btn-check labels) ignored the brand ring above. Point the
+// variable at it: the cream gap plus the ochre ring, on every button variant.
+.btn {
+  --#{$prefix}btn-focus-box-shadow: #{$focus-ring-box-shadow};
+}
+
+// §4 Carousel — Bootstrap only lifts the opacity of a focused control or
+// indicator (outline 0), so keyboard focus had no visible ring. Ring the arrow
+// glyph and the indicator bar; mouse focus is unaffected (:focus-visible).
+.carousel-control-prev:focus-visible .carousel-control-prev-icon,
+.carousel-control-next:focus-visible .carousel-control-next-icon,
+.carousel-indicators [data-bs-target]:focus-visible {
+  box-shadow: $focus-ring-box-shadow;
+}
+
+// §4 Placeholder (skeleton) — Bootstrap paints it as currentColor at 50%, so the
+// colour changes with whatever text it sits in (mauve on a card, grey elsewhere).
+// It is a skeleton, not text: use the palette's skeleton wash (beige), fully
+// opaque, and pulse between 100% and 50% for the glow variant.
+.placeholder {
+  background-color: var(--#{$prefix}beige);
+  opacity: 1;
+}
+
+@keyframes placeholder-glow {
+  50% {
+    opacity: .5;
+  }
+}
+
+// Bootstrap only guards its own transitions, not the skeleton animations.
+@media (prefers-reduced-motion: reduce) {
+  .placeholder-glow .placeholder,
+  .placeholder-wave {
+    animation: none;
+  }
+}
+
 // Text selection — brand maroon fill with cream text, no Bootstrap variable
 // reaches ::selection.
 ::selection {
@@ -326,6 +450,38 @@ img {
 .btn {
   text-transform: uppercase;
   letter-spacing: 2px;
+}
+
+// Hover/active fills come from the palette tokens rather than Bootstrap's
+// computed shade/tint, which lands on off-palette values. Focus-visible reuses
+// the hover values (Bootstrap's own behaviour), so it follows automatically.
+.btn-primary {
+  --#{$prefix}btn-hover-bg: #{$maroon-hover};
+  --#{$prefix}btn-hover-border-color: #{$maroon-hover};
+  --#{$prefix}btn-active-bg: #{$maroon-active};
+  --#{$prefix}btn-active-border-color: #{$maroon-active};
+}
+
+// Filled secondary (ochre-deep) has no darker palette step, so hover/active
+// move to the brand maroon — the same ochre → maroon step text links take.
+.btn-secondary {
+  --#{$prefix}btn-hover-bg: #{$maroon};
+  --#{$prefix}btn-hover-border-color: #{$maroon};
+  --#{$prefix}btn-active-bg: #{$maroon-active};
+  --#{$prefix}btn-active-border-color: #{$maroon-active};
+}
+
+.btn-light {
+  --#{$prefix}btn-hover-bg: #{$sand};
+  --#{$prefix}btn-hover-border-color: #{$sand};
+  --#{$prefix}btn-active-bg: #{$beige};
+  --#{$prefix}btn-active-border-color: #{$beige};
+}
+
+// Bootstrap's disabled link colour is a neutral grey that appears nowhere in
+// the palette — use the faint ink token instead.
+.btn-link {
+  --#{$prefix}btn-disabled-color: #{$ink-faint};
 }
 
 // §4 Buttons — Animated Outline. Layers onto Bootstrap's own
@@ -592,6 +748,10 @@ h4, .h4 { font-weight: 600; font-family: $font-family-sans; }
 // §4 Tag — Bootstrap has no letter-spacing utility.
 .ls-tag { letter-spacing: .1em; }
 
+// §4 Tag — filled, on dark: the same translucent scrim wash as the rule
+// variant's on-dark background.
+.tag-filled--on-dark { background-color: rgb(var(--#{$prefix}scrim-rgb), .45); }
+
 // §4 Tag — "rule" variant: a left-rule badge. The accent drives the border,
 // the text and (at 10%) the background. `--on-dark` swaps to a cream accent
 // over a translucent black wash for use on photography / dark surfaces.
@@ -666,14 +826,19 @@ h4, .h4 { font-weight: 600; font-family: $font-family-sans; }
 }
 
 // §4 Accordion — bottom hairline only (no side/top borders stacking between
-// items), and no focus ring on the button (the bottom-border active state
-// already communicates focus/expansion).
+// items). The ring is suppressed for mouse/touch focus (the open state's
+// bottom border already shows what changed) but kept for keyboard focus, so
+// the button always has a visible focus indicator.
 .accordion-item {
   border-width: 0 0 var(--#{$prefix}accordion-border-width);
 }
 
 .accordion-button:focus {
   box-shadow: none;
+}
+
+.accordion-button:focus-visible {
+  box-shadow: $focus-ring-box-shadow;
 }
 
 // Open state — primary-colored title on a white panel (rather than
@@ -707,7 +872,6 @@ h4, .h4 { font-weight: 600; font-family: $font-family-sans; }
   --#{$prefix}btn-hover-color: #{$maroon};
   --#{$prefix}btn-hover-bg: #{$white};
   --#{$prefix}btn-hover-border-color: #{$white};
-  --#{$prefix}btn-focus-shadow-rgb: 255, 255, 255;
   --#{$prefix}btn-active-color: #{$maroon};
   --#{$prefix}btn-active-bg: #{rgba($white, .85)};
   --#{$prefix}btn-active-border-color: #{$white};
@@ -727,7 +891,6 @@ h4, .h4 { font-weight: 600; font-family: $font-family-sans; }
   --#{$prefix}btn-hover-color: #{rgba($white, .8)};
   --#{$prefix}btn-active-color: #{rgba($white, .8)};
   --#{$prefix}btn-disabled-color: #{rgba($white, .5)};
-  --#{$prefix}btn-focus-shadow-rgb: 255, 255, 255;
 }
 
 // §4 Icons — Material Symbols renders as a text glyph, not an SVG; this
@@ -752,6 +915,34 @@ h4, .h4 { font-weight: 600; font-family: $font-family-sans; }
 // reset it on mobile.
 .dropdown-menu {
   box-shadow: var(--#{$prefix}dropdown-box-shadow);
+}
+
+// Bootstrap gives :focus and :hover the same wash, so a keyboard user moving
+// through the items can't tell focus from a stray hover. Keyboard focus adds
+// the ochre ring, drawn inset so the menu's edge and neighbouring rows don't
+// clip it.
+.dropdown-item:focus-visible {
+  outline: 0;
+  box-shadow: inset 0 0 0 2px $ochre;
+}
+
+// §4 Modal — same no-op mixin, so the dialog never got the large shadow that
+// $box-shadow-lg is defined for ("§4 Modal"). Apply the shadow token directly.
+.modal-content {
+  box-shadow: var(--#{$prefix}box-shadow-lg);
+}
+
+// §4 Popover — same no-op shadow mixin; Bootstrap defines --bs-popover-box-shadow
+// (the card shadow) but never emits it. Apply it directly.
+.popover {
+  box-shadow: var(--#{$prefix}popover-box-shadow);
+}
+
+// §4 Offcanvas — the side panel (Nav.astro's menu, filter drawers). Its outline
+// is off too ($offcanvas-border-width defaults to the modal's 0 above); the
+// same large shadow defines the edge. Bootstrap's mixin is a no-op here as well.
+.offcanvas {
+  box-shadow: var(--#{$prefix}box-shadow-lg);
 }
 
 // §4 Autocomplete — Bootstrap has no combobox. The control is a
@@ -866,13 +1057,17 @@ $ac-option-min-height-touch: 3rem; // 48px on coarse pointers
   background-size: .7em;
 }
 
+// The control is a div, so Bootstrap's :disabled input styles never reach it;
+// mirror them here so it matches every other disabled field.
 .ac.is-disabled .ac__control {
-  background-color: var(--#{$prefix}secondary-bg);
+  border-color: $input-disabled-border-color;
+  background-color: $input-disabled-bg;
+  color: $input-disabled-color;
   cursor: not-allowed;
 }
 
 .ac.is-readonly .ac__control {
-  background-color: var(--#{$prefix}secondary-bg);
+  background-color: $input-disabled-bg;
 }
 
 .ac.is-invalid .invalid-feedback {
@@ -1224,7 +1419,9 @@ $ac-option-min-height-touch: 3rem; // 48px on coarse pointers
   }
 
   &.is-disabled {
-    background-color: var(--#{$prefix}secondary-bg);
+    border-color: $input-disabled-border-color;
+    background-color: $input-disabled-bg;
+    color: $input-disabled-color;
     cursor: not-allowed;
   }
 }
@@ -2042,26 +2239,6 @@ $dp-pad: $spacer * .75;
     radial-gradient(ellipse at 15% 20%, rgba($ink-soft, .05), transparent 55%),
     radial-gradient(ellipse at 85% 80%, rgba($ink-soft, .05), transparent 55%),
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.4196  0 0 0 0 0.1961  0 0 0 0 0.1490  0 0 0 0.12 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-}
-
-// §4 Dividers — hairline interrupted by a small ochre geometric motif,
-// reserved for major page-section boundaries only (never a repeating fill).
-.section-divider {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  color: $ochre;
-  padding: 1.5rem $spacer; // §5 space-4 block, space-3 inline
-}
-
-.section-divider__line {
-  flex: 1 1 auto;
-  height: 1px;
-  background-color: $hairline;
-}
-
-.section-divider__motif {
-  flex: 0 0 auto;
 }
 
 // Lodges showcase — image zoom + card lift on hover, restrained per §4/§6

@@ -42,6 +42,7 @@ const wrapperClass = [
 ].filter(Boolean).join(' ');
 
 const btnVariant = isBlock ? 'filled-secondary' : 'outline';
+const btnShape = isBlock ? 'square' : 'circle';
 ---
 
 <div
@@ -50,7 +51,7 @@ const btnVariant = isBlock ? 'filled-secondary' : 'outline';
   role="group"
   aria-label={label}
 >
-  <IconButton icon="remove" label={`Decrease ${label}`} variant={btnVariant} shape="square" disabled={disabled} class="stepper__btn" />
+  <IconButton icon="remove" label={`Decrease ${label}`} variant={btnVariant} shape={btnShape} disabled={disabled} class="stepper__btn" />
   <input
     type="number"
     class="stepper__input"
@@ -64,7 +65,7 @@ const btnVariant = isBlock ? 'filled-secondary' : 'outline';
     disabled={disabled}
     aria-live="polite"
   />
-  <IconButton icon="add" label={`Increase ${label}`} variant={btnVariant} shape="square" disabled={disabled} class="stepper__btn" />
+  <IconButton icon="add" label={`Increase ${label}`} variant={btnVariant} shape={btnShape} disabled={disabled} class="stepper__btn" />
 </div>
 
 <script>

@@ -12,7 +12,7 @@ export interface Props {
 const { variant = 'outline', tone = 'neutral', class: extraClass = '' } = Astro.props;
 const onDark = tone === 'on-dark';
 const variantClass = variant === 'filled'
-  ? (onDark ? 'bg-black bg-opacity-50 text-cream' : 'bg-beige text-maroon')
+  ? (onDark ? 'tag-filled--on-dark text-cream' : 'bg-beige text-maroon')
   : variant === 'plain'
   ? `bg-transparent border-0 p-0 ${onDark ? 'text-cream' : 'text-ochre-deep'}`
   : `bg-transparent border ${onDark ? 'text-cream border-cream' : 'text-ochre-deep'}`;
